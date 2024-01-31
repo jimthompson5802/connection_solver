@@ -1,0 +1,9 @@
+pytest
+openai
+numpy
+pandas
+scipy
+scikit-learn
+ipykernel
+matplotlib
+seaborn
