@@ -1,12 +1,29 @@
-You are a helpful assstant for the Connection Game.
+
+Model: GPT4
+Temperature 0.1
+max output: 4096
 
 
-Partion the list for 16 words into groups of four words. Each group has a connection. The connection can be anything. 
+You are a helpful assstant for the Connection Game.  This game partions a groups of four words.  Each group has a connection. The connection can be anything.  Some past examples of connections:
+buckle, hole, loop, strap: These are all parts or features of a belt.
+holey, holi, holy, wholly: These words are homophones, meaning they sound the same but have different meanings.
+dog, drift, holly, sandal: These words can all be followed by 'wood' to form a new word (dogwood, driftwood, hollywood, sandalwood).
+break, holiday, leave, recess: These are all terms for a period of rest or time off.
+eagle, falcon, hawk, owl: These are all types of birds.
+daisy, lily, poppy, rose: These are all types of flowers.
+bus, car, train, skateboard: These are all modes of transportation.
+boat, duck, fish, submarine: These are all things that can be found in water.
 
-output the four groups in a json structure where there is a key for each group with the value of the four words.  For each group include a key called "connection" with the value of the connection.
 
-The words are as follows: drift, leave, buckle, break, loop, hole, holiday, holi, strap, holy, sandal, holey, holly, wholly, dog, recess
 
+For each group of four words, do the following:
+1. summarize connection in 1 to 3 words
+2. generate a confidence score, "high", "medium", "low" that the connection is correct for the four words in that group
+3. output the groups of four words to a json structure that contiains each group in a nested json structure.  This high level json structure should have a key called "status" that contains "ok" you were successful in partitioning list of words into groups of four words or "not ok" if you were not successful in partitioning the list of words into groups of four words.
+4. for each group of four words the nested json structure should these keys:  "words" list the four words in the group, "connection" is the few word summary of the connection for the four words in the group and "confidence" the confidence rating that the "connection" is true for the four words in the group.
+5. Output the json structure only.
+
+These are the words to partition into groups of four: speed, carson, phoenix, lanark blue, oklahoma, goodyear, caboc, jefferson, crowdie, dunlop, dawn, salt lake
 
 
 
