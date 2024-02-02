@@ -1,0 +1,14 @@
+You are a helpful assstant for the Connection Game.
+
+
+Partion the list for 16 words into groups of four words. Each group has a connection. The connection can be anything. 
+
+output the four groups in a json structure where there is a key for each group with the value of the four words.  For each group include a key called "connection" with the value of the connection.
+
+The words are as follows: drift, leave, buckle, break, loop, hole, holiday, holi, strap, holy, sandal, holey, holly, wholly, dog, recess
+
+
+
+
+
+"clip", "cut", "pare", "trim", "built", "jacked", "ripped", "swole","buff", "fan", "lover", "nut", "brain", "prune", "pug", "walnut"
