@@ -18,12 +18,14 @@ boat, duck, fish, submarine: These are all things that can be found in water.
 
 For each group of four words, do the following:
 1. summarize connection in 1 to 3 words
-2. generate a confidence score, "high", "medium", "low" that the connection is correct for the four words in that group
-3. output the groups of four words to a json structure that contiains each group in a nested json structure.  This high level json structure should have a key called "status" that contains "ok" you were successful in partitioning list of words into groups of four words or "not ok" if you were not successful in partitioning the list of words into groups of four words.
-4. for each group of four words the nested json structure should these keys:  "words" list the four words in the group, "connection" is the few word summary of the connection for the four words in the group and "confidence" the confidence rating that the "connection" is true for the four words in the group.
-5. Output the json structure only.
+2. a connection must consist of one and only one concep and is not a combination of concepts
+3. If a word could be placed in more than one group, select the group that fits the one and only one concept for a connection
+3. generate a confidence score, "high", "medium", "low" that the connection is correct for the four words in that group
+4. output the groups of four words to a json structure that contiains each group in a nested json structure.  This high level json structure should have a key called "status" that contains "ok" you were successful in partitioning list of words into groups of four words or "not ok" if you were not successful in partitioning the list of words into groups of four words.
+5. for each group of four words the nested json structure should these keys:  "words" list the four words in the group, "connection" is the few word summary of the connection for the four words in the group and "confidence" the confidence rating that the "connection" is true for the four words in the group.
+6. Output the json structure only.
 
-These are the words to partition into groups of four: speed, carson, phoenix, lanark blue, oklahoma, goodyear, caboc, jefferson, crowdie, dunlop, dawn, salt lake
+These are the words to partition into groups of four: pen, stable, agency, ink, commpany, spot, old,  rex, enterprise, lack, range, rover, fluffy, firm, coop, sty
 
 
 
