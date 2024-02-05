@@ -14,10 +14,13 @@ daisy, lily, poppy, rose: These are all types of flowers.
 bus, car, train, skateboard: These are all modes of transportation.
 boat, duck, fish, submarine: These are all things that can be found in water.
 cocoa, coffee, mate, tea: drinks with caffeine.
-borring, dull, mundane, vanilla: unexciting.
+boring, dull, mundane, vanilla: unexciting.
 act, bit, routine, set: comedian's performance.
 dirty, dry, twist, up: martini specifications.
-
+bishop, cardinal, pastor, prior - All are religious titles or roles.
+brother, lord, please, sheesh - All are forms of address or exclamations.
+heart, madonna, prince, queen - All are names of famous music artists or bands.
+deli, niece, roam, soul: homophones of city names 
 
 
 
@@ -30,8 +33,7 @@ For each group of four words, do the following:
 5. for each group of four words the nested json structure should these keys:  "words" list the four words in the group, "connection" is the few word summary of the connection for the four words in the group and "confidence" the confidence rating that the "connection" is true for the four words in the group.
 6. Output the json structure only.
 
-These are the words to partition into groups of four: coffee, mate, set, up, dry, vanilla, act, boring, routine, twist, cocoa, mundane, dull, tea, bit, dirty
-
+These are the words to partition into groups of four: bishop, brother, queen, deli, heart, niece, soul, prince, cardinal, lord, madonna, prior, pastor, roam, sheesh, please
 
 
 
