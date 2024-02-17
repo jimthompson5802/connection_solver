@@ -1,3 +1,2 @@
-!sample_prompt.txt
-!sample_prompt2.txt
+!sample_prompt*.txt
 !explanation.txt
