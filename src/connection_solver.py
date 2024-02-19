@@ -8,11 +8,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # Add argument for word file path, with default value "data/word_list.txt"
     parser.add_argument("word_fp", nargs="?", default="data/word_list.txt")
+    # add keyword argument for temperature with default value of 0.1
+    parser.add_argument("--temperature", type=float, default=0.1)
+
     # Parse the arguments
     args = parser.parse_args()
 
     # Get the word file path from the arguments
     word_fp = args.word_fp
+    temperature = args.temperature
 
     # Open the word file and read the words
     with open(word_fp, "r") as f:
@@ -29,7 +33,7 @@ if __name__ == "__main__":
     openai_interface = OpenAIInterface(api_key["key"])
 
     # Use the OpenAIInterface to chat with the prompt and parse the response as JSON
-    json_data = json.loads(openai_interface.chat(prompt))
+    json_data = json.loads(openai_interface.chat(prompt, temperature=temperature))
 
     # Initialize an empty dictionary to store the results
     result = {}
