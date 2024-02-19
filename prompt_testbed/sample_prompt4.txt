@@ -14,20 +14,24 @@ This relationshps can be anything.  Here are some examples:
 
 What connections are possible between all pairs of words in the list.
 
+If there is no connection, do not include the pair in the list.
+
 Describe the connection in 1 to 5 words.
 
-generate json list containing all the pairs formed.  For each word pair there is the key "connection" that contains the 1 to 5 word connection and "words" that list the word pair.
 
 
 
 Part 1:
-Word list: spoil,  bumble, fluff, blow
+generate json list containing all the pairs formed.  For each word pair there is the key "connection" that contains the 1 to 5 word connection and "words" that list the word pair.
 
+Word list: spoil, drill, match, tinder, bumble, grinder, saw, log, fluff, kindling, blow, router
 
 
 
 Part 2: 
-Consolidate common or similar connections found.  Ignore "unrelated" connections.
+Consolidate common or similar connections found in the following json list. 
+
+Keep only consolidated groups that contain three or more words in the consolidation.
 
 Output the summarization in a json list where each element contains "connection" for the common connection and "words" that is a list of the words.
 
@@ -35,3 +39,95 @@ Output the summarization in a json list where each element contains "connection"
 
 2/18: Word list: stalk, stock, hunt, snack, beans, pod, peck, type, nibble, track, broad, pasta, foreband, graze, vegetables, trail
 2/19: Word list: hinge, spoil, drill, match, lock, tinder, handle, bumble, grinder, frame, saw, log, fluff, kindling, blow, router
+
+[
+  {
+    "connection": "tools for woodworking",
+    "words": ["hinge", "drill"]
+  },
+  {
+    "connection": "could spoil food",
+    "words": ["spoil", "match"]
+  },
+  {
+    "connection": "parts of a door",
+    "words": ["hinge", "lock"]
+  },
+  {
+    "connection": "door hardware",
+    "words": ["hinge", "handle"]
+  },
+  {
+    "connection": "door components",
+    "words": ["frame", "hinge"]
+  },
+  {
+    "connection": "matches make fire",
+    "words": ["match", "tinder"]
+  },
+  {
+    "connection": "dating app names",
+    "words": ["tinder", "bumble"]
+  },
+  {
+    "connection": "dating apps",
+    "words": ["bumble", "grinder"]
+  },
+  {
+    "connection": "tools for cutting",
+    "words": ["saw", "drill"]
+  },
+  {
+    "connection": "saw cuts logs",
+    "words": ["saw", "log"]
+  },
+  {
+    "connection": "used for kindling",
+    "words": ["log", "fluff"]
+  },
+  {
+    "connection": "essential for fire-starting",
+    "words": ["fluff", "kindling"]
+  },
+  {
+    "connection": "needed to start fire",
+    "words": ["blow", "kindling"]
+  },
+  {
+    "connection": "used in woodworking",
+    "words": ["drill", "router"]
+  },
+  {
+    "connection": "frame portion of a building",
+    "words": ["drill", "frame"]
+  },
+  {
+    "connection": "used in forging",
+    "words": ["blow", "lock"]
+  },
+  {
+    "connection": "power tools",
+    "words": ["saw", "router"]
+  },
+  {
+    "connection": "means of locking",
+    "words": ["lock", "handle"]
+  }
+]
+
+hinge
+spoil
+drill
+match
+lock
+tinder
+handle
+bumble
+grinder
+frame
+saw
+log
+fluff
+kindling
+blow 
+router
