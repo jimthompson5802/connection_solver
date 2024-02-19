@@ -15,8 +15,9 @@ class OpenAIInterface:
 
         This relationshps can be anything.  Here are some examples:
         * common characteristics
-        * used in combination with the same word not in the list
+        * used in combination with the same word not in the list, for example "cross" and "board" are both used with "walk"
         * Shares a common prefix or suffix.
+        * words that rhyme
         * parts of a larger whole.
         * synomyns
 
