@@ -70,7 +70,7 @@ class OpenAIInterface:
                     }
                 ],
                 temperature=0.1,
-                max_tokens=6400,
+                max_tokens=6400, 
                 top_p=1,
                 frequency_penalty=0,
                 presence_penalty=0
