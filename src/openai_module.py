@@ -54,7 +54,26 @@ class OpenAIInterface:
             prompt (str): The prompt to use.
 
         Returns:
-            dict: The contents returned by the chat API.
+            json string list: in the format of
+            [
+                {
+                    "connection": "tools for woodworking",
+                    "words": ["hinge", "drill"]
+                },
+                {
+                    "connection": "could spoil food",
+                    "words": ["spoil", "match"]
+                },
+                {
+                    "connection": "parts of a door",
+                    "words": ["hinge", "lock"]
+                },
+                {
+                    "connection": "door hardware",
+                    "words": ["hinge", "handle"]
+                }
+            ]
+
         """
         try:
             response = self.openai_client.chat.completions.create(
