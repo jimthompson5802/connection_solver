@@ -52,6 +52,73 @@ connection: action verbs:  {'spoil', 'blow'}
 * After a group of 4 words is selected and submitted, the user is expected to update the word list and remove the 4 words that were submitted.  The script can then be run again to generate the next set of possible solutions.
 
 
+### Example run for 19Feb2024 puzzle
+
+Lines that start with `>>>` are the user's action.
+
+```
+$ python src/connection_solver.py
+
+Word list: hinge, spoil, drill, match, lock, tinder, handle, bumble, grinder, frame, saw, log, fluff, kindling, blow , router
+
+connection: door parts:  {'handle', 'lock', 'hinge'}
+
+connection: woodworking tools:  {'router', 'drill', 'saw'}
+
+connection: fire starting materials:  {'kindling', 'match', 'tinder'}
+
+connection: dating apps:  {'bumble', 'tinder', 'grinder'}
+
+connection: wood related:  {'router', 'drill', 'log', 'saw'}
+
+connection: picture related:  {'match', 'frame'}
+
+connection: soft materials:  {'kindling', 'fluff'}
+
+connection: action verbs:  {'spoil', 'blow'}
+
+>>>Submitted: "door parts" + "frame"  THIS WORKED, removed words from list
+
+$ python src/connection_solver.py
+
+Word list: spoil, drill, match, tinder, bumble, grinder, saw, log, fluff, kindling, blow , router
+
+connection: Dating apps:  {'bumble', 'tinder', 'grinder'}
+
+connection: Fire starting materials:  {'match', 'kindling', 'tinder'}
+
+connection: Woodworking tools:  {'saw', 'drill', 'router'}
+
+connection: Wood related:  {'saw', 'log'}
+
+connection: Starts with 'b':  {'bumble', 'blow'}
+
+connection: Ends with 'l':  {'spoil', 'drill'}
+
+connection: Fire related:  {'blow', 'kindling'}
+
+connection: Soft materials:  {'kindling', 'fluff'}
+
+>>>Submitted: "Woodworking tools:  + "grinder" THIS WORKED, removed words from list
+
+$ python src/connection_solver.py
+Word list: spoil, match, tinder, bumble, log, fluff, kindling, blow 
+
+connection: fire starting materials:  {'tinder', 'log', 'kindling', 'match'}
+
+connection: dating apps:  {'tinder', 'bumble'}
+
+connection: verb, ruin something:  {'blow', 'spoil'}
+
+connection: light, fluffy materials:  {'kindling', 'fluff'}
+
+>>>Submitted: "fire starting materials" THIS WORKED
+
+```
+
+At this point only 4 words remain in the list, so the puzzle is solved.
+
+
 ## Core Modules
 
 ### src/connection_solver.py
