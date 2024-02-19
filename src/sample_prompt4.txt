@@ -21,12 +21,17 @@ generate json list containing all the pairs formed.  For each word pair there is
 
 
 Part 1:
-Word list: flying, media, flea, ness, ship, dom, family, ion, coverage, curl, lock, exposure, ringlet, press, publicity, tress
+Word list: spoil,  bumble, fluff, blow
 
 
 
 
 Part 2: 
-Consolidate common or similar connections found.
+Consolidate common or similar connections found.  Ignore "unrelated" connections.
 
 Output the summarization in a json list where each element contains "connection" for the common connection and "words" that is a list of the words.
+
+
+
+2/18: Word list: stalk, stock, hunt, snack, beans, pod, peck, type, nibble, track, broad, pasta, foreband, graze, vegetables, trail
+2/19: Word list: hinge, spoil, drill, match, lock, tinder, handle, bumble, grinder, frame, saw, log, fluff, kindling, blow, router

@@ -1,0 +1,456 @@
+You are a helpful assistant with knowledge about words and how words relate to each other.
+
+This relationshps can be anything.  Here are some examples:
+* common characteristics
+* used in combination with the same word not in the list
+* Shares a common prefix or suffix.
+* parts of a larger whole.
+* synomyns
+
+What connections are possible between all pairs of words in the list.
+
+Describe the connection in 1 to 5 words.
+
+generate json list containing all the pairs formed.  For each word pair there is the key "connection" that contains the 1 to 5 word connection and "words" that list the word pair.
+
+Word list: hinge, spoil, drill, match, lock, tinder, handle, bumble, grinder, frame, saw, log, fluff, kindling, blow, router
+
+[
+  {
+    "connection": "door parts",
+    "words": ["hinge", "lock"]
+  },
+  {
+    "connection": "door parts",
+    "words": ["hinge", "handle"]
+  },
+  {
+    "connection": "door parts",
+    "words": ["lock", "handle"]
+  },
+  {
+    "connection": "woodworking tools",
+    "words": ["drill", "saw"]
+  },
+  {
+    "connection": "woodworking tools",
+    "words": ["drill", "router"]
+  },
+  {
+    "connection": "woodworking tools",
+    "words": ["saw", "router"]
+  },
+  {
+    "connection": "fire starting materials",
+    "words": ["match", "tinder"]
+  },
+  {
+    "connection": "fire starting materials",
+    "words": ["match", "kindling"]
+  },
+  {
+    "connection": "fire starting materials",
+    "words": ["tinder", "kindling"]
+  },
+  {
+    "connection": "dating apps",
+    "words": ["tinder", "bumble"]
+  },
+  {
+    "connection": "dating apps",
+    "words": ["tinder", "grinder"]
+  },
+  {
+    "connection": "dating apps",
+    "words": ["bumble", "grinder"]
+  },
+  {
+    "connection": "picture related",
+    "words": ["match", "frame"]
+  },
+  {
+    "connection": "wood related",
+    "words": ["log", "saw"]
+  },
+  {
+    "connection": "wood related",
+    "words": ["log", "router"]
+  },
+  {
+    "connection": "pillow related",
+    "words": ["fluff", "blow"]
+  },
+  {
+    "connection": "ruin or decay",
+    "words": ["spoil", "rot"]
+  }
+]
+
+Consolidate common or similar connections found.  Ignore "unrelated" connections.
+
+Output the summarization in a json list where each element contains "connection" for the common connection and "words" that is a list of the words.
+
+[
+  {
+    "connection": "door parts",
+    "words": ["hinge", "lock", "handle"]     <== MANUALLY ADDED "frame" to this list
+  },
+  {
+    "connection": "woodworking tools",
+    "words": ["drill", "saw", "router"]
+  },
+  {
+    "connection": "fire starting materials",
+    "words": ["match", "tinder", "kindling"]
+  },
+  {
+    "connection": "dating apps",
+    "words": ["tinder", "bumble", "grinder"]
+  },
+  {
+    "connection": "wood related",
+    "words": ["log", "saw", "router"]
+  },
+  {
+    "connection": "pillow related",
+    "words": ["fluff", "blow"]
+  },
+  {
+    "connection": "ruin or decay",
+    "words": ["spoil"]
+  }
+]
+
+===============================
+
+You are a helpful assistant with knowledge about words and how words relate to each other.
+
+This relationshps can be anything.  Here are some examples:
+* common characteristics
+* used in combination with the same word not in the list
+* Shares a common prefix or suffix.
+* parts of a larger whole.
+* synomyns
+
+What connections are possible between all pairs of words in the list.
+
+Describe the connection in 1 to 5 words.
+
+generate json list containing all the pairs formed.  For each word pair there is the key "connection" that contains the 1 to 5 word connection and "words" that list the word pair.
+
+Word list:  spoil, drill, match, tinder, bumble, grinder, saw, log, fluff, kindling, blow, router
+
+[
+  {
+    "connection": "tools for woodworking",
+    "words": ["drill", "saw"]
+  },
+  {
+    "connection": "tools for woodworking",
+    "words": ["drill", "router"]
+  },
+  {
+    "connection": "tools for woodworking",
+    "words": ["saw", "router"]
+  },
+  {
+    "connection": "dating apps",
+    "words": ["tinder", "bumble"]
+  },
+  {
+    "connection": "dating apps",
+    "words": ["tinder", "grinder"]
+  },
+  {
+    "connection": "dating apps",
+    "words": ["bumble", "grinder"]
+  },
+  {
+    "connection": "fire starting materials",
+    "words": ["match", "tinder"]
+  },
+  {
+    "connection": "fire starting materials",
+    "words": ["match", "kindling"]
+  },
+  {
+    "connection": "fire starting materials",
+    "words": ["tinder", "kindling"]
+  },
+  {
+    "connection": "wood related",
+    "words": ["log", "kindling"]
+  },
+  {
+    "connection": "wood related",
+    "words": ["saw", "log"]
+  },
+  {
+    "connection": "wood related",
+    "words": ["router", "log"]
+  },
+  {
+    "connection": "action to ruin",
+    "words": ["spoil", "blow"]
+  },
+  {
+    "connection": "soft and light",
+    "words": ["fluff", "bumble"]
+  }
+]
+
+Consolidate common or similar connections found.  Ignore "unrelated" connections.
+
+Output the summarization in a json list where each element contains "connection" for the common connection and "words" that is a list of the words.
+
+[
+  {
+    "connection": "tools for woodworking",
+    "words": ["drill", "saw", "router"]
+  },
+  {
+    "connection": "dating apps",
+    "words": ["tinder", "bumble", "grinder"]
+  },
+  {
+    "connection": "fire starting materials",
+    "words": ["match", "tinder", "kindling"]   <== MANUALLY ADDED "log" to this list
+  },
+  {
+    "connection": "wood related",
+    "words": ["log", "kindling", "saw", "router"]
+  },
+  {
+    "connection": "action to ruin",
+    "words": ["spoil", "blow"]
+  },
+  {
+    "connection": "soft and light",
+    "words": ["fluff", "bumble"]
+  }
+]
+
+===============================
+
+You are a helpful assistant with knowledge about words and how words relate to each other.
+
+This relationshps can be anything.  Here are some examples:
+* common characteristics
+* used in combination with the same word not in the list
+* Shares a common prefix or suffix.
+* parts of a larger whole.
+* synomyns
+
+What connections are possible between all pairs of words in the list.
+
+Describe the connection in 1 to 5 words.
+
+generate json list containing all the pairs formed.  For each word pair there is the key "connection" that contains the 1 to 5 word connection and "words" that list the word pair.
+
+Word list:  spoil, drill, bumble, grinder, saw,  fluff, blow, router
+
+[
+  {
+    "connection": "tools for cutting",
+    "words": ["drill", "saw"]
+  },
+  {
+    "connection": "tools for shaping",
+    "words": ["grinder", "router"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["spoil", "blow"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["spoil", "drill"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["spoil", "bumble"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["spoil", "grinder"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["spoil", "saw"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["spoil", "fluff"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["spoil", "router"]
+  },
+  {
+    "connection": "tools for cutting",
+    "words": ["drill", "grinder"]
+  },
+  {
+    "connection": "tools for cutting",
+    "words": ["drill", "router"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["drill", "bumble"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["drill", "blow"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["drill", "fluff"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["bumble", "blow"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["bumble", "grinder"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["bumble", "saw"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["bumble", "fluff"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["bumble", "router"]
+  },
+  {
+    "connection": "tools for shaping",
+    "words": ["grinder", "saw"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["grinder", "blow"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["grinder", "fluff"]
+  },
+  {
+    "connection": "tools for shaping",
+    "words": ["grinder", "router"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["saw", "blow"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["saw", "fluff"]
+  },
+  {
+    "connection": "tools for cutting",
+    "words": ["saw", "router"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["fluff", "blow"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["fluff", "router"]
+  },
+  {
+    "connection": "verbs of action",
+    "words": ["blow", "router"]
+  }
+]
+
+
+Consolidate common or similar connections found.  Ignore "unrelated" connections.
+
+Output the summarization in a json list where each element contains "connection" for the common connection and "words" that is a list of the words.
+
+
+[
+  {
+    "connection": "verbs of action",
+    "words": ["spoil", "drill", "bumble", "blow", "fluff"]
+  },
+  {
+    "connection": "tools for cutting",
+    "words": ["drill", "saw", "router"]    <== MANUALLY ADDED "grinder" to this list
+  },
+  {
+    "connection": "tools for shaping",
+    "words": ["grinder", "router"]
+  }
+]
+
+
+===============================
+
+You are a helpful assistant with knowledge about words and how words relate to each other.
+
+This relationshps can be anything.  Here are some examples:
+* common characteristics
+* used in combination with the same word not in the list
+* Shares a common prefix or suffix.
+* parts of a larger whole.
+* synomyns
+
+What connections are possible between all pairs of words in the list.
+
+Describe the connection in 1 to 5 words.
+
+generate json list containing all the pairs formed.  For each word pair there is the key "connection" that contains the 1 to 5 word connection and "words" that list the word pair.
+
+Word list:  spoil, bumble,  fluff, blow
+
+[
+  {
+    "connection": "Synonyms for making mistakes",
+    "words": ["spoil", "bumble"]
+  },
+  {
+    "connection": "Synonyms for making mistakes",
+    "words": ["spoil", "fluff"]
+  },
+  {
+    "connection": "Spoil and blow: negative outcomes",
+    "words": ["spoil", "blow"]
+  },
+  {
+    "connection": "Bumble and fluff: clumsy actions",
+    "words": ["bumble", "fluff"]
+  },
+  {
+    "connection": "Bumble and blow: verbs with 'b'",
+    "words": ["bumble", "blow"]
+  },
+  {
+    "connection": "Fluff and blow: air-related actions",
+    "words": ["fluff", "blow"]
+  }
+]
+
+Consolidate common or similar connections found.  Ignore "unrelated" connections.
+
+Output the summarization in a json list where each element contains "connection" for the common connection and "words" that is a list of the words.
+
+[
+  {
+    "connection": "Synonyms for making mistakes",
+    "words": ["spoil", "bumble", "fluff"]
+  },
+  {
+    "connection": "Verbs starting with 'b'",
+    "words": ["bumble", "blow"]
+  },
+  {
+    "connection": "Actions related to air",
+    "words": ["fluff", "blow"]
+  }
+]
