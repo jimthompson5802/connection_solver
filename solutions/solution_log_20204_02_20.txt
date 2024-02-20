@@ -1,0 +1,165 @@
+$ python src/connection_solver.py --temperature 0.1
+Word list: leak, wind, drag, drop, string, drip, beat, tear, bore, rhythm, bead, brass, charred, glob, pee, dud
+
+connection: related to water:  {'drip', 'leak'}
+
+connection: synonyms:  {'beat', 'rhythm', 'drip', 'leak'}
+
+connection: related to music:  {'rhythm', 'beat'}
+
+connection: related to jewelry:  {'brass', 'bead'}
+
+connection: related to damage:  {'tear', 'charred'}
+
+connection: related to movement:  {'wind', 'drag'}
+
+connection: related to failure:  {'bore', 'dud'}
+
+connection: related to small amount:  {'drop', 'glob'}
+
+connection: related to liquid:  {'drip', 'pee'}
+
+connection: related to thread:  {'string', 'wind'}
+
+connection: rhyme:  {'lead', 'pee', 'bead', 'be'}
+vscode ➜ /workspaces/connection_solver (main) $ python src/connection_solver.py --temperature 1.0
+Word list: leak, wind, drag, drop, string, drip, beat, tear, bore, rhythm, bead, brass, charred, glob, pee, dud
+
+connection: contain liquid:  {'leak', 'drip'}
+
+connection: action words:  {'drag', 'drop', 'wind'}
+
+connection: fluid movement:  {'drop', 'drip'}
+
+connection: musically related:  {'beat', 'rhythm'}
+
+connection: related to holes:  {'leak', 'bore'}
+
+connection: damage oriented:  {'tear', 'charred'}
+
+connection: rhyme:  {'bead', 'teak', 'be', 'pee', 'lead', 'leak'}
+
+connection: small round things:  {'bead', 'glob'}
+
+connection: made of metal:  {'bead', 'brass'}
+
+connection: repeating in sequence:  {'string', 'rhythm'}
+
+connection: describe failures:  {'drag', 'dud'}
+
+connection: four-letter verbs:  {'bore', 'wind'}
+
+connection: sound related:  {'brass', 'beat'}
+vscode ➜ /workspaces/connection_solver (main) $ python src/connection_solver.py --temperature 0.5
+Word list: leak, wind, drag, drop, string, drip, beat, tear, bore, rhythm, bead, brass, charred, glob, pee, dud
+
+connection: similar action:  {'leak', 'drip'}
+
+connection: force exerted:  {'drag', 'wind'}
+
+connection: part of music:  {'beat', 'rhythm'}
+
+connection: can be round:  {'bead', 'glob'}
+
+connection: can be damaged:  {'charred', 'tear'}
+
+connection: can be disappointing:  {'dud', 'bore'}
+
+connection: involves liquid:  {'pee', 'drip'}
+
+connection: can be attached:  {'string', 'bead'}
+
+connection: can be caused by heat:  {'charred', 'bore'}
+
+connection: can be metallic:  {'brass', 'bead'}
+
+connection: can be forceful:  {'drag', 'beat'}
+
+connection: can be light:  {'drop', 'glob'}
+
+connection: can be subtle:  {'leak', 'wind'}
+
+connection: can be negative:  {'dud', 'pee'}
+vscode ➜ /workspaces/connection_solver (main) $ python src/connection_solver.py --temperature 1.0
+Word list: leak, wind, drag, drop, string, drip, beat, tear, bore, rhythm, bead, brass, charred, glob, pee, dud
+
+connection: related to water:  {'drip', 'leak'}
+
+connection: repeat in rhythm:  {'rhythm', 'beat'}
+
+connection: force exerted:  {'wind', 'drag'}
+
+connection: common 'r':  {'charred', 'drag'}
+
+connection: both actions:  {'drip', 'leak'}
+
+connection: related to failure:  {'bore', 'dud'}
+
+connection: sound of impact:  {'beat', 'drop'}
+
+connection: can be torn:  {'tear', 'string'}
+
+connection: can form wearable objects:  {'brass', 'bead'}
+
+connection: made round:  {'glob', 'bead'}
+
+connection: sounds when falling:  {'drip', 'drop'}
+
+>>>> Selected "brass", "wind", "string, "rhythm"  THIS WORKED
+
+Word list: leak, drag, drop, drip, beat, tear, bore, bead, charred, glob, pee, dud
+
+connection: related to liquid:  {'leak', 'drop', 'drip'}
+
+connection: rhyme:  {'glob', 'bead', 'leak', 'drop', 'drip', 'peek', 'bore', 'beat', 'dud', 'charred'}
+vscode ➜ /workspaces/connection_solver (main) $ python src/connection_solver.py --temperature 1.0
+Word list: leak, drag, drop, drip, beat, tear, bore, bead, charred, glob, pee, dud
+
+connection: Objects falling liquid:  {'drip', 'leak'}
+
+connection: End with same letter:  {'charred', 'bore', 'drag'}
+
+connection: Associated with water:  {'drip', 'leak'}
+
+connection: Both nouns and verbs:  {'drop', 'drag'}
+
+connection: Four letter words:  {'drop', 'bore', 'leak', 'tear', 'drag', 'drip', 'beat'}
+
+connection: Begin with same letter:  {'bore', 'bead', 'beat'}
+
+connection: Shared body function connotation:  {'pee', 'drip'}
+
+connection: Negative connotation:  {'dud', 'drag'}
+
+connection: Colloquial terms for failing:  {'bore', 'dud'}
+vscode ➜ /workspaces/connection_solver (main) $ python src/connection_solver.py --temperature 0.5
+Word list: leak, drag, drop, drip, beat, tear, bore, bead, charred, glob, pee, dud
+
+connection: Similar action or result:  {'leak', 'drip'}
+
+connection: Rhyme:  {'leak', 'glob', 'dud', 'beat', 'peek', 'drop', 'drip', 'rip', 'be', 'pee'}
+
+connection: Sound or action:  {'drop', 'drag'}
+
+connection: Start with 'd':  {'drop', 'drip', 'drag', 'dud'}
+
+connection: Start with 'b':  {'bead', 'bore', 'beat'}
+
+connection: End with 'r':  {'bore', 'charred'}
+
+connection: End with 'd':  {'charred', 'bead', 'dud'}
+
+connection: End with 'b':  {'dud', 'glob'}
+
+connection: End with 'e':  {'dud', 'pee'}
+
+>>>> Selected ""drop", "drip", "bead", "glob"  THIS DID NOT WORK - one away
+>>>> Selected "drop", "drip", "bead", "leak" THIS DID NOT WORK
+>>>> Selected "drop", "drip", "glob", "tear" THIS DID NOT WORK - one away
+FAILED TO SOLVE
+
+SOLUTION:
+musical sections: brass, rhythm, string, wind
+party pooper: bore, drag, drip, dud
+bit of liquid: bead, drop, glob, tear
+vegetable homophones: beat, charred, leak, pee
