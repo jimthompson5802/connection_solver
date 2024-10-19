@@ -8,5 +8,6 @@ ipykernel
 matplotlib
 seaborn
 langchain
+langchain-openai
 langchain_community
 langgraph
