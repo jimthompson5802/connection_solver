@@ -11,3 +11,6 @@ langchain
 langchain-openai
 langchain_community
 langgraph
+flake8
+flake8-pyproject
+pytest
