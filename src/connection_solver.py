@@ -30,10 +30,12 @@ if __name__ == "__main__":
     # Load the API key from a JSON file
     with open("/openai/api_key.json") as f:
         api_key = json.load(f)
-    openai_interface = OpenAIInterface(api_key["key"])
+    openai_interface = OpenAIInterface(api_key["key"], model="gpt-4o")
 
     # Use the OpenAIInterface to chat with the prompt and parse the response as JSON
-    json_data = json.loads(openai_interface.chat(prompt, temperature=temperature))
+    response = openai_interface.chat(prompt, temperature=temperature)
+    print(f"Response:\n{response}")
+    json_data = json.loads(response)
 
     # Initialize an empty dictionary to store the results
     result = {}
