@@ -191,7 +191,67 @@ FINAL PUZZLE STATE:
     'words_remaining': []}
 ```
 
-### Failed to Solve Connection Puzzle
+### Solved Connection Puzzle 3
+**Expected Solution**
+```text
+🟡 RUMMAGE: COMB ,DIG ,ROOT ,SIFT
+
+🟢 SOUNDS OF THUNDER: CLAP ,PEAL ,ROLL ,RUMBLE
+
+🔵 WAYS TO WEAR YOUR HAIR UP: BUN ,BRAID ,PONY ,TWIST
+
+🟣 THINGS THAT CAN HAVE LEAVES: BOOK ,SALAD ,TABLE ,TREE
+```
+
+**Example Run**
+```text
+/usr/local/bin/python /workspaces/connection_solver/src/agent/app.py
+Please enter the file location: data/word_list4.txt
+
+Words read from file: ['rumble', 'table', 'pony', 'sift', 'roll', 'bun', 'tree', 'twist', 'salad', 'clap', 'comb', 'peal', 'dig', 'braid', 'root', 'book']
+
+RECOMMENDED WORDS ['bun', 'pony', 'braid', 'comb'] with connection Related to hairstyles
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['bun', 'pony', 'braid', 'comb'] is incorrect
+
+RECOMMENDED WORDS ['twist', 'braid', 'roll', 'bun'] with connection Hairstyles
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['twist', 'braid', 'roll', 'bun'] is incorrect
+
+RECOMMENDED WORDS ['comb', 'dig', 'sift', 'root'] with connection Actions related to gardening or soil preparation
+Is the recommendation accepted? (y/g/b/p/n): y
+Recommendation ['comb', 'dig', 'sift', 'root'] is correct
+
+RECOMMENDED WORDS ['clap', 'rumble', 'peal', 'roll'] with connection Types of sounds
+Is the recommendation accepted? (y/g/b/p/n): g
+Recommendation ['clap', 'rumble', 'peal', 'roll'] is correct
+
+RECOMMENDED WORDS ['table', 'book', 'salad', 'tree'] with connection Types of leaves
+Is the recommendation accepted? (y/g/b/p/n): p
+Recommendation ['table', 'book', 'salad', 'tree'] is correct
+
+RECOMMENDED WORDS ['twist', 'bun', 'pony', 'braid'] with connection types of hairstyles
+Is the recommendation accepted? (y/g/b/p/n): b
+Recommendation ['twist', 'bun', 'pony', 'braid'] is correct
+SOLVED THE CONNECTION PUZZLE!!!
+
+
+FINAL PUZZLE STATE:
+{   'found_blue': True,
+    'found_purple': True,
+    'found_yellow': True,
+    'invalid_connections': [   ['bun', 'pony', 'braid', 'comb'],
+                               ['twist', 'braid', 'roll', 'bun']],
+    'llm_temperature': 0.7,
+    'mistake_count': 2,
+    'recommendation_count': 6,
+    'recommended_connection': 'types of hairstyles',
+    'recommended_correct': True,
+    'recommended_words': ['twist', 'bun', 'pony', 'braid'],
+    'words_remaining': []}
+```
+
+### Failed to Solve Connection Puzzle 1
 **Expected Solution**
 ```text
 🟡 FOOTBALL POSITIONS: CENTER ,GUARD ,QUARTERBACK ,SAFETY
@@ -261,4 +321,73 @@ FINAL PUZZLE STATE:
                            'oxygen',
                            'guard',
                            'nickelodeon']}
+```
+
+### Failed to Solve Connection Puzzle 2
+**Expected Solution**
+```text
+🟡 GRASSY AREA: GREEN ,LAWN ,PARK ,YARD
+
+🟢 DEAL WITH: ADDRESS ,ANSWER ,FIELD ,HANDLE
+
+🔵 MOVIES WITH “S” REMOVED: CAR ,GOODFELLA ,JAW ,SWINGER
+
+🟣 ___ LAW: CRIMINAL ,HARVARD ,LEMON ,NATURAL
+```
+
+**Example Run**
+```text
+/usr/local/bin/python /workspaces/connection_solver/src/agent/app.py
+Please enter the file location: data/word_list1.txt
+
+Words read from file: ['goodfella', 'jaw', 'answer', 'handle', 'park', 'lemon', 'yard', 'field', 'natural', 'car', 'harvard', 'swinger', 'green', 'criminal', 'address', 'lawn']
+
+RECOMMENDED WORDS ['park', 'lawn', 'field', 'yard'] with connection Outdoor spaces
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['park', 'lawn', 'field', 'yard'] is incorrect
+
+RECOMMENDED WORDS ['lawn', 'yard', 'handle', 'jaw'] with connection Parts of a Tool
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['lawn', 'yard', 'handle', 'jaw'] is incorrect
+
+RECOMMENDED WORDS ['answer', 'address', 'field', 'park'] with connection Things related to location or response
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['answer', 'address', 'field', 'park'] is incorrect
+
+RECOMMENDED WORDS ['lawn', 'green', 'lemon', 'natural'] with connection Things that are green
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['lawn', 'green', 'lemon', 'natural'] is incorrect
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{   'found_blue': False,
+    'found_purple': False,
+    'found_yellow': False,
+    'invalid_connections': [   ['park', 'lawn', 'field', 'yard'],
+                               ['lawn', 'yard', 'handle', 'jaw'],
+                               ['answer', 'address', 'field', 'park'],
+                               ['lawn', 'green', 'lemon', 'natural']],
+    'llm_temperature': 0.7,
+    'mistake_count': 4,
+    'recommendation_count': 4,
+    'recommended_connection': 'Things that are green',
+    'recommended_correct': False,
+    'recommended_words': ['lawn', 'green', 'lemon', 'natural'],
+    'words_remaining': [   'lawn',
+                           'park',
+                           'address',
+                           'swinger',
+                           'answer',
+                           'field',
+                           'lemon',
+                           'yard',
+                           'jaw',
+                           'handle',
+                           'goodfella',
+                           'car',
+                           'criminal',
+                           'green',
+                           'harvard',
+                           'natural']}
 ```
