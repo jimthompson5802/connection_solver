@@ -1,4 +1,6 @@
 import json
+import logging
+
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 
@@ -6,6 +8,9 @@ with open("/openai/api_key.json") as f:
     config = json.load(f)
 
 api_key = config["key"]
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def read_file_to_word_list():
@@ -20,6 +25,7 @@ def read_file_to_word_list():
     list: A list of words from the file. If the file is not found or an error occurs, returns an empty list.
     """
     file_location = input("Please enter the file location: ")
+    logger.info(f"Reading words from file {file_location}")
     try:
         with open(file_location, "r") as file:
             contents = file.readline()
@@ -100,6 +106,8 @@ def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
     Returns:
     dict: The response from the LLM in JSON format.
     """
+    logger.info("Entering ask_llm_for_solution")
+    logger.debug(f"Entering ask_llm_for_solution Prompt: {prompt.content}")
     # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
     llm = ChatOpenAI(
         api_key=api_key,
@@ -114,5 +122,7 @@ def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
 
     # Invoke the LLM
     response = llm.invoke(conversation)
+
+    logger.info(f"Exiting ask_llm_for_solution {response.content}")
 
     return response

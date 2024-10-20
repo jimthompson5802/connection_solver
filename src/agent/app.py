@@ -1,8 +1,12 @@
+import logging
 import pprint
 import json
+from typing import TypedDict, List
+import random
+
+
 import numpy as np
 
-from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 
@@ -10,6 +14,8 @@ from tools import read_file_to_word_list, ask_llm_for_solution
 from utils import chunk_words, flatten_list
 
 pp = pprint.PrettyPrinter(indent=4)
+
+MAX_ERRORS = 6
 
 
 class PuzzleState(TypedDict):
@@ -28,10 +34,14 @@ class PuzzleState(TypedDict):
 
 
 def read_words_from_file(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering read_words_from_file")
+
     words = read_file_to_word_list()
     state["words_remaining"] = words
-    print("\nWords read from file:")
-    pp.pprint(state)
+
+    logger.info(f"\nWords read from file: {words}")
+    logger.debug(f"Exiting read_words_from_file State: {pp.pformat(state)}")
+
     return state
 
 
@@ -41,8 +51,8 @@ HUMAN_MESSAGE_BASE = """
 
 
 def get_recommendation(state: PuzzleState) -> PuzzleState:
-    print("\nEntering Recommendation:")
-    pp.pprint(state)
+    logger.info("Entering get_recommendation")
+    logger.debug(f"Entering get_recommendation State: {pp.pformat(state)}")
 
     state["recommendation_count"] += 1
 
@@ -55,6 +65,7 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
         for invalid_connection in state["invalid_connections"]:
             prompt += f"{', '.join(invalid_connection)}\n"
     prompt += "\n\n"
+    random.shuffle(state["words_remaining"])
     prompt += f"candidate list: {', '.join(state['words_remaining'])}\n"
 
     prompt = HumanMessage(prompt)
@@ -74,8 +85,8 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
         state["recommended_words"] = llm_response_json["words"]
         state["recommended_connection"] = llm_response_json["connection"]
 
-    print("\nExiting recommendation:")
-    pp.pprint(state)
+    logger.info("Exiting get_recommendation")
+    logger.debug(f"Exiting get_recommendation State: {pp.pformat(state)}")
 
     return state
 
@@ -91,11 +102,13 @@ REGNERTE_MESSAGE_PART2 = """
 
 
 def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
-    print("\nEntering regenerate recommendation:")
-    pp.pprint(state)
+    logger.info("Entering regenerate recommendation:")
+    logger.debug(f"\nEntering regenerate recommendation State: {pp.pformat(state)}")
 
     # build prompt for llm
     prompt = REGENERATE_MESSAGE_PART1
+    # scramble the remaining words
+    random.shuffle(state["words_remaining"])
     prompt += f"\nRemaining words: {', '.join(state['words_remaining'])}\n"
     prompt += f"\nCurrent recommended set (incorrect): {', '.join(state['recommended_words'])}\n"
     if len(state["invalid_connections"]) > 0:
@@ -124,15 +137,15 @@ def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
         state["recommended_words"] = llm_response_json["words"]
         state["recommended_connection"] = llm_response_json["connection"]
 
-    print("\nExiting regenerate recommendation:")
-    pp.pprint(state)
+    logger.info("Exiting regenerate recommendation:")
+    logger.debug(f"\nExiting regenerate recommendation State: {pp.pformat(state)}")
 
     return state
 
 
 def apply_recommendation(state: PuzzleState) -> PuzzleState:
-    print("\nEntering apply_recommendation:")
-    pp.pprint(state)
+    logger.info("Entering apply_recommendation:")
+    logger.debug(f"\nEntering apply_recommendation State: {pp.pformat(state)}")
 
     print(f"\nRECOMMENDED WORDS {state['recommended_words']} with connection {state['recommended_connection']}")
 
@@ -159,43 +172,60 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         state["invalid_connections"].append(state["recommended_words"])
         state["recommended_correct"] = False
 
-    print("\nExiting apply_recommendation:")
-    pp.pprint(state)
+    logger.info("Exiting apply_recommendation:")
+    logger.debug(f"\nExiting apply_recommendation State: {pp.pformat(state)}")
 
     return state
 
 
 def clear_recommendation(state: PuzzleState) -> PuzzleState:
-    print("\nEntering clear_recommendation:")
-    pp.pprint(state)
+    logger.info("Entering clear_recommendation:")
+    logger.debug(f"\nEntering clear_recommendation State: {pp.pformat(state)}")
 
     state["recommended_words"] = []
     state["recommended_connection"] = ""
     state["recommended_correct"] = False
 
-    print("\nExiting clear_recommendation:")
-    pp.pprint(state)
+    logger.info("Exiting clear_recommendation:")
+    logger.debug(f"\nExiting clear_recommendation State: {pp.pformat(state)}")
 
     return state
 
 
 def is_end(state: PuzzleState) -> str:
-    print("\nEntering is_end:")
-    pp.pprint(state)
+    logger.info("Entering is_end:")
+    logger.debug(f"\nEntering is_end State: {pp.pformat(state)}")
 
     if len(state["words_remaining"]) == 0:
-        print("\nSOLVED THE CONNECTION PUZZLE!!!")
+        logger.info("SOLVED THE CONNECTION PUZZLE!!!")
         return END
-    elif state["mistake_count"] >= 4:
-        print("\nFAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
+    elif state["mistake_count"] >= MAX_ERRORS:
+        logger.info("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
         return END
     elif state["recommended_correct"]:
+        logger.info("Recommendation accepted, Going to clear_recommendation")
         return "clear_recommendation"
     else:
+        logger.info("Recommendation not accepted, Going to regenerate_recommendation")
         return "regenerate_recommendation"
 
 
 if __name__ == "__main__":
+
+    # Configure the logging settings
+    logging.basicConfig(
+        level=logging.WARNING,  # Set the logging level
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Define the log format
+        handlers=[
+            logging.FileHandler("app.log"),  # Log to a file
+            logging.StreamHandler(),  # Optional: Log to the console as well
+        ],
+    )
+
+    # Create a logger instance
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+
     workflow = StateGraph(PuzzleState)
 
     workflow.add_node("read_words_from_file", read_words_from_file)
@@ -239,4 +269,5 @@ if __name__ == "__main__":
 
     result = app.invoke(initial_state)
 
+    print("\n\nFINAL PUZZLE STATE:")
     pp.pprint(result)
