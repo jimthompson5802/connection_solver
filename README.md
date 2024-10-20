@@ -72,7 +72,8 @@ Major contents of the repo:
 | `data/` | Directory containing past NYT Connection Puzzles for testing. |
 | `prompt_testbed/` | Directory containing sample prompts used in testing with the OpenAI Playground. |
 
-
+## Lesson Learned
+While prompt engineering is a critical component to the agent's success, an equally critical function is setting up the right data structures to be used by the LLM.  Speficially, randomizing the order of the words in `words_remaining` seemed to allow the LLM to get unstuck from invalid groupings. 
 
 ## Sample Runs
 
