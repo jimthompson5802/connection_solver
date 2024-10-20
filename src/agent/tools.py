@@ -40,6 +40,14 @@ def read_file_to_word_list():
         return []
 
 
+def interact_with_user(words, connection) -> str:
+    print(f"\nRECOMMENDED WORDS {words} with connection {connection}")
+
+    user_response = input("Is the recommendation accepted? (y/g/b/p/n): ")
+
+    return user_response
+
+
 SYSTEM_MESSAGE = SystemMessage(
     """
     You are a helpful assistant in solving the New York Times Connection Puzzle.

@@ -10,12 +10,12 @@ import numpy as np
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 
-from tools import read_file_to_word_list, ask_llm_for_solution
+from tools import read_file_to_word_list, ask_llm_for_solution, interact_with_user
 from utils import chunk_words, flatten_list
 
 pp = pprint.PrettyPrinter(indent=4)
 
-MAX_ERRORS = 6
+MAX_ERRORS = 4
 
 
 class PuzzleState(TypedDict):
@@ -148,10 +148,10 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
     logger.info("Entering apply_recommendation:")
     logger.debug(f"\nEntering apply_recommendation State: {pp.pformat(state)}")
 
-    print(f"\nRECOMMENDED WORDS {state['recommended_words']} with connection {state['recommended_connection']}")
+    # display recommended words to user and get user response
+    found_correct_group = interact_with_user(state["recommended_words"], state["recommended_connection"])
 
-    # update state with found words
-    found_correct_group = input("Is the recommendation accepted? (y/g/b/p/n): ")
+    # process user response
     match found_correct_group:
         case "y":
             state["found_yellow"] = True
