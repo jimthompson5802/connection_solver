@@ -42,7 +42,7 @@ SYSTEM_MESSAGE = SystemMessage(
 
     # Steps
 
-    1. **Review the Grid**: Look at the 16 words provided in the grid carefully.
+    1. **Review the candidate words**: Look at thewords provided in the candidate list carefully.
     2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
     3. **Group Words**: Attempt to form groups of four words that share a common theme.
     4. **Avoid invalid groups**: Do not include word groups that are known to be invalid.
@@ -89,7 +89,7 @@ SYSTEM_MESSAGE = SystemMessage(
 
 HUMAN_MESSAGE_BASE = HumanMessage(
     """
-    From the following list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.      
+    From the following candidate list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.      
     """
 )
 
