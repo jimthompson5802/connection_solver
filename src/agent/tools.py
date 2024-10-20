@@ -41,9 +41,15 @@ def read_file_to_word_list():
 
 
 def interact_with_user(words, connection) -> str:
-    print(f"\nRECOMMENDED WORDS {words} with connection {connection}")
+    recommendation_message = f"\nRECOMMENDED WORDS {words} with connection {connection}"
+    logger.info(recommendation_message)
+    print(recommendation_message)
 
-    user_response = input("Is the recommendation accepted? (y/g/b/p/n): ")
+    user_instruction = "Is the recommendation accepted? (y/g/b/p/n): "
+    logger.info(user_instruction)
+    user_response = input(user_instruction)
+
+    logger.info(f"User response: {user_response}")
 
     return user_response
 

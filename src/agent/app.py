@@ -71,7 +71,7 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
 
     prompt = HumanMessage(prompt)
 
-    print(f"\nPrompt for llm: {prompt.content}")
+    logger.info(f"\nPrompt for llm: {prompt.content}")
 
     # get recommendation from llm
     llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
@@ -123,7 +123,7 @@ def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
 
     prompt = HumanMessage(prompt)
 
-    print(f"\nPrompt for llm: {prompt.content}")
+    logger.info(f"\nPrompt for llm: {prompt.content}")
 
     # get recommendation from llm
     llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
@@ -166,10 +166,12 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
     # remove recommended words if we found a solution
     if found_correct_group != "n":
+        print(f"Recommendation {state['recommended_words']} is correct")
         # remove from remaining_words the words from recommended_words
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
         state["recommended_correct"] = True
     else:
+        print(f"Recommendation {state['recommended_words']} is incorrect")
         state["invalid_connections"].append(state["recommended_words"])
         state["recommended_correct"] = False
 
@@ -199,9 +201,11 @@ def is_end(state: PuzzleState) -> str:
 
     if len(state["words_remaining"]) == 0:
         logger.info("SOLVED THE CONNECTION PUZZLE!!!")
+        print("SOLVED THE CONNECTION PUZZLE!!!")
         return END
     elif state["mistake_count"] >= MAX_ERRORS:
         logger.info("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
+        print("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
         return END
     elif state["recommended_correct"]:
         logger.info("Recommendation accepted, Going to clear_recommendation")
@@ -219,7 +223,7 @@ if __name__ == "__main__":
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Define the log format
         handlers=[
             logging.FileHandler("app.log"),  # Log to a file
-            logging.StreamHandler(),  # Optional: Log to the console as well
+            # logging.StreamHandler(),  # Optional: Log to the console as well
         ],
     )
 
