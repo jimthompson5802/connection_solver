@@ -45,6 +45,7 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     # build prompt for llm
     prompt = prompt_template
     if len(state["invalid_connections"]) > 0:
+        prompt += " Do not include word groups that are known to be invalid."
         prompt += "\n\n"
         prompt += "Invalid word groups:\n"
         for invalid_connection in state["invalid_connections"]:
@@ -68,6 +69,26 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
         state["recommended_connection"] = llm_response_json["connection"]
 
     print("\nExiting recommendation:")
+    pp.pprint(state)
+
+    return state
+
+
+REGENERATE_MESSAGE_PART1 = """
+    I am working on solving a word grouping puzzle where I need to select 4 words that fit into a specific category from a list of remaining words. The current recommended set of 4 words is incorrect, with one or more words being wrong. Please help me regenerate a new set of 4 words that better fits the category. Below is the relevant information:
+    """
+# Remaining words: [list the remaining words]
+# Current recommended set (incorrect): [list the 4 words]
+REGNERTE_MESSAGE_PART2 = """
+    Please suggest an alternative set of 4 words based on the remaining options and correct the errors in the current set. 
+    """
+
+
+def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
+    print("\nEntering regenerate recommendation:")
+    pp.pprint(state)
+
+    print("\nExiting regenerate recommendation:")
     pp.pprint(state)
 
     return state
@@ -129,6 +150,8 @@ def is_end(state: PuzzleState) -> str:
     elif state["mistake_count"] >= 4:
         print("\nFAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
         return END
+    elif state["recommended_correct"]:
+        return "clear_recommendation"
     else:
         return "clear_recommendation"
 
@@ -137,14 +160,22 @@ workflow = StateGraph(PuzzleState)
 
 workflow.add_node("read_words_from_file", read_words_from_file)
 workflow.add_node("get_recommendation", get_recommendation)
+# workflow.add_node("regenerate_recommendation", regenerate_recommendation)
 workflow.add_node("apply_recommendation", apply_recommendation)
 workflow.add_node("clear_recommendation", clear_recommendation)
 
 workflow.add_edge("read_words_from_file", "get_recommendation")
 workflow.add_edge("get_recommendation", "apply_recommendation")
 workflow.add_edge("clear_recommendation", "get_recommendation")
+# workflow.add_edge("regenerate_recommendation", "apply_recommendation")
 workflow.add_conditional_edges(
-    "apply_recommendation", is_end, {END: END, "clear_recommendation": "clear_recommendation"}
+    "apply_recommendation",
+    is_end,
+    {
+        END: END,
+        "clear_recommendation": "clear_recommendation",
+        # "regenerate_recommendation": "regenerate_recommendation",
+    },
 )
 
 workflow.set_entry_point("read_words_from_file")
