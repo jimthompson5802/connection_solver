@@ -257,6 +257,7 @@ if __name__ == "__main__":
     workflow.set_entry_point("read_words_from_file")
 
     app = workflow.compile()
+    # app.get_graph().draw_png("images/connection_solver_graph.png")
 
     initial_state = PuzzleState(
         words_remaining=[],
