@@ -55,8 +55,6 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     logger.info("Entering get_recommendation")
     logger.debug(f"Entering get_recommendation State: {pp.pformat(state)}")
 
-    state["recommendation_count"] += 1
-
     # build prompt for llm
     prompt = HUMAN_MESSAGE_BASE
     if len(state["invalid_connections"]) > 0:
@@ -148,6 +146,8 @@ def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
 def apply_recommendation(state: PuzzleState) -> PuzzleState:
     logger.info("Entering apply_recommendation:")
     logger.debug(f"\nEntering apply_recommendation State: {pp.pformat(state)}")
+
+    state["recommendation_count"] += 1
 
     # display recommended words to user and get user response
     found_correct_group = interact_with_user(state["recommended_words"], state["recommended_connection"])
