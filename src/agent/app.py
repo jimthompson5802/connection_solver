@@ -1,16 +1,20 @@
 import pprint
+import json
 
 from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
 
-from tools import read_file_to_word_list
+from tools import read_file_to_word_list, HUMAN_MESSAGE_BASE, ask_llm_for_solution
 from utils import chunk_words, flatten_list
 
 pp = pprint.PrettyPrinter(indent=4)
 
+prompt_template = HUMAN_MESSAGE_BASE.content
+
 
 class PuzzleState(TypedDict):
     words_remaining: List[str] = []
+    invalid_connections: List[List[str]] = []
     recommended_words: List[str] = []
     recommeded_connection: str = ""
     found_yellow: bool = False
@@ -34,14 +38,30 @@ def get_recomendation(state: PuzzleState) -> PuzzleState:
     pp.pprint(state)
 
     state["recommendation_count"] += 1
-    list_of_lists = chunk_words(state["words_remaining"])
 
-    # remove first element
-    state["recommended_words"] = list_of_lists[0]
-    state["recommeded_connection"] = f"simulated connection {state['recommended_words']}"
+    # build prompt for llm
+    prompt = prompt_template
+    if len(state["invalid_connections"]) > 0:
+        prompt += "\n\n"
+        prompt += "Invalid group of words:\n"
+        for invalid_connection in state["invalid_connections"]:
+            prompt += f"{', '.join(invalid_connection)}\n"
+    prompt += "\n\n"
+    prompt += f"word list: {', '.join(state['words_remaining'])}\n"
 
-    # update state with remaining words
-    state["words_remaining"] = flatten_list(list_of_lists)
+    print(f"\nPrompt for llm: {prompt}")
+
+    # get recommendation from llm
+    llm_response = ask_llm_for_solution(prompt)
+    print(f"\nLLM response: {llm_response}")
+
+    llm_response_json = json.loads(llm_response.content)
+    if isinstance(llm_response_json, list):
+        state["recommended_words"] = llm_response_json[0]["words"]
+        state["recommeded_connection"] = llm_response_json[0]["connection"]
+    else:
+        state["recommended_words"] = llm_response_json["words"]
+        state["recommeded_connection"] = llm_response_json["connection"]
 
     print("\nExiting recomendation:")
     pp.pprint(state)
@@ -73,6 +93,8 @@ def apply_recomendation(state: PuzzleState) -> PuzzleState:
     if recommendation_ok != "no":
         # remove from remaining_words the words from recommended_words
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
+    else:
+        state["invalid_connections"].append(state["recommended_words"])
 
     print("\nExiting apply_recomendation:")
     pp.pprint(state)
@@ -107,6 +129,7 @@ app = workflow.compile()
 
 initial_state = PuzzleState(
     words=[],
+    invalid_connections=[],
     recommended_words=[],
     recommeded_connection="",
     found_blue=False,
