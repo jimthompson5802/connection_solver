@@ -78,11 +78,11 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
 
     llm_response_json = json.loads(llm_response.content)
     if isinstance(llm_response_json, list):
-        print(f"\nLLM response is list")
+        logger.debug(f"\nLLM response is list")
         state["recommended_words"] = llm_response_json[0]["words"]
         state["recommended_connection"] = llm_response_json[0]["connection"]
     else:
-        print(f"\nLLM response is dict")
+        logger.debug(f"\nLLM response is dict")
         state["recommended_words"] = llm_response_json["words"]
         state["recommended_connection"] = llm_response_json["connection"]
 
@@ -130,11 +130,11 @@ def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
 
     llm_response_json = json.loads(llm_response.content)
     if isinstance(llm_response_json, list):
-        print(f"\nLLM response is list")
+        logger.debug(f"\nLLM response is list")
         state["recommended_words"] = llm_response_json[0]["words"]
         state["recommended_connection"] = llm_response_json[0]["connection"]
     else:
-        print(f"\nLLM response is dict")
+        logger.debug(f"\nLLM response is dict")
         state["recommended_words"] = llm_response_json["words"]
         state["recommended_connection"] = llm_response_json["connection"]
 
