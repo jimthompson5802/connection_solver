@@ -2,196 +2,119 @@
 
 Experimental project to determine how to use GPT4 to solve the NYT Connection puzzles
 
-## Instructions for use
-* Create a new line separate file with the "Connection" puzzle words.  By default, the software assumes
-the file is in `data/word_list.txt`, e.g.,
+## Sample Runs
+
+### Solved Connection Puzzle
+**Solution**
+```text
+🟡 MAKE GOOD ON, AS A PROMISE: FULFILL ,HONOR ,KEEP ,UPHOLD
+
+🟢 BEDDING: BLANKET ,SHAM ,SHEET ,THROW
+
+🔵 ACTIONS IN CARD GAMES: DISCARD ,DRAW ,PASS ,PLAY
+
+🟣 CABINET DEPARTMENTS: ENERGY ,JUSTICE ,LABOR ,STATE
 ```
-hinge
-spoil
-drill
-match
-lock
-tinder
-handle
-bumble
-grinder
-frame
-saw
-log
-fluff
-kindling
-blow 
-router
-```
+**Example Run**
+```text
+$ /usr/local/bin/python /workspaces/connection_solver/src/agent/app.py
+Please enter the file location: data/word_list5.txt
 
-* Run the `src/connection_solver.py` script to generate possible solutions for the NYT `Connection` puzzles. It uses the OpenAI API to generate the solutions.  Example output:
+RECOMMENDED WORDS ['blanket', 'throw', 'sham', 'sheet'] with connection Bedding items
+Is the recommendation accepted? (y/g/b/p/n): g
+Recommendation ['blanket', 'throw', 'sham', 'sheet'] is correct
 
-```
-Word list: hinge, spoil, drill, match, lock, tinder, handle, bumble, grinder, frame, saw, log, fluff, kindling, blow , router
+RECOMMENDED WORDS ['keep', 'uphold', 'honor', 'fulfill'] with connection Actions associated with maintaining or supporting something
+Is the recommendation accepted? (y/g/b/p/n): y
+Recommendation ['keep', 'uphold', 'honor', 'fulfill'] is correct
 
-connection: door parts:  {'handle', 'lock', 'hinge'}
+RECOMMENDED WORDS ['state', 'labor', 'energy', 'justice'] with connection Departments of the US Government
+Is the recommendation accepted? (y/g/b/p/n): p
+Recommendation ['state', 'labor', 'energy', 'justice'] is correct
 
-connection: woodworking tools:  {'router', 'drill', 'saw'}
-
-connection: fire starting materials:  {'kindling', 'match', 'tinder'}
-
-connection: dating apps:  {'bumble', 'tinder', 'grinder'}
-
-connection: wood related:  {'router', 'drill', 'log', 'saw'}
-
-connection: picture related:  {'match', 'frame'}
-
-connection: soft materials:  {'kindling', 'fluff'}
-
-connection: action verbs:  {'spoil', 'blow'}
-
-```
-
-* The user can use the above output to determine a group of four words that can be submitted as a solution to the NYT `Connection` puzzle.
-
-* After a group of 4 words is selected and submitted, the user is expected to update the word list and remove the 4 words that were submitted.  The script can then be run again to generate the next set of possible solutions.
+RECOMMENDED WORDS ['discard', 'play', 'pass', 'draw'] with connection Card Game Actions
+Is the recommendation accepted? (y/g/b/p/n): b
+Recommendation ['discard', 'play', 'pass', 'draw'] is correct
+SOLVED THE CONNECTION PUZZLE!!!
 
 
-### Example run for 19Feb2024 puzzle
-
-Lines that start with `>>>` are the user's action.
-
-```
-$ python src/connection_solver.py
-
-Word list: hinge, spoil, drill, match, lock, tinder, handle, bumble, grinder, frame, saw, log, fluff, kindling, blow , router
-
-connection: door parts:  {'handle', 'lock', 'hinge'}
-
-connection: woodworking tools:  {'router', 'drill', 'saw'}
-
-connection: fire starting materials:  {'kindling', 'match', 'tinder'}
-
-connection: dating apps:  {'bumble', 'tinder', 'grinder'}
-
-connection: wood related:  {'router', 'drill', 'log', 'saw'}
-
-connection: picture related:  {'match', 'frame'}
-
-connection: soft materials:  {'kindling', 'fluff'}
-
-connection: action verbs:  {'spoil', 'blow'}
-
->>>Submitted: "door parts" + "frame"  THIS WORKED, removed words from list
-
-$ python src/connection_solver.py
-
-Word list: spoil, drill, match, tinder, bumble, grinder, saw, log, fluff, kindling, blow , router
-
-connection: Dating apps:  {'bumble', 'tinder', 'grinder'}
-
-connection: Fire starting materials:  {'match', 'kindling', 'tinder'}
-
-connection: Woodworking tools:  {'saw', 'drill', 'router'}
-
-connection: Wood related:  {'saw', 'log'}
-
-connection: Starts with 'b':  {'bumble', 'blow'}
-
-connection: Ends with 'l':  {'spoil', 'drill'}
-
-connection: Fire related:  {'blow', 'kindling'}
-
-connection: Soft materials:  {'kindling', 'fluff'}
-
->>>Submitted: "Woodworking tools:  + "grinder" THIS WORKED, removed words from list
-
-$ python src/connection_solver.py
-Word list: spoil, match, tinder, bumble, log, fluff, kindling, blow 
-
-connection: fire starting materials:  {'tinder', 'log', 'kindling', 'match'}
-
-connection: dating apps:  {'tinder', 'bumble'}
-
-connection: verb, ruin something:  {'blow', 'spoil'}
-
-connection: light, fluffy materials:  {'kindling', 'fluff'}
-
->>>Submitted: "fire starting materials" THIS WORKED
-
+FINAL PUZZLE STATE:
+{   'found_blue': True,
+    'found_purple': True,
+    'found_yellow': True,
+    'invalid_connections': [],
+    'llm_temperature': 0.7,
+    'mistake_count': 0,
+    'recommendation_count': 4,
+    'recommended_connection': 'Card Game Actions',
+    'recommended_correct': True,
+    'recommended_words': ['discard', 'play', 'pass', 'draw'],
+    'words_remaining': []}
 ```
 
-At this point only 4 words remain in the list, so the puzzle is solved.
+### Failed to Solve Connection Puzzle
+**Solution**
+```text
+🟡 FOOTBALL POSITIONS: CENTER ,GUARD ,QUARTERBACK ,SAFETY
 
+🟢 CABLE CHANNELS: DISCOVERY ,HISTORY ,NICKELODEON ,OXYGEN
 
-## Core Modules
+🔵 FICTIONAL CLOWNS: HOMEY ,JOKER ,PENNYWISE ,RONALD
 
-### src/connection_solver.py
-
-This module generates possible solutions for the NYT `Connection` puzzles. It uses the OpenAI API to generate the solutions.
-
-Here's a step-by-step breakdown:
-
-1. The script starts by importing necessary modules: `argparse` for command-line argument parsing, `json` for handling JSON data, and `OpenAIInterface` from a custom module named `openai_module`.
-
-2. The `argparse.ArgumentParser()` is initialized to handle command-line arguments. An argument for the word file path is added with a default value of "data/word_list.txt".
-
-3. The arguments are parsed and the word file path is extracted.
-
-4. The script then opens the word file, reads the words, and stores them in a list.
-
-5. A prompt is created with the words and printed to the console.
-
-6. The script opens a JSON file containing the OpenAI API key, loads the key, and initializes an `OpenAIInterface` object with it.
-
-7. The `OpenAIInterface` object is used to chat with the prompt and the response is parsed as JSON.
-
-8. An empty dictionary is initialized to store the results.
-
-9. The script iterates over the JSON data. For each item, it extracts a 'connection' value and a list of 'words'. If the 'connection' value is not already in the result dictionary, it adds a new set with the 'words' values. If the 'connection' value is already in the result dictionary, it adds the 'words' values to the existing set.
-
-10. Finally, the script prints the results.
-
-Here is sample output from the script:
-
-```
-$ python src/connection_solver.py
-
-Word list: hinge, spoil, drill, match, lock, tinder, handle, bumble, grinder, frame, saw, log, fluff, kindling, blow , router
-
-connection: door parts:  {'handle', 'lock', 'hinge'}
-
-connection: woodworking tools:  {'router', 'drill', 'saw'}
-
-connection: fire starting materials:  {'kindling', 'match', 'tinder'}
-
-connection: dating apps:  {'bumble', 'tinder', 'grinder'}
-
-connection: wood related:  {'router', 'drill', 'log', 'saw'}
-
-connection: picture related:  {'match', 'frame'}
-
-connection: soft materials:  {'kindling', 'fluff'}
-
-connection: action verbs:  {'spoil', 'blow'}
+🟣 WHAT “D” MIGHT STAND FOR: DEFENSE ,DEMOCRAT ,DIMENSIONAL ,DRIVE
 ```
 
-The user can use the above output to determine a group of four words that can be submitted as a solution to the NYT `Connection` puzzle.
+**Example Run**
+```text 
+/usr/local/bin/python /workspaces/connection_solver/src/agent/app.py
+Please enter the file location: data/word_list3.txt
 
-In the above example, "door parts" with the addition of "frame" can be submitted as a solution to the puzzle.
+RECOMMENDED WORDS ['quarterback', 'safety', 'center', 'defense'] with connection Football positions
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['quarterback', 'safety', 'center', 'defense'] is incorrect
 
-### src/openai_module.py
+RECOMMENDED WORDS ['quarterback', 'safety', 'guard', 'defense'] with connection Football Positions
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['quarterback', 'safety', 'guard', 'defense'] is incorrect
 
-The selected code is a Python class named [`OpenAIInterface`](command:_github.copilot.openSymbolInFile?%5B%22src%2Fopenai_module.py%22%2C%22OpenAIInterface%22%5D "src/openai_module.py") that is used to interact with the OpenAI API. This class is defined in a module named [`openai_module.py`](command:_github.copilot.openRelativePath?%5B%22src%2Fopenai_module.py%22%5D "src/openai_module.py").
+RECOMMENDED WORDS ['quarterback', 'center', 'guard', 'joker'] with connection Positions and roles in sports and entertainment
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['quarterback', 'center', 'guard', 'joker'] is incorrect
 
-Here's a step-by-step breakdown:
+RECOMMENDED WORDS ['nickelodeon', 'oxygen', 'homey', 'discovery'] with connection Television Channels
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['nickelodeon', 'oxygen', 'homey', 'discovery'] is incorrect
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
 
-1. The `openai` module is imported, which provides the functionality to interact with the OpenAI API.
 
-2. The [`OpenAIInterface`](command:_github.copilot.openSymbolInFile?%5B%22src%2Fopenai_module.py%22%2C%22OpenAIInterface%22%5D "src/openai_module.py") class is defined with a docstring that describes its purpose and attributes.
-
-3. A class attribute [`system_prompt`](command:_github.copilot.openSymbolInFile?%5B%22src%2Fopenai_module.py%22%2C%22system_prompt%22%5D "src/openai_module.py") is defined. This is a multi-line string that seems to be used as a prompt for the OpenAI API.
-
-4. The [`__init__`](command:_github.copilot.openSymbolInFile?%5B%22src%2Fopenai_module.py%22%2C%22__init__%22%5D "src/openai_module.py") method is defined. This method is called when an instance of the [`OpenAIInterface`](command:_github.copilot.openSymbolInFile?%5B%22src%2Fopenai_module.py%22%2C%22OpenAIInterface%22%5D "src/openai_module.py") class is created. It takes an API key and a model name as arguments, with the model defaulting to "gpt-4". The method initializes an `OpenAI` client with the provided API key and sets the model.
-
-5. The [`chat`](command:_github.copilot.openSymbolInFile?%5B%22src%2Fopenai_module.py%22%2C%22chat%22%5D "src/openai_module.py") method is defined. This method takes a prompt as an argument and uses it to make a request to the OpenAI API. The method constructs a list of messages, with the [`system_prompt`](command:_github.copilot.openSymbolInFile?%5B%22src%2Fopenai_module.py%22%2C%22system_prompt%22%5D "src/openai_module.py") as the system message and the provided prompt as the user message. It then makes a request to the OpenAI API's chat completions endpoint with these messages and some additional parameters. The response from the API is returned.
-
-6. If an error occurs during the API request, it is caught and printed, and then re-raised.
-
-This class provides a convenient way to interact with the OpenAI API, encapsulating the details of making the API request and handling the response. It can be used in other parts of your project to generate responses from the OpenAI API based on a given prompt.
-
+FINAL PUZZLE STATE:
+{   'found_blue': False,
+    'found_purple': False,
+    'found_yellow': False,
+    'invalid_connections': [   ['quarterback', 'safety', 'center', 'defense'],
+                               ['quarterback', 'safety', 'guard', 'defense'],
+                               ['quarterback', 'center', 'guard', 'joker'],
+                               ['nickelodeon', 'oxygen', 'homey', 'discovery']],
+    'llm_temperature': 0.7,
+    'mistake_count': 4,
+    'recommendation_count': 1,
+    'recommended_connection': 'Television Channels',
+    'recommended_correct': False,
+    'recommended_words': ['nickelodeon', 'oxygen', 'homey', 'discovery'],
+    'words_remaining': [   'ronald',
+                           'pennywise',
+                           'joker',
+                           'oxygen',
+                           'homey',
+                           'center',
+                           'dimensional',
+                           'safety',
+                           'democrat',
+                           'drive',
+                           'quarterback',
+                           'discovery',
+                           'history',
+                           'defense',
+                           'nickelodeon',
+                           'guard']}
+```
