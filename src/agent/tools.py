@@ -9,8 +9,7 @@ api_key = config["key"]
 
 
 def read_file_to_word_list():
-    # TODO: undo hard coding for testing
-    file_location = "data/word_list3.txt"  # input("Please enter the file location: ")
+    file_location = input("Please enter the file location: ")
     try:
         with open(file_location, "r") as file:
             contents = file.read()
