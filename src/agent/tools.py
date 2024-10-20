@@ -9,6 +9,15 @@ api_key = config["key"]
 
 
 def read_file_to_word_list():
+    """
+    Reads a file and returns a list of words separated by commas.
+
+    Prompts the user to enter the file location, reads the file, and splits its contents by commas.
+    Strips any leading or trailing whitespace from each word.
+
+    Returns:
+    list: A list of words from the file. If the file is not found or an error occurs, returns an empty list.
+    """
     file_location = input("Please enter the file location: ")
     try:
         with open(file_location, "r") as file:
@@ -96,6 +105,17 @@ HUMAN_ERROR_ANALYSIS_MESSAGE = HumanMessage(
 
 
 def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
+    """
+    Asks the OpenAI LLM for a solution based on the provided prompt.
+
+    Parameters:
+    prompt (str): The input prompt to be sent to the LLM.
+    temperature (float, optional): The sampling temperature to use. Defaults to 1.0.
+    max_tokens (int, optional): The maximum number of tokens to generate. Defaults to 4096.
+
+    Returns:
+    dict: The response from the LLM in JSON format.
+    """
     # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
     llm = ChatOpenAI(
         api_key=api_key,
