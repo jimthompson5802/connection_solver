@@ -17,7 +17,8 @@ class PuzzleState(TypedDict):
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
     recommended_words: List[str] = []
-    recommeded_connection: str = ""
+    recommended_connection: str = ""
+    recommended_correct: bool = False
     found_yellow: bool = False
     found_greeen: bool = False
     found_blue: bool = False
@@ -35,7 +36,7 @@ def read_words_from_file(state: PuzzleState) -> PuzzleState:
     return state
 
 
-def get_recomendation(state: PuzzleState) -> PuzzleState:
+def get_recommendation(state: PuzzleState) -> PuzzleState:
     print("\nEntering Recommendation:")
     pp.pprint(state)
 
@@ -49,7 +50,7 @@ def get_recomendation(state: PuzzleState) -> PuzzleState:
         for invalid_connection in state["invalid_connections"]:
             prompt += f"{', '.join(invalid_connection)}\n"
     prompt += "\n\n"
-    prompt += f"word list: {', '.join(state['words_remaining'])}\n"
+    prompt += f"candidate list: {', '.join(state['words_remaining'])}\n"
 
     print(f"\nPrompt for llm: {prompt}")
 
@@ -60,27 +61,27 @@ def get_recomendation(state: PuzzleState) -> PuzzleState:
     if isinstance(llm_response_json, list):
         print(f"\nLLM response is list")
         state["recommended_words"] = llm_response_json[0]["words"]
-        state["recommeded_connection"] = llm_response_json[0]["connection"]
+        state["recommended_connection"] = llm_response_json[0]["connection"]
     else:
         print(f"\nLLM response is dict")
         state["recommended_words"] = llm_response_json["words"]
-        state["recommeded_connection"] = llm_response_json["connection"]
+        state["recommended_connection"] = llm_response_json["connection"]
 
-    print("\nExiting recomendation:")
+    print("\nExiting recommendation:")
     pp.pprint(state)
 
     return state
 
 
-def apply_recomendation(state: PuzzleState) -> PuzzleState:
-    print("\nEntering apply_recomendation:")
+def apply_recommendation(state: PuzzleState) -> PuzzleState:
+    print("\nEntering apply_recommendation:")
     pp.pprint(state)
 
-    print(f"\nRECOMMENDED WORDS {state['recommended_words']} with connection {state['recommeded_connection']}")
+    print(f"\nRECOMMENDED WORDS {state['recommended_words']} with connection {state['recommended_connection']}")
 
     # update state with found words
-    recommendation_ok = input("Is the recommendation accepted? (y/g/b/p/no): ")
-    match recommendation_ok:
+    found_correct_group = input("Is the recommendation accepted? (y/g/b/p/n): ")
+    match found_correct_group:
         case "y":
             state["found_yellow"] = True
         case "g":
@@ -89,17 +90,33 @@ def apply_recomendation(state: PuzzleState) -> PuzzleState:
             state["found_blue"] = True
         case "p":
             state["found_purple"] = True
-        case "no":
+        case "n":
             state["mistake_count"] += 1
 
     # remove recommended words if we found a solution
-    if recommendation_ok != "no":
+    if found_correct_group != "n":
         # remove from remaining_words the words from recommended_words
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
+        state["recommended_correct"] = True
     else:
         state["invalid_connections"].append(state["recommended_words"])
+        state["recommended_correct"] = False
 
-    print("\nExiting apply_recomendation:")
+    print("\nExiting apply_recommendation:")
+    pp.pprint(state)
+
+    return state
+
+
+def clear_recommendation(state: PuzzleState) -> PuzzleState:
+    print("\nEntering clear_recommendation:")
+    pp.pprint(state)
+
+    state["recommended_words"] = []
+    state["recommended_connection"] = ""
+    state["recommended_correct"] = False
+
+    print("\nExiting clear_recommendation:")
     pp.pprint(state)
 
     return state
@@ -113,18 +130,22 @@ def is_end(state: PuzzleState) -> str:
         print("\nFAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
         return END
     else:
-        return "get_recomendation"
+        return "clear_recommendation"
 
 
 workflow = StateGraph(PuzzleState)
 
 workflow.add_node("read_words_from_file", read_words_from_file)
-workflow.add_node("get_recomendation", get_recomendation)
-workflow.add_node("apply_recomendation", apply_recomendation)
+workflow.add_node("get_recommendation", get_recommendation)
+workflow.add_node("apply_recommendation", apply_recommendation)
+workflow.add_node("clear_recommendation", clear_recommendation)
 
-workflow.add_edge("read_words_from_file", "get_recomendation")
-workflow.add_edge("get_recomendation", "apply_recomendation")
-workflow.add_conditional_edges("apply_recomendation", is_end, {END: END, "get_recomendation": "get_recomendation"})
+workflow.add_edge("read_words_from_file", "get_recommendation")
+workflow.add_edge("get_recommendation", "apply_recommendation")
+workflow.add_edge("clear_recommendation", "get_recommendation")
+workflow.add_conditional_edges(
+    "apply_recommendation", is_end, {END: END, "clear_recommendation": "clear_recommendation"}
+)
 
 workflow.set_entry_point("read_words_from_file")
 
@@ -134,7 +155,8 @@ initial_state = PuzzleState(
     words=[],
     invalid_connections=[],
     recommended_words=[],
-    recommeded_connection="",
+    recommended_connection="",
+    recommended_correct=False,
     found_blue=False,
     found_green=False,
     found_purple=False,
