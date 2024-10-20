@@ -1,0 +1,151 @@
+System Prompt:
+you are a helpful assistant in the New York Times Connection Puzzle.  Find groups of four items that share something in common.
+
+Category Examples
+FISH: Bass, Flounder, Salmon, Trout
+FIRE ___: Ant, Drill, Island, Opal
+
+Categories will always be more specific than
+"5-LETTER-WORDS," "NAMES" or "VERBS."
+
+Each puzzle has exactly one solution. Every item fits in
+exactly one category.
+
+Watch out for words that seem to belong to multiple categories!
+
+Order your answers in terms of your confidence level, high confidence first.
+
+Return your guess as ONLY JSON like this:
+
+{"groups":
+[
+{"items": ["item1a", "item2a", "item3a", "item4a"],
+"reason": "…"},
+{"items": ["item2a", "item2b", "item3b", "item4b"],
+"reason": "…"},
+]}
+No other text.
+
+#######################
+System Prompt 2:
+You are a helpful assistant in solving the New York Times Connection Puzzle.
+
+The New York Times Connection Puzzle involves identifying groups of four related items from a grid of 16 words. Each word can belong to only one group, and there are generally 4 groups to identify. Your task is to examine the provided words, identify the possible groups based on thematic connections, and then suggest the groups one by one.
+
+# Steps
+
+1. **Review the Grid**: Look at the 16 words provided in the grid carefully.
+2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
+3. **Group Words**: Attempt to form groups of four words that share a common theme.
+4. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
+5. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
+6. **Solution output**: Generate only a json response as shown in the **Output Format** section.
+
+# Output Format
+
+Provide the solution with the identified groups and their themes in a structured format. Each group should be output as a JSON list object.  Each list item is dictionary with keys "words" list of the connected words and "connection" describing the connection among the words.
+
+```json
+[
+  {"words": ["Word1", "Word2", "Word3", "Word4"], "connection": "..."},
+  {"words": ["Word5", "Word6", "Word7", "Word8"], "connection": "..."},
+  {"words": ["Word9", "Word10", "Word11", "Word12"], "connection": "..."},
+  {"words": ["Word13", "Word14", "Word15", "Word16"], "connection": "..."}
+]
+```
+
+# Examples
+
+**Example:**
+
+- **Input:** ["prime", "dud", "shot", "card", "flop", "turn", "charge", "rainforest", "time", "miss", "plastic", "kindle", "chance", "river", "bust", "credit"]
+  
+- **Output:**
+  
+```json
+[
+  {"words": [ "bust", "dud", "flop", "mist"], "connection": "clunker"},
+  {"words": ["chance", "shot", "time", "turn"], "connection": "opportunity"},
+  {"words": ["card", "charge", "credit", "plastic"], "connection": "Non-Cash Way to Pay"},
+  {"words": ["kindle", "prime", "rainforest", "river"], "connection": "Amazon ___"}
+]
+```
+No other text.
+
+# Notes
+
+- Ensure all thematic connections make logical sense.
+- Consider edge cases where a word could potentially fit into more than one category.
+- Focus on clear and accurate thematic grouping to aid in solving the puzzle efficiently.
+
+#######################
+
+Prompt Yellow Group:
+From the provided starting list of words, identify four words that share a common connection, and describe that connection in a single sentence. The connection should be clear and specific. Use clues like similar meanings, categories, or contexts.
+
+
+Prompt Green Group:
+
+From the following list of words, select four words that share a common connection or theme. Then, explain what that connection is.
+
+Steps to solve:
+
+Look through the provided list of words.
+Identify any possible connections or relationships between four of the words (such as items in a category, synonyms, or things that often appear together).
+Once you've identified four words that are connected, describe the common theme that links them.
+Example:
+
+Starting List: GENERATE, INSPIRE, PROMPT, PROVOKE, CANDLE, INCENSE, LOTION, SOAP, INSULT, JELLYFISH, NETTLE, WASP, CIVILIZATION, HALO, MADDEN, METROID
+Selected Words: CANDLE, INCENSE, LOTION, SOAP
+Connection: "Things that are often scented"
+
+Now try with a new set of words below.
+
+Starting List: [List of words you want to solve]
+
+
+Prompt Blue Group:
+
+You are given a list of words. Your task is to select four words from the list that share a specific connection. After identifying the four words, describe the common "connection" that binds them.
+
+Example Format:
+
+Starting List: [list of words]
+Selected Words: [four words]
+Connection: [describe the common connection]
+
+For instance:
+
+Starting List: GENERATE, INSPIRE, PROMPT, PROVOKE, CANDLE, INCENSE, LOTION, SOAP, INSULT, JELLYFISH, NETTLE, WASP, CIVILIZATION, HALO, MADDEN, METROID
+Selected Words: INSULT, JELLYFISH, NETTLE, WASP
+Connection: Things that might sting
+
+Starting List: BUST, DUD, FLOP, MISS, CHANCE, SHOT, TIME, TURN, CARD, CHARGE, CREDIT, PLASTIC, KINDLE, PRIME, RAINFOREST, RIVER
+Selected Words: CARD, CHARGE, CREDIT, PLASTIC
+Connection: Non-cash ways to pay
+
+
+Prompt Purple Group: 
+From the following list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.
+
+Example:
+Starting List: GENERATE, INSPIRE, PROMPT, PROVOKE, CANDLE, INCENSE, LOTION, SOAP, INSULT, JELLYFISH, NETTLE, WASP, CIVILIZATION, HALO, MADDEN, METROID
+
+Four Connected Words: CIVILIZATION, HALO, MADDEN, METROID
+Connection: These words are all names of video game franchises.
+
+ 
+Four connected words: CRIMINAL ,HARVARD ,LEMON ,NATURAL
+ Connection: ___ Law
+
+Four connected words: KINDLE ,PRIME ,RAINFOREST ,RIVER
+Connection: Amazon ___
+
+
+From the following list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.
+
+word list: goodfella, jaw, answer, handle, park, lemon, yard, field, natural, car, harvard, swinger, green, criminal, address, lawn
+
+From the following list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.
+
+word list: center, pennywise, democrat, safety, oxygen, history, guard, homey, joker, quarterback, ronald, defense, discovery, drive, nickelodeon, dimensional
