@@ -131,29 +131,33 @@ Please enter the file location: data/word_list2.txt
 
 Words read from file: ['inspire', 'madden', 'jellyfish', 'metroid', 'insult', 'candle', 'halo', 'provoke', 'soap', 'generate', 'incense', 'civilization', 'lotion', 'wasp', 'prompt', 'nettle']
 
-RECOMMENDED WORDS ['prompt', 'provoke', 'insult', 'inspire'] with connection Words related to stimulation or incitement
+RECOMMENDED WORDS ['madden', 'provoke', 'insult', 'incense'] with connection To Anger or Annoy
 Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['prompt', 'provoke', 'insult', 'inspire'] is incorrect
+Recommendation ['madden', 'provoke', 'insult', 'incense'] is incorrect
 
-RECOMMENDED WORDS ['candle', 'lotion', 'soap', 'incense'] with connection Items related to fragrance or cleansing
+RECOMMENDED WORDS ['soap', 'lotion', 'candle', 'incense'] with connection Items that can produce a pleasant scent or are used in personal care
 Is the recommendation accepted? (y/g/b/p/n): g
-Recommendation ['candle', 'lotion', 'soap', 'incense'] is correct
+Recommendation ['soap', 'lotion', 'candle', 'incense'] is correct
 
-RECOMMENDED WORDS ['madden', 'provoke', 'nettle', 'insult'] with connection to annoy or irritate
+RECOMMENDED WORDS ['provoke', 'insult', 'nettle', 'incense'] with connection To Annoy or Irritate
 Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['madden', 'provoke', 'nettle', 'insult'] is incorrect
+Recommendation ['provoke', 'insult', 'nettle', 'incense'] is incorrect
 
-RECOMMENDED WORDS ['generate', 'prompt', 'inspire', 'provoke'] with connection Words related to causing action or reaction
+RECOMMENDED WORDS ['provoke', 'inspire', 'prompt', 'generate'] with connection words related to causing or inducing action or emotion
 Is the recommendation accepted? (y/g/b/p/n): y
-Recommendation ['generate', 'prompt', 'inspire', 'provoke'] is correct
+Recommendation ['provoke', 'inspire', 'prompt', 'generate'] is correct
 
-RECOMMENDED WORDS ['halo', 'metroid', 'civilization', 'madden'] with connection Video Game Titles
+RECOMMENDED WORDS ['wasp', 'halo', 'metroid', 'jellyfish'] with connection video game titles
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['wasp', 'halo', 'metroid', 'jellyfish'] is incorrect
+
+RECOMMENDED WORDS ['madden', 'civilization', 'metroid', 'halo'] with connection Video Game Titles
 Is the recommendation accepted? (y/g/b/p/n): p
-Recommendation ['halo', 'metroid', 'civilization', 'madden'] is correct
+Recommendation ['madden', 'civilization', 'metroid', 'halo'] is correct
 
-RECOMMENDED WORDS ['wasp', 'jellyfish', 'nettle', 'insult'] with connection They all sting or hurt
+RECOMMENDED WORDS ['jellyfish', 'nettle', 'insult', 'wasp'] with connection things that sting
 Is the recommendation accepted? (y/g/b/p/n): b
-Recommendation ['wasp', 'jellyfish', 'nettle', 'insult'] is correct
+Recommendation ['jellyfish', 'nettle', 'insult', 'wasp'] is correct
 SOLVED THE CONNECTION PUZZLE!!!
 
 
@@ -161,14 +165,15 @@ FINAL PUZZLE STATE:
 {   'found_blue': True,
     'found_purple': True,
     'found_yellow': True,
-    'invalid_connections': [   ['prompt', 'provoke', 'insult', 'inspire'],
-                               ['madden', 'provoke', 'nettle', 'insult']],
+    'invalid_connections': [   ['madden', 'provoke', 'insult', 'incense'],
+                               ['provoke', 'insult', 'nettle', 'incense'],
+                               ['wasp', 'halo', 'metroid', 'jellyfish']],
     'llm_temperature': 0.7,
-    'mistake_count': 2,
-    'recommendation_count': 4,
-    'recommended_connection': 'They all sting or hurt',
+    'mistake_count': 3,
+    'recommendation_count': 7,
+    'recommended_connection': 'things that sting',
     'recommended_correct': True,
-    'recommended_words': ['wasp', 'jellyfish', 'nettle', 'insult'],
+    'recommended_words': ['jellyfish', 'nettle', 'insult', 'wasp'],
     'words_remaining': []}
 ```
 
@@ -191,56 +196,55 @@ Please enter the file location: data/word_list3.txt
 
 Words read from file: ['center', 'pennywise', 'democrat', 'safety', 'oxygen', 'history', 'guard', 'homey', 'joker', 'quarterback', 'ronald', 'defense', 'discovery', 'drive', 'nickelodeon', 'dimensional']
 
-RECOMMENDED WORDS ['quarterback', 'center', 'safety', 'guard'] with connection Football positions
-Is the recommendation accepted? (y/g/b/p/n): y
-Recommendation ['quarterback', 'center', 'safety', 'guard'] is correct
-
-RECOMMENDED WORDS ['joker', 'democrat', 'ronald', 'pennywise'] with connection Clown or clown-like characters
+RECOMMENDED WORDS ['quarterback', 'safety', 'defense', 'guard'] with connection Football positions
 Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['joker', 'democrat', 'ronald', 'pennywise'] is incorrect
+Recommendation ['quarterback', 'safety', 'defense', 'guard'] is incorrect
 
-RECOMMENDED WORDS ['ronald', 'nickelodeon', 'discovery', 'homey'] with connection Television Networks/Shows
+RECOMMENDED WORDS ['nickelodeon', 'joker', 'pennywise', 'ronald'] with connection Famous Clowns
 Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['ronald', 'nickelodeon', 'discovery', 'homey'] is incorrect
+Recommendation ['nickelodeon', 'joker', 'pennywise', 'ronald'] is incorrect
 
-RECOMMENDED WORDS ['nickelodeon', 'discovery', 'drive', 'dimensional'] with connection TV Channels
+RECOMMENDED WORDS ['quarterback', 'defense', 'guard', 'safety'] with connection Football Positions
 Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['nickelodeon', 'discovery', 'drive', 'dimensional'] is incorrect
+Recommendation ['quarterback', 'defense', 'guard', 'safety'] is incorrect
 
-RECOMMENDED WORDS ['ronald', 'joker', 'pennywise', 'nickelodeon'] with connection Fictional Characters/Brands Associated with Entertainment
+RECOMMENDED WORDS ['quarterback', 'center', 'dimensional', 'drive'] with connection Positions or terms related to football
 Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['ronald', 'joker', 'pennywise', 'nickelodeon'] is incorrect
+Recommendation ['quarterback', 'center', 'dimensional', 'drive'] is incorrect
 FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
 
 
 FINAL PUZZLE STATE:
 {   'found_blue': False,
     'found_purple': False,
-    'found_yellow': True,
-    'invalid_connections': [   ['joker', 'democrat', 'ronald', 'pennywise'],
-                               ['ronald', 'nickelodeon', 'discovery', 'homey'],
-                               [   'nickelodeon',
-                                   'discovery',
-                                   'drive',
-                                   'dimensional'],
-                               ['ronald', 'joker', 'pennywise', 'nickelodeon']],
+    'found_yellow': False,
+    'invalid_connections': [   ['quarterback', 'safety', 'defense', 'guard'],
+                               ['nickelodeon', 'joker', 'pennywise', 'ronald'],
+                               ['quarterback', 'defense', 'guard', 'safety'],
+                               [   'quarterback',
+                                   'center',
+                                   'dimensional',
+                                   'drive']],
     'llm_temperature': 0.7,
     'mistake_count': 4,
-    'recommendation_count': 2,
-    'recommended_connection': 'Fictional Characters/Brands Associated with '
-                              'Entertainment',
+    'recommendation_count': 4,
+    'recommended_connection': 'Positions or terms related to football',
     'recommended_correct': False,
-    'recommended_words': ['ronald', 'joker', 'pennywise', 'nickelodeon'],
-    'words_remaining': [   'ronald',
-                           'dimensional',
-                           'history',
-                           'democrat',
-                           'joker',
-                           'pennywise',
+    'recommended_words': ['quarterback', 'center', 'dimensional', 'drive'],
+    'words_remaining': [   'drive',
+                           'safety',
                            'discovery',
-                           'drive',
-                           'nickelodeon',
-                           'defense',
                            'homey',
-                           'oxygen']}
+                           'joker',
+                           'defense',
+                           'dimensional',
+                           'democrat',
+                           'history',
+                           'center',
+                           'quarterback',
+                           'pennywise',
+                           'ronald',
+                           'oxygen',
+                           'guard',
+                           'nickelodeon']}
 ```
