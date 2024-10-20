@@ -86,7 +86,7 @@ REGENERATE_MESSAGE_PART1 = """
 # Remaining words: [list the remaining words]
 # Current recommended set (incorrect): [list the 4 words]
 REGNERTE_MESSAGE_PART2 = """
-    Please suggest an alternative set of 4 words based on the remaining words and correct the errors in the current set. 
+    Please suggest a completely new set of 4 words based on the remaining words and correct the errors in the current set and do not use any know invalid groups. 
     """
 
 
@@ -98,6 +98,13 @@ def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
     prompt = REGENERATE_MESSAGE_PART1
     prompt += f"\nRemaining words: {', '.join(state['words_remaining'])}\n"
     prompt += f"\nCurrent recommended set (incorrect): {', '.join(state['recommended_words'])}\n"
+    if len(state["invalid_connections"]) > 0:
+        prompt += "\n\nDo not include word groups that are known to be invalid."
+        prompt += "\n"
+        prompt += "Invalid word groups:\n"
+        for invalid_connection in state["invalid_connections"]:
+            prompt += f"{', '.join(invalid_connection)}\n"
+
     prompt += REGNERTE_MESSAGE_PART2
 
     prompt = HumanMessage(prompt)
@@ -188,47 +195,48 @@ def is_end(state: PuzzleState) -> str:
         return "regenerate_recommendation"
 
 
-workflow = StateGraph(PuzzleState)
+if __name__ == "__main__":
+    workflow = StateGraph(PuzzleState)
 
-workflow.add_node("read_words_from_file", read_words_from_file)
-workflow.add_node("get_recommendation", get_recommendation)
-workflow.add_node("regenerate_recommendation", regenerate_recommendation)
-workflow.add_node("apply_recommendation", apply_recommendation)
-workflow.add_node("clear_recommendation", clear_recommendation)
+    workflow.add_node("read_words_from_file", read_words_from_file)
+    workflow.add_node("get_recommendation", get_recommendation)
+    workflow.add_node("regenerate_recommendation", regenerate_recommendation)
+    workflow.add_node("apply_recommendation", apply_recommendation)
+    workflow.add_node("clear_recommendation", clear_recommendation)
 
-workflow.add_edge("read_words_from_file", "get_recommendation")
-workflow.add_edge("get_recommendation", "apply_recommendation")
-workflow.add_edge("clear_recommendation", "get_recommendation")
-workflow.add_edge("regenerate_recommendation", "apply_recommendation")
-workflow.add_conditional_edges(
-    "apply_recommendation",
-    is_end,
-    {
-        END: END,
-        "clear_recommendation": "clear_recommendation",
-        "regenerate_recommendation": "regenerate_recommendation",
-    },
-)
+    workflow.add_edge("read_words_from_file", "get_recommendation")
+    workflow.add_edge("get_recommendation", "apply_recommendation")
+    workflow.add_edge("clear_recommendation", "get_recommendation")
+    workflow.add_edge("regenerate_recommendation", "apply_recommendation")
+    workflow.add_conditional_edges(
+        "apply_recommendation",
+        is_end,
+        {
+            END: END,
+            "clear_recommendation": "clear_recommendation",
+            "regenerate_recommendation": "regenerate_recommendation",
+        },
+    )
 
-workflow.set_entry_point("read_words_from_file")
+    workflow.set_entry_point("read_words_from_file")
 
-app = workflow.compile()
+    app = workflow.compile()
 
-initial_state = PuzzleState(
-    words=[],
-    invalid_connections=[],
-    recommended_words=[],
-    recommended_connection="",
-    recommended_correct=False,
-    found_blue=False,
-    found_green=False,
-    found_purple=False,
-    found_yellow=False,
-    mistake_count=0,
-    recommendation_count=0,
-    llm_temperature=1.0,
-)
+    initial_state = PuzzleState(
+        words_remaining=[],
+        invalid_connections=[],
+        recommended_words=[],
+        recommended_connection="",
+        recommended_correct=False,
+        found_blue=False,
+        found_green=False,
+        found_purple=False,
+        found_yellow=False,
+        mistake_count=0,
+        recommendation_count=0,
+        llm_temperature=0.7,
+    )
 
-result = app.invoke(initial_state)
+    result = app.invoke(initial_state)
 
-pp.pprint(result)
+    pp.pprint(result)
