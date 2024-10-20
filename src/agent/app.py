@@ -4,13 +4,12 @@ import numpy as np
 
 from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
+from langchain_core.messages import HumanMessage
 
-from tools import read_file_to_word_list, HUMAN_MESSAGE_BASE, ask_llm_for_solution
+from tools import read_file_to_word_list, ask_llm_for_solution
 from utils import chunk_words, flatten_list
 
 pp = pprint.PrettyPrinter(indent=4)
-
-prompt_template = HUMAN_MESSAGE_BASE.content
 
 
 class PuzzleState(TypedDict):
@@ -36,6 +35,11 @@ def read_words_from_file(state: PuzzleState) -> PuzzleState:
     return state
 
 
+HUMAN_MESSAGE_BASE = """
+    From the following candidate list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.      
+    """
+
+
 def get_recommendation(state: PuzzleState) -> PuzzleState:
     print("\nEntering Recommendation:")
     pp.pprint(state)
@@ -43,7 +47,7 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     state["recommendation_count"] += 1
 
     # build prompt for llm
-    prompt = prompt_template
+    prompt = HUMAN_MESSAGE_BASE
     if len(state["invalid_connections"]) > 0:
         prompt += " Do not include word groups that are known to be invalid."
         prompt += "\n\n"
@@ -53,7 +57,9 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     prompt += "\n\n"
     prompt += f"candidate list: {', '.join(state['words_remaining'])}\n"
 
-    print(f"\nPrompt for llm: {prompt}")
+    prompt = HumanMessage(prompt)
+
+    print(f"\nPrompt for llm: {prompt.content}")
 
     # get recommendation from llm
     llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
@@ -94,7 +100,9 @@ def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
     prompt += f"\nCurrent recommended set (incorrect): {', '.join(state['recommended_words'])}\n"
     prompt += REGNERTE_MESSAGE_PART2
 
-    print(f"\nPrompt for llm: {prompt}")
+    prompt = HumanMessage(prompt)
+
+    print(f"\nPrompt for llm: {prompt.content}")
 
     # get recommendation from llm
     llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])

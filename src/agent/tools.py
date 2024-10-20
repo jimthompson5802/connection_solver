@@ -87,12 +87,6 @@ SYSTEM_MESSAGE = SystemMessage(
     """
 )
 
-HUMAN_MESSAGE_BASE = HumanMessage(
-    """
-    From the following candidate list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.      
-    """
-)
-
 
 def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
     """
