@@ -75,18 +75,39 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
 
 
 REGENERATE_MESSAGE_PART1 = """
-    I am working on solving a word grouping puzzle where I need to select 4 words that fit into a specific category from a list of remaining words. The current recommended set of 4 words is incorrect, with one or more words being wrong. Please help me regenerate a new set of 4 words that better fits the category. Below is the relevant information:
+    I am working on solving a word grouping puzzle where I need to select 4 words that fit into a specific category from a list of remaining words. The current recommended set of 4 words is incorrect, with one or more words being wrong. Please help me regenerate a new set of 4 words that better fits the category. Below is the relevant information:\n
     """
 # Remaining words: [list the remaining words]
 # Current recommended set (incorrect): [list the 4 words]
 REGNERTE_MESSAGE_PART2 = """
-    Please suggest an alternative set of 4 words based on the remaining options and correct the errors in the current set. 
+    Please suggest an alternative set of 4 words based on the remaining words and correct the errors in the current set. 
     """
 
 
 def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
     print("\nEntering regenerate recommendation:")
     pp.pprint(state)
+
+    # build prompt for llm
+    prompt = REGENERATE_MESSAGE_PART1
+    prompt += f"\nRemaining words: {', '.join(state['words_remaining'])}\n"
+    prompt += f"\nCurrent recommended set (incorrect): {', '.join(state['recommended_words'])}\n"
+    prompt += REGNERTE_MESSAGE_PART2
+
+    print(f"\nPrompt for llm: {prompt}")
+
+    # get recommendation from llm
+    llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
+
+    llm_response_json = json.loads(llm_response.content)
+    if isinstance(llm_response_json, list):
+        print(f"\nLLM response is list")
+        state["recommended_words"] = llm_response_json[0]["words"]
+        state["recommended_connection"] = llm_response_json[0]["connection"]
+    else:
+        print(f"\nLLM response is dict")
+        state["recommended_words"] = llm_response_json["words"]
+        state["recommended_connection"] = llm_response_json["connection"]
 
     print("\nExiting regenerate recommendation:")
     pp.pprint(state)
@@ -144,6 +165,9 @@ def clear_recommendation(state: PuzzleState) -> PuzzleState:
 
 
 def is_end(state: PuzzleState) -> str:
+    print("\nEntering is_end:")
+    pp.pprint(state)
+
     if len(state["words_remaining"]) == 0:
         print("\nSOLVED THE CONNECTION PUZZLE!!!")
         return END
@@ -153,28 +177,28 @@ def is_end(state: PuzzleState) -> str:
     elif state["recommended_correct"]:
         return "clear_recommendation"
     else:
-        return "clear_recommendation"
+        return "regenerate_recommendation"
 
 
 workflow = StateGraph(PuzzleState)
 
 workflow.add_node("read_words_from_file", read_words_from_file)
 workflow.add_node("get_recommendation", get_recommendation)
-# workflow.add_node("regenerate_recommendation", regenerate_recommendation)
+workflow.add_node("regenerate_recommendation", regenerate_recommendation)
 workflow.add_node("apply_recommendation", apply_recommendation)
 workflow.add_node("clear_recommendation", clear_recommendation)
 
 workflow.add_edge("read_words_from_file", "get_recommendation")
 workflow.add_edge("get_recommendation", "apply_recommendation")
 workflow.add_edge("clear_recommendation", "get_recommendation")
-# workflow.add_edge("regenerate_recommendation", "apply_recommendation")
+workflow.add_edge("regenerate_recommendation", "apply_recommendation")
 workflow.add_conditional_edges(
     "apply_recommendation",
     is_end,
     {
         END: END,
         "clear_recommendation": "clear_recommendation",
-        # "regenerate_recommendation": "regenerate_recommendation",
+        "regenerate_recommendation": "regenerate_recommendation",
     },
 )
 
