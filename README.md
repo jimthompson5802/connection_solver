@@ -60,6 +60,19 @@ Agent's workflow defintion:
 Diagram of the agent's workflow:
 ![Connection Solver Workflow](./images/connection_solver_graph.png)
 
+## Repo Contents
+Major contents of the repo:
+| File/Folder | Description |
+| --- | --- |
+| `src/agent/app.py` | Main entry point for the agent.  Define workflow processing steps (aka graph nodes), workflow transitions (aka graph edges) and `PuzzleState` data structure.|
+| `src/agent/tools.py` | Tools used by the agent: retrieve puzzle setup, interact with user and interface to OpenAI LLM|
+| `src/agent/utils.py` | Utilities to be used by the agent. |
+| `src/agent/tests/` | Unit tests for the agent. |
+| `src/agent_testbed/` | Directory containing technical proof-of-concept code. |
+| `data/` | Directory containing past NYT Connection Puzzles for testing. |
+| `prompt_testbed/` | Directory containing sample prompts used in testing with the OpenAI Playground. |
+
+
 
 ## Sample Runs
 
