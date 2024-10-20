@@ -4,9 +4,61 @@ Experimental project to solve the [NYT Connection puzzles](https://www.nytimes.c
 * [`langchain`'s OpenAI LLM abstraction layer](https://python.langchain.com/v0.2/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html#chatopenai) to interact with OpenAI's `gpt-4o` model
 * [`langgraph`'s stateful orchestration framework](https://langchain-ai.github.io/langgraph/tutorials/multi_agent/multi-agent-collaboration/#multi-agent-network) to manage the agent's workflow
 
-## Connection Puzzle Description
-Connections is a word game that challenges players to find themes between words. The user is presented with 16 words and must create groups of four items that share something in common. For example: Tropical fruit: banana, mango, pineapple, guave. 
+Historical NYT Connection Puzzles were used in testing the agent.  Past puzzles can be found [here](https://word.tips/todays-nyt-connections-answers/).
 
+## Connection Puzzle Description
+Connections is a word game that challenges players to find themes between words. The user is presented with 16 words and must create groups of four items that share something in common. For example: Tropical fruit: banana, mango, pineapple, guava.
+
+## Solution Strategy
+The agent uses the `PuzzleState` class to manage the agent's state and controls the agent's workflow. 
+```python
+class PuzzleState(TypedDict):
+    words_remaining: List[str] = []
+    invalid_connections: List[List[str]] = []
+    recommended_words: List[str] = []
+    recommended_connection: str = ""
+    recommended_correct: bool = False
+    found_yellow: bool = False
+    found_greeen: bool = False
+    found_blue: bool = False
+    found_purple: bool = False
+    mistake_count: int = 0
+    recommendation_count: int = 0
+    llm_temperature: float = 1.0
+```
+The attributes `words_remaining` and `mistake_count` are used to determine when to terminate the agent.  When a correct group of 4 words are found, these words are removed from `words_remaining`.  If a mistake is made, then `mistake_count` is incremented.  The agent is terminated when either `words_reamaining` becomes empty or  `mistake_count` exceeds a threshold.
+
+Agent's workflow defintion:
+```python
+    workflow = StateGraph(PuzzleState)
+
+    workflow.add_node("read_words_from_file", read_words_from_file)
+    workflow.add_node("get_recommendation", get_recommendation)
+    workflow.add_node("regenerate_recommendation", regenerate_recommendation)
+    workflow.add_node("apply_recommendation", apply_recommendation)
+    workflow.add_node("clear_recommendation", clear_recommendation)
+
+    workflow.add_edge("read_words_from_file", "get_recommendation")
+    workflow.add_edge("get_recommendation", "apply_recommendation")
+    workflow.add_edge("clear_recommendation", "get_recommendation")
+    workflow.add_edge("regenerate_recommendation", "apply_recommendation")
+    workflow.add_conditional_edges(
+        "apply_recommendation",
+        is_end,
+        {
+            END: END,
+            "clear_recommendation": "clear_recommendation",
+            "regenerate_recommendation": "regenerate_recommendation",
+        },
+    )
+
+    workflow.set_entry_point("read_words_from_file")
+
+    app = workflow.compile()
+```
+
+Diagram of the agent's workflow:
+![Connection Solver Workflow](./images/connection_solver_graph.png)
 
 
 ## Sample Runs
