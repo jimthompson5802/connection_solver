@@ -10,7 +10,7 @@ with open("/openai/api_key.json") as f:
 api_key = config["key"]
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 def read_file_to_word_list():
@@ -123,6 +123,7 @@ def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
     # Invoke the LLM
     response = llm.invoke(conversation)
 
-    logger.info(f"Exiting ask_llm_for_solution {response.content}")
+    logger.info("Exiting ask_llm_for_solution")
+    logger.debug(f"exiting ask_llm_for_solution response {response.content}")
 
     return response
