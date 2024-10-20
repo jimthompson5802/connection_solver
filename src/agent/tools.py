@@ -93,17 +93,6 @@ HUMAN_MESSAGE_BASE = HumanMessage(
     """
 )
 
-HUMAN_ERROR_ANALYSIS_MESSAGE = HumanMessage(
-    """
-    I am working on solving a word grouping puzzle where I need to select 4 words that fit into a specific category from a list of remaining words. The current recommended set of 4 words is incorrect, with one or more words being wrong. Please help me regenerate a new set of 4 words that better fits the category. Below is the relevant information:
-    """
-    # Remaining words: [list the remaining words]
-    # Current recommended set (incorrect): [list the 4 words]
-    """
-    Please suggest an alternative set of 4 words based on the remaining options and correct the errors in the current set. 
-    """
-)
-
 
 def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
     """
