@@ -1,5 +1,6 @@
 import pprint
 import json
+import numpy as np
 
 from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
@@ -23,6 +24,7 @@ class PuzzleState(TypedDict):
     found_purple: bool = False
     mistake_count: int = 0
     recommendation_count: int = 0
+    llm_temperature: float = 1.0
 
 
 def read_words_from_file(state: PuzzleState) -> PuzzleState:
@@ -43,7 +45,7 @@ def get_recomendation(state: PuzzleState) -> PuzzleState:
     prompt = prompt_template
     if len(state["invalid_connections"]) > 0:
         prompt += "\n\n"
-        prompt += "Invalid group of words:\n"
+        prompt += "Invalid word groups:\n"
         for invalid_connection in state["invalid_connections"]:
             prompt += f"{', '.join(invalid_connection)}\n"
     prompt += "\n\n"
@@ -52,14 +54,15 @@ def get_recomendation(state: PuzzleState) -> PuzzleState:
     print(f"\nPrompt for llm: {prompt}")
 
     # get recommendation from llm
-    llm_response = ask_llm_for_solution(prompt)
-    print(f"\nLLM response: {llm_response}")
+    llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
 
     llm_response_json = json.loads(llm_response.content)
     if isinstance(llm_response_json, list):
+        print(f"\nLLM response is list")
         state["recommended_words"] = llm_response_json[0]["words"]
         state["recommeded_connection"] = llm_response_json[0]["connection"]
     else:
+        print(f"\nLLM response is dict")
         state["recommended_words"] = llm_response_json["words"]
         state["recommeded_connection"] = llm_response_json["connection"]
 
@@ -138,6 +141,7 @@ initial_state = PuzzleState(
     found_yellow=False,
     mistake_count=0,
     recommendation_count=0,
+    llm_temperature=1.0,
 )
 
 result = app.invoke(initial_state)

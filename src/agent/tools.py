@@ -35,7 +35,7 @@ SYSTEM_MESSAGE = SystemMessage(
     1. **Review the Grid**: Look at the 16 words provided in the grid carefully.
     2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
     3. **Group Words**: Attempt to form groups of four words that share a common theme.
-    4. **Avoid invalid groups**: Avoid groups that are known to be invalid.
+    4. **Avoid invalid groups**: Do not include word groups that are known to be invalid.
     5. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
     6. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
     7. **Solution output**: Generate only a json response as shown in the **Output Format** section.
@@ -83,14 +83,25 @@ HUMAN_MESSAGE_BASE = HumanMessage(
     """
 )
 
+HUMAN_ERROR_ANALYSIS_MESSAGE = HumanMessage(
+    """
+    I am working on solving a word grouping puzzle where I need to select 4 words that fit into a specific category from a list of remaining words. The current recommended set of 4 words is incorrect, with one or more words being wrong. Please help me regenerate a new set of 4 words that better fits the category. Below is the relevant information:
+    """
+    # Remaining words: [list the remaining words]
+    # Current recommended set (incorrect): [list the 4 words]
+    """
+    Please suggest an alternative set of 4 words based on the remaining options and correct the errors in the current set. 
+    """
+)
 
-def ask_llm_for_solution(prompt):
+
+def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
     # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
     llm = ChatOpenAI(
         api_key=api_key,
         model="gpt-4o",
-        temperature=1.0,
-        max_tokens=4096,
+        temperature=temperature,
+        max_tokens=max_tokens,
         model_kwargs={"response_format": {"type": "json_object"}},
     )
 
