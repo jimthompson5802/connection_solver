@@ -39,6 +39,7 @@ def read_words_from_file(state: PuzzleState) -> PuzzleState:
     words = read_file_to_word_list()
     state["words_remaining"] = words
 
+    print(f"\nWords read from file: {words}")
     logger.info(f"\nWords read from file: {words}")
     logger.debug(f"Exiting read_words_from_file State: {pp.pformat(state)}")
 

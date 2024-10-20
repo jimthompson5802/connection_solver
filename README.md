@@ -1,6 +1,13 @@
 # Connection Solver Virtual Assistant Testbed
 
-Experimental project to determine how to use GPT4 to solve the NYT Connection puzzles
+Experimental project to solve the [NYT Connection puzzles](https://www.nytimes.com/games/connections) using agentic workflow based on the [`langchain` ecosystem](https://python.langchain.com/v0.2/docs/introduction/).  In particular used:
+* [`langchain`'s OpenAI LLM abstraction layer](https://python.langchain.com/v0.2/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html#chatopenai) to interact with OpenAI's `gpt-4o` model
+* [`langgraph`'s stateful orchestration framework](https://langchain-ai.github.io/langgraph/tutorials/multi_agent/multi-agent-collaboration/#multi-agent-network) to manage the agent's workflow
+
+## Connection Puzzle Description
+Connections is a word game that challenges players to find themes between words. The user is presented with 16 words and must create groups of four items that share something in common. For example: Tropical fruit: banana, mango, pineapple, guave. 
+
+
 
 ## Sample Runs
 
@@ -17,24 +24,26 @@ Experimental project to determine how to use GPT4 to solve the NYT Connection pu
 ```
 **Example Run**
 ```text
-$ /usr/local/bin/python /workspaces/connection_solver/src/agent/app.py
+/usr/local/bin/python /workspaces/connection_solver/src/agent/app.py
 Please enter the file location: data/word_list5.txt
 
-RECOMMENDED WORDS ['blanket', 'throw', 'sham', 'sheet'] with connection Bedding items
+Words read from file: ['uphold', 'discard', 'honor', 'energy', 'state', 'play', 'justice', 'labor', 'pass', 'fulfill', 'draw', 'keep', 'blanket', 'sham', 'sheet', 'throw']
+
+RECOMMENDED WORDS ['blanket', 'sheet', 'sham', 'throw'] with connection bedding items
 Is the recommendation accepted? (y/g/b/p/n): g
-Recommendation ['blanket', 'throw', 'sham', 'sheet'] is correct
+Recommendation ['blanket', 'sheet', 'sham', 'throw'] is correct
 
-RECOMMENDED WORDS ['keep', 'uphold', 'honor', 'fulfill'] with connection Actions associated with maintaining or supporting something
-Is the recommendation accepted? (y/g/b/p/n): y
-Recommendation ['keep', 'uphold', 'honor', 'fulfill'] is correct
-
-RECOMMENDED WORDS ['state', 'labor', 'energy', 'justice'] with connection Departments of the US Government
-Is the recommendation accepted? (y/g/b/p/n): p
-Recommendation ['state', 'labor', 'energy', 'justice'] is correct
-
-RECOMMENDED WORDS ['discard', 'play', 'pass', 'draw'] with connection Card Game Actions
+RECOMMENDED WORDS ['play', 'discard', 'draw', 'pass'] with connection Card game actions
 Is the recommendation accepted? (y/g/b/p/n): b
-Recommendation ['discard', 'play', 'pass', 'draw'] is correct
+Recommendation ['play', 'discard', 'draw', 'pass'] is correct
+
+RECOMMENDED WORDS ['honor', 'uphold', 'keep', 'fulfill'] with connection ways to maintain or adhere to something (e.g., a promise, duty)
+Is the recommendation accepted? (y/g/b/p/n): y
+Recommendation ['honor', 'uphold', 'keep', 'fulfill'] is correct
+
+RECOMMENDED WORDS ['energy', 'state', 'justice', 'labor'] with connection Departments of the US Government
+Is the recommendation accepted? (y/g/b/p/n): p
+Recommendation ['energy', 'state', 'justice', 'labor'] is correct
 SOLVED THE CONNECTION PUZZLE!!!
 
 
@@ -46,9 +55,9 @@ FINAL PUZZLE STATE:
     'llm_temperature': 0.7,
     'mistake_count': 0,
     'recommendation_count': 4,
-    'recommended_connection': 'Card Game Actions',
+    'recommended_connection': 'Departments of the US Government',
     'recommended_correct': True,
-    'recommended_words': ['discard', 'play', 'pass', 'draw'],
+    'recommended_words': ['energy', 'state', 'justice', 'labor'],
     'words_remaining': []}
 ``` 
 
@@ -65,28 +74,34 @@ FINAL PUZZLE STATE:
 ```
 **Example Run**
 ```text
-$ /usr/local/bin/python /workspaces/connection_solver/src/agent/app.py
+/usr/local/bin/python /workspaces/connection_solver/src/agent/app.py
 Please enter the file location: data/word_list2.txt
 
-RECOMMENDED WORDS ['soap', 'lotion', 'incense', 'candle'] with connection Items used for fragrance or skincare
-Is the recommendation accepted? (y/g/b/p/n): g
-Recommendation ['soap', 'lotion', 'incense', 'candle'] is correct
+Words read from file: ['inspire', 'madden', 'jellyfish', 'metroid', 'insult', 'candle', 'halo', 'provoke', 'soap', 'generate', 'incense', 'civilization', 'lotion', 'wasp', 'prompt', 'nettle']
 
-RECOMMENDED WORDS ['wasp', 'jellyfish', 'nettle', 'provoke'] with connection They all sting or cause irritation.
+RECOMMENDED WORDS ['prompt', 'provoke', 'insult', 'inspire'] with connection Words related to stimulation or incitement
 Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['wasp', 'jellyfish', 'nettle', 'provoke'] is incorrect
+Recommendation ['prompt', 'provoke', 'insult', 'inspire'] is incorrect
 
-RECOMMENDED WORDS ['generate', 'prompt', 'inspire', 'provoke'] with connection Words related to causing a reaction or starting something
+RECOMMENDED WORDS ['candle', 'lotion', 'soap', 'incense'] with connection Items related to fragrance or cleansing
+Is the recommendation accepted? (y/g/b/p/n): g
+Recommendation ['candle', 'lotion', 'soap', 'incense'] is correct
+
+RECOMMENDED WORDS ['madden', 'provoke', 'nettle', 'insult'] with connection to annoy or irritate
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['madden', 'provoke', 'nettle', 'insult'] is incorrect
+
+RECOMMENDED WORDS ['generate', 'prompt', 'inspire', 'provoke'] with connection Words related to causing action or reaction
 Is the recommendation accepted? (y/g/b/p/n): y
 Recommendation ['generate', 'prompt', 'inspire', 'provoke'] is correct
 
-RECOMMENDED WORDS ['metroid', 'madden', 'halo', 'civilization'] with connection Video Game Series
+RECOMMENDED WORDS ['halo', 'metroid', 'civilization', 'madden'] with connection Video Game Titles
 Is the recommendation accepted? (y/g/b/p/n): p
-Recommendation ['metroid', 'madden', 'halo', 'civilization'] is correct
+Recommendation ['halo', 'metroid', 'civilization', 'madden'] is correct
 
-RECOMMENDED WORDS ['insult', 'jellyfish', 'wasp', 'nettle'] with connection Things that sting
+RECOMMENDED WORDS ['wasp', 'jellyfish', 'nettle', 'insult'] with connection They all sting or hurt
 Is the recommendation accepted? (y/g/b/p/n): b
-Recommendation ['insult', 'jellyfish', 'wasp', 'nettle'] is correct
+Recommendation ['wasp', 'jellyfish', 'nettle', 'insult'] is correct
 SOLVED THE CONNECTION PUZZLE!!!
 
 
@@ -94,13 +109,14 @@ FINAL PUZZLE STATE:
 {   'found_blue': True,
     'found_purple': True,
     'found_yellow': True,
-    'invalid_connections': [['wasp', 'jellyfish', 'nettle', 'provoke']],
+    'invalid_connections': [   ['prompt', 'provoke', 'insult', 'inspire'],
+                               ['madden', 'provoke', 'nettle', 'insult']],
     'llm_temperature': 0.7,
-    'mistake_count': 1,
+    'mistake_count': 2,
     'recommendation_count': 4,
-    'recommended_connection': 'Things that sting',
+    'recommended_connection': 'They all sting or hurt',
     'recommended_correct': True,
-    'recommended_words': ['insult', 'jellyfish', 'wasp', 'nettle'],
+    'recommended_words': ['wasp', 'jellyfish', 'nettle', 'insult'],
     'words_remaining': []}
 ```
 
@@ -121,52 +137,58 @@ FINAL PUZZLE STATE:
 /usr/local/bin/python /workspaces/connection_solver/src/agent/app.py
 Please enter the file location: data/word_list3.txt
 
-RECOMMENDED WORDS ['quarterback', 'safety', 'center', 'defense'] with connection Football positions
-Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['quarterback', 'safety', 'center', 'defense'] is incorrect
+Words read from file: ['center', 'pennywise', 'democrat', 'safety', 'oxygen', 'history', 'guard', 'homey', 'joker', 'quarterback', 'ronald', 'defense', 'discovery', 'drive', 'nickelodeon', 'dimensional']
 
-RECOMMENDED WORDS ['quarterback', 'safety', 'guard', 'defense'] with connection Football Positions
-Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['quarterback', 'safety', 'guard', 'defense'] is incorrect
+RECOMMENDED WORDS ['quarterback', 'center', 'safety', 'guard'] with connection Football positions
+Is the recommendation accepted? (y/g/b/p/n): y
+Recommendation ['quarterback', 'center', 'safety', 'guard'] is correct
 
-RECOMMENDED WORDS ['quarterback', 'center', 'guard', 'joker'] with connection Positions and roles in sports and entertainment
+RECOMMENDED WORDS ['joker', 'democrat', 'ronald', 'pennywise'] with connection Clown or clown-like characters
 Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['quarterback', 'center', 'guard', 'joker'] is incorrect
+Recommendation ['joker', 'democrat', 'ronald', 'pennywise'] is incorrect
 
-RECOMMENDED WORDS ['nickelodeon', 'oxygen', 'homey', 'discovery'] with connection Television Channels
+RECOMMENDED WORDS ['ronald', 'nickelodeon', 'discovery', 'homey'] with connection Television Networks/Shows
 Is the recommendation accepted? (y/g/b/p/n): n
-Recommendation ['nickelodeon', 'oxygen', 'homey', 'discovery'] is incorrect
+Recommendation ['ronald', 'nickelodeon', 'discovery', 'homey'] is incorrect
+
+RECOMMENDED WORDS ['nickelodeon', 'discovery', 'drive', 'dimensional'] with connection TV Channels
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['nickelodeon', 'discovery', 'drive', 'dimensional'] is incorrect
+
+RECOMMENDED WORDS ['ronald', 'joker', 'pennywise', 'nickelodeon'] with connection Fictional Characters/Brands Associated with Entertainment
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['ronald', 'joker', 'pennywise', 'nickelodeon'] is incorrect
 FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
 
 
 FINAL PUZZLE STATE:
 {   'found_blue': False,
     'found_purple': False,
-    'found_yellow': False,
-    'invalid_connections': [   ['quarterback', 'safety', 'center', 'defense'],
-                               ['quarterback', 'safety', 'guard', 'defense'],
-                               ['quarterback', 'center', 'guard', 'joker'],
-                               ['nickelodeon', 'oxygen', 'homey', 'discovery']],
+    'found_yellow': True,
+    'invalid_connections': [   ['joker', 'democrat', 'ronald', 'pennywise'],
+                               ['ronald', 'nickelodeon', 'discovery', 'homey'],
+                               [   'nickelodeon',
+                                   'discovery',
+                                   'drive',
+                                   'dimensional'],
+                               ['ronald', 'joker', 'pennywise', 'nickelodeon']],
     'llm_temperature': 0.7,
     'mistake_count': 4,
-    'recommendation_count': 1,
-    'recommended_connection': 'Television Channels',
+    'recommendation_count': 2,
+    'recommended_connection': 'Fictional Characters/Brands Associated with '
+                              'Entertainment',
     'recommended_correct': False,
-    'recommended_words': ['nickelodeon', 'oxygen', 'homey', 'discovery'],
+    'recommended_words': ['ronald', 'joker', 'pennywise', 'nickelodeon'],
     'words_remaining': [   'ronald',
-                           'pennywise',
-                           'joker',
-                           'oxygen',
-                           'homey',
-                           'center',
                            'dimensional',
-                           'safety',
-                           'democrat',
-                           'drive',
-                           'quarterback',
-                           'discovery',
                            'history',
-                           'defense',
+                           'democrat',
+                           'joker',
+                           'pennywise',
+                           'discovery',
+                           'drive',
                            'nickelodeon',
-                           'guard']}
+                           'defense',
+                           'homey',
+                           'oxygen']}
 ```
