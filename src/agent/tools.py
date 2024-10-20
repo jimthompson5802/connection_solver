@@ -10,7 +10,8 @@ api_key = config["key"]
 
 def read_file_to_word_list():
     """
-    Reads a file and returns a list of words separated by commas.
+    Reads a file and returns a list of words separated by commas on the first line of the file.
+    Remainder of the file contains the correct word groupings and is ignored.
 
     Prompts the user to enter the file location, reads the file, and splits its contents by commas.
     Strips any leading or trailing whitespace from each word.
@@ -21,7 +22,7 @@ def read_file_to_word_list():
     file_location = input("Please enter the file location: ")
     try:
         with open(file_location, "r") as file:
-            contents = file.read()
+            contents = file.readline()
             words = contents.split(",")
             words = [word.strip() for word in words]
             return words
