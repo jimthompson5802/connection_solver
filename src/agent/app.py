@@ -65,6 +65,7 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
         for invalid_connection in state["invalid_connections"]:
             prompt += f"{', '.join(invalid_connection)}\n"
     prompt += "\n\n"
+    # scramble the remaining words for more robust group selection
     random.shuffle(state["words_remaining"])
     prompt += f"candidate list: {', '.join(state['words_remaining'])}\n"
 
@@ -107,7 +108,7 @@ def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
 
     # build prompt for llm
     prompt = REGENERATE_MESSAGE_PART1
-    # scramble the remaining words
+    # scramble the remaining words for more robust group selection
     random.shuffle(state["words_remaining"])
     prompt += f"\nRemaining words: {', '.join(state['words_remaining'])}\n"
     prompt += f"\nCurrent recommended set (incorrect): {', '.join(state['recommended_words'])}\n"
