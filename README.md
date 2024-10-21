@@ -253,7 +253,7 @@ FINAL PUZZLE STATE:
 ```
 
 ### Solved Connection Puzzle 4
-This puzzle is defined by the image from the NYT Connection Puzzle grid for October 20, 2024.
+This puzzle is defined by the image from the NYT Connection Puzzle grid for October 20, 2024.  A screenshot of the NYT online Connection Puzzle is saved to disk.  The agent reads the words from the image and solves the puzzle.
 
 **Puzzle Grid**
 
