@@ -33,16 +33,29 @@ Agent's workflow defintion:
 ```python
     workflow = StateGraph(PuzzleState)
 
+    workflow.add_node("get_input_source", get_input_source)
     workflow.add_node("read_words_from_file", read_words_from_file)
+    workflow.add_node("read_words_from_image", read_words_from_image)
     workflow.add_node("get_recommendation", get_recommendation)
     workflow.add_node("regenerate_recommendation", regenerate_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
     workflow.add_node("clear_recommendation", clear_recommendation)
 
+    workflow.add_conditional_edges(
+        "get_input_source",
+        route_input_source,
+        {
+            "read_words_from_file": "read_words_from_file",
+            "read_words_from_image": "read_words_from_image",
+        },
+    )
+
     workflow.add_edge("read_words_from_file", "get_recommendation")
+    workflow.add_edge("read_words_from_image", "get_recommendation")
     workflow.add_edge("get_recommendation", "apply_recommendation")
     workflow.add_edge("clear_recommendation", "get_recommendation")
     workflow.add_edge("regenerate_recommendation", "apply_recommendation")
+
     workflow.add_conditional_edges(
         "apply_recommendation",
         is_end,
@@ -53,9 +66,10 @@ Agent's workflow defintion:
         },
     )
 
-    workflow.set_entry_point("read_words_from_file")
+    workflow.set_entry_point("get_input_source")
 
     app = workflow.compile()
+    app.get_graph().draw_png("images/connection_solver_graph.png")
 ```
 
 Diagram of the agent's workflow:
