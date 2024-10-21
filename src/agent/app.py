@@ -327,6 +327,7 @@ if __name__ == "__main__":
         mistake_count=0,
         recommendation_count=0,
         llm_temperature=0.7,
+        input_source_type="",
     )
 
     result = app.invoke(initial_state)

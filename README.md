@@ -25,6 +25,7 @@ class PuzzleState(TypedDict):
     mistake_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
+    input_source_type: str = ""
 ```
 The attributes `words_remaining` and `mistake_count` are used to determine when to terminate the agent.  When a correct group of 4 words are found, these words are removed from `words_remaining`.  If a mistake is made, then `mistake_count` is incremented.  The agent is terminated when either `words_reamaining` becomes empty or  `mistake_count` exceeds a threshold.
 
