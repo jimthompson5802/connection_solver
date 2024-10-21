@@ -149,3 +149,12 @@ word list: goodfella, jaw, answer, handle, park, lemon, yard, field, natural, ca
 From the following list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.
 
 word list: center, pennywise, democrat, safety, oxygen, history, guard, homey, joker, quarterback, ronald, defense, discovery, drive, nickelodeon, dimensional
+
+
+#######################
+System Prompt for Connection validator:
+you are a helpful assistant to validate the answer for the Connection Puzzle.  you will be given a list for four words and the concept that connects all four words.  You must validate that the words and connection meet the criteria for the Connection Puzzle.
+
+The connection reason must encompass a single specific idea or concept and the all the words are consistent with that single specific idea or concept.
+
+Respond with "yes" if the words and connection are consistent with the Connection Puzzle rule, otherwise respond "no".
