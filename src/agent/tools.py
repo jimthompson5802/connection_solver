@@ -102,6 +102,9 @@ def interact_with_user(words, connection) -> str:
     return user_response
 
 
+# Used ChatGPT to get an initial system message with this prompt:
+# "What is a good system prompt to solve the NYT Connection Puzzle that returns a JSON output?"
+# Revised the system message to be based on development experience.
 SYSTEM_MESSAGE = SystemMessage(
     """
     You are a helpful assistant in solving the New York Times Connection Puzzle.
