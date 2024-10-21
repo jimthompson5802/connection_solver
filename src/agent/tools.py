@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 
@@ -38,6 +39,53 @@ def read_file_to_word_list():
     except Exception as e:
         print(f"An error occurred: {e}")
         return []
+
+
+def extract_words_from_image():
+    """
+    Encodes an image to base64 and sends it to the OpenAI LLM to extract words from the image.
+
+    Parameters:
+    image_path (str): The path to the image file to be processed.
+
+    Returns:
+    dict: The response from the LLM in JSON format.
+    """
+    image_fp = input("Please enter the image file location: ")
+
+    logger.info("Entering extract_words_from_image")
+    logger.debug(f"Entering extract_words_from_image image_path: {image_fp}")
+
+    # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
+    llm = ChatOpenAI(
+        api_key=api_key,
+        model="gpt-4o",
+        temperature=1.0,
+        max_tokens=4096,
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+
+    # Encode the image
+    with open(image_fp, "rb") as image_file:
+        base64_image = base64.b64encode(image_file.read()).decode("utf-8")
+
+    # Create a message with text and image
+    message = HumanMessage(
+        content=[
+            {"type": "text", "text": "extract words from the image and return as a json list"},
+            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}},
+        ]
+    )
+
+    # Get the response from the model
+    response = llm.invoke([message])
+
+    words = [w.lower() for w in json.loads(response.content)["words"]]
+
+    logger.info("Exiting extract_words_from_image")
+    logger.debug(f"Exiting extract_words_from_image response {words}")
+
+    return words
 
 
 def interact_with_user(words, connection) -> str:

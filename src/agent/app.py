@@ -10,7 +10,7 @@ import numpy as np
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 
-from tools import read_file_to_word_list, ask_llm_for_solution, interact_with_user
+from tools import read_file_to_word_list, extract_words_from_image, ask_llm_for_solution, interact_with_user
 from utils import chunk_words, flatten_list
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -31,6 +31,35 @@ class PuzzleState(TypedDict):
     mistake_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
+    input_source_type: str = ""
+
+
+def get_input_source(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering get_input_source:")
+    logger.debug(f"\nEntering get_input_source State: {pp.pformat(state)}")
+
+    # prompt user for input source
+    state["input_source_type"] = input(
+        "Enter 'file' to read words from a file or 'image' to read words from an image: "
+    )
+
+    logger.info("Exiting get_input_source:")
+    logger.debug(f"\nExiting get_input_source State: {pp.pformat(state)}")
+
+    return state
+
+
+def route_input_source(state: PuzzleState) -> str:
+    logger.info("Entering route_input_source:")
+    logger.debug(f"\nEntering route_input_source State: {pp.pformat(state)}")
+
+    if state["input_source_type"] == "file":
+        return "read_words_from_file"
+    elif state["input_source_type"] == "image":
+        return "read_words_from_image"
+    else:
+        print("Invalid input source type")
+        return END
 
 
 def read_words_from_file(state: PuzzleState) -> PuzzleState:
@@ -42,6 +71,19 @@ def read_words_from_file(state: PuzzleState) -> PuzzleState:
     print(f"\nWords read from file: {words}")
     logger.info(f"\nWords read from file: {words}")
     logger.debug(f"Exiting read_words_from_file State: {pp.pformat(state)}")
+
+    return state
+
+
+def read_words_from_image(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering read_words_from_image")
+
+    words = extract_words_from_image()
+    state["words_remaining"] = words
+
+    print(f"\nWords read from image: {words}")
+    logger.info(f"\nWords read from image: {words}")
+    logger.debug(f"Exiting read_words_from_image State: {pp.pformat(state)}")
 
     return state
 
@@ -234,16 +276,29 @@ if __name__ == "__main__":
 
     workflow = StateGraph(PuzzleState)
 
+    workflow.add_node("get_input_source", get_input_source)
     workflow.add_node("read_words_from_file", read_words_from_file)
+    workflow.add_node("read_words_from_image", read_words_from_image)
     workflow.add_node("get_recommendation", get_recommendation)
     workflow.add_node("regenerate_recommendation", regenerate_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
     workflow.add_node("clear_recommendation", clear_recommendation)
 
+    workflow.add_conditional_edges(
+        "get_input_source",
+        route_input_source,
+        {
+            "read_words_from_file": "read_words_from_file",
+            "read_words_from_image": "read_words_from_image",
+        },
+    )
+
     workflow.add_edge("read_words_from_file", "get_recommendation")
+    workflow.add_edge("read_words_from_image", "get_recommendation")
     workflow.add_edge("get_recommendation", "apply_recommendation")
     workflow.add_edge("clear_recommendation", "get_recommendation")
     workflow.add_edge("regenerate_recommendation", "apply_recommendation")
+
     workflow.add_conditional_edges(
         "apply_recommendation",
         is_end,
@@ -254,10 +309,10 @@ if __name__ == "__main__":
         },
     )
 
-    workflow.set_entry_point("read_words_from_file")
+    workflow.set_entry_point("get_input_source")
 
     app = workflow.compile()
-    # app.get_graph().draw_png("images/connection_solver_graph.png")
+    app.get_graph().draw_png("images/connection_solver_graph.png")
 
     initial_state = PuzzleState(
         words_remaining=[],
