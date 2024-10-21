@@ -251,6 +251,68 @@ FINAL PUZZLE STATE:
     'words_remaining': []}
 ```
 
+### Solved Connection Puzzle 4
+This puzzle is defined by the image from the NYT Connection Puzzle grid for October 20, 2024.
+
+**Puzzle Grid**
+
+![Connection Puzzle Grid](src/agent_testbed/connection_puzzle_image.png)
+
+**Expected Solution**
+
+![Connection Puzzle Solution](src/agent_testbed/connection_puzzle_solution.png)
+
+**Example Run**
+```text
+/usr/local/bin/python /workspaces/connection_solver/src/agent/app.py
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: src/agent_testbed/connection_puzzle_image.png
+
+Words read from image: ['paddle', 'sew', 'row', 'story', 'oar', 'fore', 'column', 'racket', 'net', 'butt', 'feature', 'ball', 'clatter', 'table', 'ruckus', 'article']
+
+RECOMMENDED WORDS ['oar', 'paddle', 'fore', 'row'] with connection Rowing-related terms
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['oar', 'paddle', 'fore', 'row'] is incorrect
+
+RECOMMENDED WORDS ['oar', 'paddle', 'butt', 'ball'] with connection Parts of a Rowing Boat
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['oar', 'paddle', 'butt', 'ball'] is incorrect
+
+RECOMMENDED WORDS ['story', 'feature', 'article', 'column'] with connection Parts of a newspaper or magazine
+Is the recommendation accepted? (y/g/b/p/n): y
+Recommendation ['story', 'feature', 'article', 'column'] is correct
+
+RECOMMENDED WORDS ['racket', 'ruckus', 'clatter', 'row'] with connection Noise or commotion
+Is the recommendation accepted? (y/g/b/p/n): g
+Recommendation ['racket', 'ruckus', 'clatter', 'row'] is correct
+
+RECOMMENDED WORDS ['net', 'table', 'ball', 'paddle'] with connection Table Tennis Terms
+Is the recommendation accepted? (y/g/b/p/n): b
+Recommendation ['net', 'table', 'ball', 'paddle'] is correct
+
+RECOMMENDED WORDS ['fore', 'sew', 'butt', 'oar'] with connection Homophones of numbers (four, so, but, or)
+Is the recommendation accepted? (y/g/b/p/n): p
+Recommendation ['fore', 'sew', 'butt', 'oar'] is correct
+SOLVED THE CONNECTION PUZZLE!!!
+
+
+FINAL PUZZLE STATE:
+{   'found_blue': True,
+    'found_purple': True,
+    'found_yellow': True,
+    'input_source_type': 'image',
+    'invalid_connections': [   ['oar', 'paddle', 'fore', 'row'],
+                               ['oar', 'paddle', 'butt', 'ball']],
+    'llm_temperature': 0.7,
+    'mistake_count': 2,
+    'recommendation_count': 6,
+    'recommended_connection': 'Homophones of numbers (four, so, but, or)',
+    'recommended_correct': True,
+    'recommended_words': ['fore', 'sew', 'butt', 'oar'],
+    'words_remaining': []}
+```
+
+
 ### Failed to Solve Connection Puzzle 1
 **Expected Solution**
 ```text
