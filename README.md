@@ -82,6 +82,8 @@ Experiment tracking is needed.  As different designs of the workflow and changes
 
 ## Sample Runs
 
+Note: Due to the random nature of the LLM, the results vary from run to run.  For example, running the same puzzle multiple times may result in different recommendations from the LLM.  As a result, the puzzle may get solved in one run and not in another.
+
 ### Solved Connection Puzzle 1
 **Expected Solution**
 ```text
