@@ -117,7 +117,7 @@ SYSTEM_MESSAGE = SystemMessage(
     2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
     3. **Group Words**: Attempt to form groups of four words that share a common theme.
     4. **Avoid invalid groups**: Do not include word groups that are known to be invalid.
-    5. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
+    5. **Verify Groups**: Ensure that each word belongs to only one group and the word comes from the candiate list. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
     6. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
     7. **Solution output**: Generate only a json response as shown in the **Output Format** section.
 
@@ -190,5 +190,48 @@ def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
 
     logger.info("Exiting ask_llm_for_solution")
     logger.debug(f"exiting ask_llm_for_solution response {response.content}")
+
+    return response
+
+
+VALIDATION_SYSTEM_MESSAGE = SystemMessage(
+    """
+    you are a helpful assistant to validate the answer for the Connection Puzzle.  you will be given a list for four words.  You must validate that the words have a common theme or characteristic.
+
+    The common theme reason must encompass a single specific idea or concept and the all the words are consistent with that single specific idea or concept.
+
+    Respond with "yes" if the words share the common theme, otherwise respond "no" in a json format.
+
+    # Ouptut Format
+    ```json
+    {
+        "validation_status": "yes"
+    }
+    ```
+    """
+)
+
+
+def validate_llm_solution(prompt, temperature=1.0, max_tokens=4096):
+
+    logger.info("Entering validate_llm_solution")
+    logger.debug(f"Entering validate_llm_solution Prompt: {prompt.content}")
+    # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
+    llm = ChatOpenAI(
+        api_key=api_key,
+        model="gpt-4o",
+        temperature=temperature,
+        max_tokens=max_tokens,
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+
+    # Create a prompt by concatenating the system and human messages
+    conversation = [VALIDATION_SYSTEM_MESSAGE, prompt]
+
+    # Invoke the LLM
+    response = llm.invoke(conversation)
+
+    logger.info("Exiting validate_llm_solution")
+    logger.debug(f"exiting validate_llm_solution response {response.content}")
 
     return response

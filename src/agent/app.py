@@ -10,12 +10,20 @@ import numpy as np
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 
-from tools import read_file_to_word_list, extract_words_from_image, ask_llm_for_solution, interact_with_user
+from tools import (
+    read_file_to_word_list,
+    extract_words_from_image,
+    ask_llm_for_solution,
+    validate_llm_solution,
+    interact_with_user,
+)
 from utils import chunk_words, flatten_list
 
 pp = pprint.PrettyPrinter(indent=4)
 
 MAX_ERRORS = 4
+
+np.random.seed(0)
 
 
 class PuzzleState(TypedDict):
@@ -24,6 +32,8 @@ class PuzzleState(TypedDict):
     recommended_words: List[str] = []
     recommended_connection: str = ""
     recommended_correct: bool = False
+    recommended_validation_count: int = 0
+    recommended_validation_status: str = ""
     found_yellow: bool = False
     found_greeen: bool = False
     found_blue: bool = False
@@ -107,7 +117,7 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
             prompt += f"{', '.join(invalid_connection)}\n"
     prompt += "\n\n"
     # scramble the remaining words for more robust group selection
-    random.shuffle(state["words_remaining"])
+    np.random.shuffle(state["words_remaining"])
     prompt += f"candidate list: {', '.join(state['words_remaining'])}\n"
 
     prompt = HumanMessage(prompt)
@@ -133,56 +143,94 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     return state
 
 
-REGENERATE_MESSAGE_PART1 = """
-    I am working on solving a word grouping puzzle where I need to select 4 words that fit into a specific category from a list of remaining words. The current recommended set of 4 words is incorrect, with one or more words being wrong. Please help me regenerate a new set of 4 words that better fits the category. Below is the relevant information:\n
-    """
-# Remaining words: [list the remaining words]
-# Current recommended set (incorrect): [list the 4 words]
-REGNERTE_MESSAGE_PART2 = """
-    Please suggest a completely new set of 4 words based on the remaining words and correct the errors in the current set and do not use any know invalid groups. 
-    """
+def validate_recommendation(state: PuzzleState) -> PuzzleState:
 
+    logger.info("Entering validate_recommendation:")
+    logger.debug(f"\nEntering validate_recommendation State: {pp.pformat(state)}")
 
-def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
-    logger.info("Entering regenerate recommendation:")
-    logger.debug(f"\nEntering regenerate recommendation State: {pp.pformat(state)}")
+    print(
+        f"Vallidating: Recommended Words: {state['recommended_words']}, Connection: {state['recommended_connection']}"
+    )
 
-    # build prompt for llm
-    prompt = REGENERATE_MESSAGE_PART1
-    # scramble the remaining words for more robust group selection
-    random.shuffle(state["words_remaining"])
-    prompt += f"\nRemaining words: {', '.join(state['words_remaining'])}\n"
-    prompt += f"\nCurrent recommended set (incorrect): {', '.join(state['recommended_words'])}\n"
-    if len(state["invalid_connections"]) > 0:
-        prompt += "\n\nDo not include word groups that are known to be invalid."
-        prompt += "\n"
-        prompt += "Invalid word groups:\n"
-        for invalid_connection in state["invalid_connections"]:
-            prompt += f"{', '.join(invalid_connection)}\n"
-
-    prompt += REGNERTE_MESSAGE_PART2
+    # validate the recommendation
+    prompt = f"words: {', '.join(state['recommended_words'])}\nconnection: {state['recommended_connection']}\n"
+    logger.info(f"\nPrompt for llm:\n{prompt}")
 
     prompt = HumanMessage(prompt)
 
-    logger.info(f"\nPrompt for llm: {prompt.content}")
-
-    # get recommendation from llm
-    llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
+    # get validation from llm
+    llm_response = validate_llm_solution(prompt, temperature=state["llm_temperature"])
 
     llm_response_json = json.loads(llm_response.content)
-    if isinstance(llm_response_json, list):
-        logger.debug(f"\nLLM response is list")
-        state["recommended_words"] = llm_response_json[0]["words"]
-        state["recommended_connection"] = llm_response_json[0]["connection"]
-    else:
-        logger.debug(f"\nLLM response is dict")
-        state["recommended_words"] = llm_response_json["words"]
-        state["recommended_connection"] = llm_response_json["connection"]
 
-    logger.info("Exiting regenerate recommendation:")
-    logger.debug(f"\nExiting regenerate recommendation State: {pp.pformat(state)}")
+    print(f"Validation Status: {llm_response_json['validation_status']}")
+    state["recommended_validation_status"] = llm_response_json["validation_status"]
+    state["recommended_validation_count"] += 1
 
     return state
+
+
+def determine_validation_action(state: PuzzleState) -> str:
+    logger.info("Entering determine_validation_action:")
+    logger.debug(f"\nEntering determine_validation_action State: {pp.pformat(state)}")
+
+    if state["recommended_validation_status"] == "yes":
+        return "apply_recommendation"
+    else:
+        return "get_recommendation"
+
+
+# TODO: Clean up code
+# REGENERATE_MESSAGE_PART1 = """
+#     I am working on solving a word grouping puzzle where I need to select 4 words that fit into a specific category from a list of remaining words. The current recommended set of 4 words is incorrect, with one or more words being wrong. Please help me regenerate a new set of 4 words that better fits the category. Below is the relevant information:\n
+#     """
+# # Remaining words: [list the remaining words]
+# # Current recommended set (incorrect): [list the 4 words]
+# REGNERTE_MESSAGE_PART2 = """
+#     Please suggest a completely new set of 4 words based on the remaining words and correct the errors in the current set and do not use any know invalid groups.
+#     """
+
+
+# def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
+#     logger.info("Entering regenerate recommendation:")
+#     logger.debug(f"\nEntering regenerate recommendation State: {pp.pformat(state)}")
+
+#     # build prompt for llm
+#     prompt = REGENERATE_MESSAGE_PART1
+#     # scramble the remaining words for more robust group selection
+#     random.shuffle(state["words_remaining"])
+#     prompt += f"\nRemaining words: {', '.join(state['words_remaining'])}\n"
+#     prompt += f"\nCurrent recommended set (incorrect): {', '.join(state['recommended_words'])}\n"
+#     if len(state["invalid_connections"]) > 0:
+#         prompt += "\n\nDo not include word groups that are known to be invalid."
+#         prompt += "\n"
+#         prompt += "Invalid word groups:\n"
+#         for invalid_connection in state["invalid_connections"]:
+#             prompt += f"{', '.join(invalid_connection)}\n"
+
+#     prompt += REGNERTE_MESSAGE_PART2
+
+#     prompt = HumanMessage(prompt)
+
+#     logger.info(f"\nPrompt for llm: {prompt.content}")
+
+#     # get recommendation from llm
+#     llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
+
+#     llm_response_json = json.loads(llm_response.content)
+#     if isinstance(llm_response_json, list):
+#         logger.debug(f"\nLLM response is list")
+#         state["recommended_words"] = llm_response_json[0]["words"]
+#         state["recommended_connection"] = llm_response_json[0]["connection"]
+#     else:
+#         logger.debug(f"\nLLM response is dict")
+#         state["recommended_words"] = llm_response_json["words"]
+#         state["recommended_connection"] = llm_response_json["connection"]
+
+#     logger.info("Exiting regenerate recommendation:")
+#     logger.debug(f"\nExiting regenerate recommendation State: {pp.pformat(state)}")
+
+#     return state
 
 
 def apply_recommendation(state: PuzzleState) -> PuzzleState:
@@ -231,6 +279,8 @@ def clear_recommendation(state: PuzzleState) -> PuzzleState:
     state["recommended_words"] = []
     state["recommended_connection"] = ""
     state["recommended_correct"] = False
+    state["recommended_validation_count"] = 0
+    state["recommended_validation_status"] = ""
 
     logger.info("Exiting clear_recommendation:")
     logger.debug(f"\nExiting clear_recommendation State: {pp.pformat(state)}")
@@ -254,8 +304,8 @@ def is_end(state: PuzzleState) -> str:
         logger.info("Recommendation accepted, Going to clear_recommendation")
         return "clear_recommendation"
     else:
-        logger.info("Recommendation not accepted, Going to regenerate_recommendation")
-        return "regenerate_recommendation"
+        logger.info("Recommendation not accepted, Going to get_recommendation")
+        return "get_recommendation"
 
 
 if __name__ == "__main__":
@@ -280,7 +330,8 @@ if __name__ == "__main__":
     workflow.add_node("read_words_from_file", read_words_from_file)
     workflow.add_node("read_words_from_image", read_words_from_image)
     workflow.add_node("get_recommendation", get_recommendation)
-    workflow.add_node("regenerate_recommendation", regenerate_recommendation)
+    workflow.add_node("validate_recommendation", validate_recommendation)
+    # workflow.add_node("regenerate_recommendation", regenerate_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
     workflow.add_node("clear_recommendation", clear_recommendation)
 
@@ -295,9 +346,19 @@ if __name__ == "__main__":
 
     workflow.add_edge("read_words_from_file", "get_recommendation")
     workflow.add_edge("read_words_from_image", "get_recommendation")
-    workflow.add_edge("get_recommendation", "apply_recommendation")
+    workflow.add_edge("get_recommendation", "validate_recommendation")
+
+    workflow.add_conditional_edges(
+        "validate_recommendation",
+        determine_validation_action,
+        {
+            "get_recommendation": "get_recommendation",
+            "apply_recommendation": "apply_recommendation",
+        },
+    )
+
     workflow.add_edge("clear_recommendation", "get_recommendation")
-    workflow.add_edge("regenerate_recommendation", "apply_recommendation")
+    # workflow.add_edge("regenerate_recommendation", "apply_recommendation")
 
     workflow.add_conditional_edges(
         "apply_recommendation",
@@ -305,7 +366,7 @@ if __name__ == "__main__":
         {
             END: END,
             "clear_recommendation": "clear_recommendation",
-            "regenerate_recommendation": "regenerate_recommendation",
+            "get_recommendation": "get_recommendation",
         },
     )
 
@@ -320,17 +381,19 @@ if __name__ == "__main__":
         recommended_words=[],
         recommended_connection="",
         recommended_correct=False,
+        recommended_validation_count=0,
+        recommended_validation_status="",
         found_blue=False,
         found_green=False,
         found_purple=False,
         found_yellow=False,
         mistake_count=0,
         recommendation_count=0,
-        llm_temperature=0.7,
+        llm_temperature=1.0,
         input_source_type="",
     )
 
-    result = app.invoke(initial_state)
+    result = app.invoke(initial_state, {"recursion_limit": 50})
 
     print("\n\nFINAL PUZZLE STATE:")
     pp.pprint(result)
