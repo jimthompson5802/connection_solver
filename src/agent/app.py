@@ -1,3 +1,4 @@
+from enum import Enum
 import logging
 import pprint
 import json
@@ -17,9 +18,16 @@ pp = pprint.PrettyPrinter(indent=4)
 
 MAX_ERRORS = 4
 
+# Puzzle phase enums
+PUZZLE_PHASE_UNINITIALIZED = "PUZZLE_PHASE_UNINITIALIZED"
+PUZZLE_PHASE_SETUP = "PUZZLE_PHASE_SETUP"
+PUZZLE_PHASE_SETUP_COMPLETE = "PUZZLE_PHASE_SETUP_COMPLETE"
+PUZZLE_PHASE_SOLVING = "PUZZLE_PHASE_SOLVING"
+PUZZLE_PHASE_COMPLETE = "PUZZLE_PHASE_COMPLETE"
+
 
 class PuzzleState(TypedDict):
-    puzzle_state="get_input_source",
+    puzzle_phase: int = PUZZLE_PHASE_UNINITIALIZED
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
     recommended_words: List[str] = []
@@ -36,10 +44,45 @@ class PuzzleState(TypedDict):
 
 
 def run_planner(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering run_planner:")
+    logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
 
-    if 
+    if state["puzzle_phase"] == PUZZLE_PHASE_UNINITIALIZED:
+        state["puzzle_phase"] = PUZZLE_PHASE_SETUP
 
+    elif state["puzzle_phase"] == PUZZLE_PHASE_SETUP_COMPLETE:
+        state["puzzle_phase"] = PUZZLE_PHASE_SOLVING
+
+    elif state["puzzle_phase"] == PUZZLE_PHASE_SOLVING:
+        if len(state["words_remaining"]) == 0 or state["mistake_count"] >= MAX_ERRORS:
+            state["puzzle_phase"] = PUZZLE_PHASE_COMPLETE
+        else:
+            # leave the puzzle phase as is
+            pass
+
+    elif state["puzzle_phase"] == PUZZLE_PHASE_COMPLETE:
+        pass
+    else:
+        raise ValueError(f"Invalid puzzle phase {state['puzzle_phase']}")
+
+    logger.info("Exiting run_planner:")
+    logger.debug(f"\nExiting run_planner State: {pp.pformat(state)}")
     return state
+
+
+def determine_next_action(state: PuzzleState) -> str:
+    logger.info("Entering determine_next_action:")
+    logger.debug(f"\nEntering determine_next_action State: {pp.pformat(state)}")
+    if state["puzzle_phase"] == PUZZLE_PHASE_SETUP:
+        logger.debug("Returning get_input_source")
+        return "get_input_source"
+    elif state["puzzle_phase"] == PUZZLE_PHASE_SOLVING:
+        logger.debug("Returning get_recommendation")
+        return "get_recommendation"
+    elif state["puzzle_phase"] == PUZZLE_PHASE_COMPLETE:
+        logger.debug("Returning END")
+        return END
+
 
 def get_input_source(state: PuzzleState) -> PuzzleState:
     logger.info("Entering get_input_source:")
@@ -74,6 +117,7 @@ def read_words_from_file(state: PuzzleState) -> PuzzleState:
 
     words = read_file_to_word_list()
     state["words_remaining"] = words
+    state["puzzle_phase"] = PUZZLE_PHASE_SETUP_COMPLETE
 
     print(f"\nWords read from file: {words}")
     logger.info(f"\nWords read from file: {words}")
@@ -87,6 +131,7 @@ def read_words_from_image(state: PuzzleState) -> PuzzleState:
 
     words = extract_words_from_image()
     state["words_remaining"] = words
+    state["puzzle_phase"] = PUZZLE_PHASE_SETUP_COMPLETE
 
     print(f"\nWords read from image: {words}")
     logger.info(f"\nWords read from image: {words}")
@@ -252,11 +297,11 @@ def is_end(state: PuzzleState) -> str:
     if len(state["words_remaining"]) == 0:
         logger.info("SOLVED THE CONNECTION PUZZLE!!!")
         print("SOLVED THE CONNECTION PUZZLE!!!")
-        return END
+        return "run_planner"
     elif state["mistake_count"] >= MAX_ERRORS:
         logger.info("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
         print("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
-        return END
+        return "run_planner"
     elif state["recommended_correct"]:
         logger.info("Recommendation accepted, Going to clear_recommendation")
         return "clear_recommendation"
@@ -283,6 +328,7 @@ if __name__ == "__main__":
 
     workflow = StateGraph(PuzzleState)
 
+    workflow.add_node("run_planner", run_planner)
     workflow.add_node("get_input_source", get_input_source)
     workflow.add_node("read_words_from_file", read_words_from_file)
     workflow.add_node("read_words_from_image", read_words_from_image)
@@ -290,6 +336,16 @@ if __name__ == "__main__":
     workflow.add_node("regenerate_recommendation", regenerate_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
     workflow.add_node("clear_recommendation", clear_recommendation)
+
+    workflow.add_conditional_edges(
+        "run_planner",
+        determine_next_action,
+        {
+            "get_input_source": "get_input_source",
+            "get_recommendation": "get_recommendation",
+            END: END,
+        },
+    )
 
     workflow.add_conditional_edges(
         "get_input_source",
@@ -300,28 +356,29 @@ if __name__ == "__main__":
         },
     )
 
-    workflow.add_edge("read_words_from_file", "get_recommendation")
-    workflow.add_edge("read_words_from_image", "get_recommendation")
+    workflow.add_edge("read_words_from_file", "run_planner")
+    workflow.add_edge("read_words_from_image", "run_planner")
     workflow.add_edge("get_recommendation", "apply_recommendation")
-    workflow.add_edge("clear_recommendation", "get_recommendation")
+    workflow.add_edge("clear_recommendation", "run_planner")
     workflow.add_edge("regenerate_recommendation", "apply_recommendation")
 
     workflow.add_conditional_edges(
         "apply_recommendation",
         is_end,
         {
-            END: END,
+            "run_planner": "run_planner",
             "clear_recommendation": "clear_recommendation",
             "regenerate_recommendation": "regenerate_recommendation",
         },
     )
 
-    workflow.set_entry_point("get_input_source")
+    workflow.set_entry_point("run_planner")
 
     app = workflow.compile()
     app.get_graph().draw_png("images/connection_solver_graph.png")
 
     initial_state = PuzzleState(
+        puzzle_phase=PUZZLE_PHASE_UNINITIALIZED,
         words_remaining=[],
         invalid_connections=[],
         recommended_words=[],
