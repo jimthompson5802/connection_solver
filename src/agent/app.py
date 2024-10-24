@@ -117,7 +117,9 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
             prompt += f"{', '.join(invalid_connection)}\n"
     prompt += "\n\n"
     # scramble the remaining words for more robust group selection
+    print(f"\nWords Remaining before shuffle: {state['words_remaining']}")
     np.random.shuffle(state["words_remaining"])
+    print(f"\nWords Remaining after shuffle: {state['words_remaining']}")
     prompt += f"candidate list: {', '.join(state['words_remaining'])}\n"
 
     prompt = HumanMessage(prompt)
@@ -149,7 +151,7 @@ def validate_recommendation(state: PuzzleState) -> PuzzleState:
     logger.debug(f"\nEntering validate_recommendation State: {pp.pformat(state)}")
 
     print(
-        f"Vallidating: Recommended Words: {state['recommended_words']}, Connection: {state['recommended_connection']}"
+        f"\nVallidating: Recommended Words: {state['recommended_words']}, Connection: {state['recommended_connection']}"
     )
 
     # validate the recommendation
@@ -163,7 +165,8 @@ def validate_recommendation(state: PuzzleState) -> PuzzleState:
 
     llm_response_json = json.loads(llm_response.content)
 
-    print(f"Validation Status: {llm_response_json['validation_status']}")
+    print(f"\nValidation Status: {llm_response_json}")
+    logger.info(f"\nValidation Status: {llm_response_json}")
     state["recommended_validation_status"] = llm_response_json["validation_status"]
     state["recommended_validation_count"] += 1
 
@@ -389,7 +392,7 @@ if __name__ == "__main__":
         found_yellow=False,
         mistake_count=0,
         recommendation_count=0,
-        llm_temperature=1.0,
+        llm_temperature=0.5,
         input_source_type="",
     )
 

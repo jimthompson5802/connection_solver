@@ -158,3 +158,80 @@ you are a helpful assistant to validate the answer for the Connection Puzzle.  y
 The connection reason must encompass a single specific idea or concept and the all the words are consistent with that single specific idea or concept.
 
 Respond with "yes" if the words and connection are consistent with the Connection Puzzle rule, otherwise respond "no".
+
+#######################
+System Prompt for Connection Brainstorming:
+you are a helpful assistant to brainstorm ideas for the Connection Puzzle.  you will be given a word and a list of other words.  Select three words from that list that, along with the first word, will have a common theme that is specific. 
+
+Steps to solve:
+1. Look at the first word and the list of other words.
+2. Create groups of 4 words by combining three unique words from the list that, along with the first word, will have a common theme that is unique and specific.  All of the words must fit theme, such as synonyms, parts of the same compnent, associated with another word, have a common prefix or suffix.
+4. generate up to 5 groups for the 4 words and their respective themes.
+5. For each group provide a confidence rating, high or low, that the 4 words align with the unique specific theme.
+5. Return your guess as ONLY JSON like this:
+
+{"groups":
+[
+{"items": ["item1a", "item2a", "item3a", "item4a"],
+"reason": "…", "confidence": "high"},
+{"items": ["item1a", "item2b", "item3b", "item4b"],
+"reason": "…", "confidence": "low"},
+{"items": ["item1a", "item2c", "item3c", "item4b"],
+"reason": "…", "confidence": "high"},
+]}
+
+No other text.
+
+
+
+
+word:  field
+word list:  goodfella, jaw, answer, handle, park, lemon, yard,  natural, car, harvard, swinger, green, criminal, address, lawn
+
+########################
+In the *New York Times* *Connections* puzzle, players are tasked with grouping 16 seemingly unrelated words into four distinct categories of connections. These connections can be based on different types of relationships, such as:
+
+1. **Synonyms/Similar Meanings**: Words that are synonyms or have closely related meanings.
+   - Example: Happy, Cheerful, Elated, Joyful.
+
+2. **Categories or Themes**: Words that belong to the same overarching category, like colors, animals, or countries.
+   - Example: Red, Blue, Green, Yellow (colors).
+
+3. **Homophones or Wordplay**: Words that sound alike but may have different meanings or spellings.
+   - Example: Bear, Bare, Bair, Bayer.
+
+4. **Associations**: Words that are connected conceptually, even if they aren't synonyms or part of a clear category.
+   - Example: Coffee, Mug, Brew, Beans (things related to coffee).
+
+5. **Words with the Same Prefix/Suffix or Similar Patterns**: Words that share a common part of speech, like ending in the same suffix.
+   - Example: Running, Jumping, Skipping, Jogging (verbs ending in "ing").
+
+6. **Cultural or Historical References**: Words tied to specific historical events, popular culture, or famous figures.
+   - Example: Kennedy, Roosevelt, Lincoln, Washington (US presidents).
+
+These puzzles often require thinking creatively about how words might be grouped together, and many times, the connections aren't immediately obvious.
+
+Yes, there are many other possible connections in the *New York Times* *Connections* puzzle beyond the more common ones like synonyms or categories. Here are additional types of connections that might appear:
+
+1. **Compound Words**: Words that can be combined with another to form a compound word or phrase.
+   - Example: Sun, Flower, Light, Beam (Sunflower, Sunlight, Lightbeam).
+
+2. **Adjectives/Nouns Modifiers**: Words that commonly modify or describe a specific noun.
+   - Example: Fast, Expensive, Sports, Red (common car descriptions).
+
+5. **Rhyming Words**: Words that rhyme or have a similar ending sound.
+   - Example: Cat, Hat, Mat, Rat.
+
+7. **Pop Culture**: Words that are connected through references to popular TV shows, books, movies, or games.
+   - Example: Marvel, DC, Gotham, Metropolis (superhero-related terms).
+
+8. **Actions/Verbs Associated with an Object**: Words that describe actions commonly associated with a particular object or situation.
+   - Example: Fry, Boil, Grill, Bake (cooking methods).
+
+9. **Part of a Set or Series**: Words that form a known set, like seasons, directions, or cardinal numbers.
+   - Example: Winter, Spring, Summer, Fall (seasons).
+
+11. **Puns or Wordplay**: Words used in playful or pun-like ways, where the connection is more abstract or based on humor.
+    - Example: Sole, Heel, Toe, Arch (parts of a shoe, or puns for "soul").
+
+These types of connections encourage players to think in broader, more creative ways, often blending logic with trivia knowledge or cultural references.

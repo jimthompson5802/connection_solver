@@ -198,14 +198,17 @@ VALIDATION_SYSTEM_MESSAGE = SystemMessage(
     """
     you are a helpful assistant to validate the answer for the Connection Puzzle.  you will be given a list for four words.  You must validate that the words have a common theme or characteristic.
 
-    The common theme reason must encompass a single specific idea or concept and the all the words are consistent with that single specific idea or concept.
+    The common theme reason must encompass a single specific idea or concept and the all the words are consistent with that single specific idea or concept.  Do not speculate on the theme or provide multiple possible themes. 
 
     Respond with "yes" if the words share the common theme, otherwise respond "no" in a json format.
+    include your decision in the "validation_status" key, the words in the "words" key and the rationale for the decision in the "reason" key.
 
     # Ouptut Format
     ```json
     {
         "validation_status": "yes"
+        "words": ["word1", "word2", "word3", "word4"],
+        "reason": "The words share a common theme of ..."
     }
     ```
     """
