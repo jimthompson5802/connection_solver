@@ -12,7 +12,15 @@ Connections is a word game that challenges players to find themes between words.
 ## Solution Strategy
 The agent uses the `PuzzleState` class to manage the agent's state and controls the agent's workflow. 
 ```python
+# Puzzle phase enums
+PUZZLE_PHASE_UNINITIALIZED = "PUZZLE_PHASE_UNINITIALIZED"
+PUZZLE_PHASE_SETUP = "PUZZLE_PHASE_SETUP"
+PUZZLE_PHASE_SETUP_COMPLETE = "PUZZLE_PHASE_SETUP_COMPLETE"
+PUZZLE_PHASE_SOLVING = "PUZZLE_PHASE_SOLVING"
+PUZZLE_PHASE_COMPLETE = "PUZZLE_PHASE_COMPLETE"
+
 class PuzzleState(TypedDict):
+    puzzle_phase: int = PUZZLE_PHASE_UNINITIALIZED
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
     recommended_words: List[str] = []
@@ -29,10 +37,13 @@ class PuzzleState(TypedDict):
 ```
 The attributes `words_remaining` and `mistake_count` are used to determine when to terminate the agent.  When a correct group of 4 words are found, these words are removed from `words_remaining`.  If a mistake is made, then `mistake_count` is incremented.  The agent is terminated when either `words_reamaining` becomes empty or  `mistake_count` exceeds a threshold.
 
+Overall control is performed by the `run_planner()` function.  The agent's workflow is defined by the `StateGraph` class from `langgraph`.  The agent's workflow is defined by a series of nodes and edges.  The nodes are the agent's processing steps and the edges are the transitions between the processing steps.  This function determines the next step in the agent's workflow based on the `puzzle_phase` of the agent. 
+
 Agent's workflow defintion:
 ```python
     workflow = StateGraph(PuzzleState)
 
+    workflow.add_node("run_planner", run_planner)
     workflow.add_node("get_input_source", get_input_source)
     workflow.add_node("read_words_from_file", read_words_from_file)
     workflow.add_node("read_words_from_image", read_words_from_image)
@@ -40,6 +51,16 @@ Agent's workflow defintion:
     workflow.add_node("regenerate_recommendation", regenerate_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
     workflow.add_node("clear_recommendation", clear_recommendation)
+
+    workflow.add_conditional_edges(
+        "run_planner",
+        determine_next_action,
+        {
+            "get_input_source": "get_input_source",
+            "get_recommendation": "get_recommendation",
+            END: END,
+        },
+    )
 
     workflow.add_conditional_edges(
         "get_input_source",
@@ -50,23 +71,23 @@ Agent's workflow defintion:
         },
     )
 
-    workflow.add_edge("read_words_from_file", "get_recommendation")
-    workflow.add_edge("read_words_from_image", "get_recommendation")
+    workflow.add_edge("read_words_from_file", "run_planner")
+    workflow.add_edge("read_words_from_image", "run_planner")
     workflow.add_edge("get_recommendation", "apply_recommendation")
-    workflow.add_edge("clear_recommendation", "get_recommendation")
+    workflow.add_edge("clear_recommendation", "run_planner")
     workflow.add_edge("regenerate_recommendation", "apply_recommendation")
 
     workflow.add_conditional_edges(
         "apply_recommendation",
         is_end,
         {
-            END: END,
+            "run_planner": "run_planner",
             "clear_recommendation": "clear_recommendation",
             "regenerate_recommendation": "regenerate_recommendation",
         },
     )
 
-    workflow.set_entry_point("get_input_source")
+    workflow.set_entry_point("run_planner")
 
     app = workflow.compile()
     app.get_graph().draw_png("images/connection_solver_graph.png")
