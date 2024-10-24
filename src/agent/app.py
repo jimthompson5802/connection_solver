@@ -19,6 +19,7 @@ MAX_ERRORS = 4
 
 
 class PuzzleState(TypedDict):
+    puzzle_state="get_input_source",
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
     recommended_words: List[str] = []
@@ -33,6 +34,12 @@ class PuzzleState(TypedDict):
     llm_temperature: float = 1.0
     input_source_type: str = ""
 
+
+def run_planner(state: PuzzleState) -> PuzzleState:
+
+    if 
+
+    return state
 
 def get_input_source(state: PuzzleState) -> PuzzleState:
     logger.info("Entering get_input_source:")
