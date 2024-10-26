@@ -10,15 +10,11 @@ from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langgraph.graph import StateGraph, END
 from langchain_core.utils.function_calling import convert_to_openai_function
-from langchain_core.tracers.context import tracing_v2_enabled
-from langsmith import Client
 
 with open("/openai/api_key.json") as f:
     config = json.load(f)
 
 # Set up environment variables
-os.environ["LANGCHAIN_TRACING_V2"] = "false"
-os.environ["LANGCHAIN_API_KEY"] = config["langsmith_key"]
 os.environ["LANGCHAIN_PROJECT"] = "Agent-With-LangGraph"
 os.environ["OPENAI_API_KEY"] = config["key"]
 
@@ -81,7 +77,7 @@ def agent_step(state: AgentState) -> AgentState:
         }
     )
 
-    state["messages"].append(AIMessage(content=result.return_values["output"]))
+    state["messages"].append(result.message_log[-1])
 
     if "intermediate_steps" in result:
         state["intermediate_steps"] = result["intermediate_steps"]
@@ -141,24 +137,17 @@ workflow.set_entry_point("human")
 
 # Compile the graph
 app = workflow.compile()
-app.get_graph().draw_png("src/agent_testbed/agent_graph_smith_workflow.png")
+app.get_graph().draw_png("src/agent_testbed/agent_langgraph_poc.png")
 
 
-# LangSmith setup
-client = Client()
-run = client.create_run(
-    name="Agent Workflow",
-    inputs={},
-    run_type="chain",
-    project_name="Agent-With-LangGraph",
+initial_state = AgentState(
+    messages=[],
+    next_step="",
+    intermediate_steps="",
 )
 
-# Run the agent with tracing
-# try:
-with tracing_v2_enabled("Agent-With-LangGraph"):
-    for output in app.stream({"messages": [], "next_step": "human"}):
-        if "messages" in output:
-            print(output["messages"][-1].content)
-# finally:
-#     # Mark the run as completed
-#     client.update_run(run.id, end_time=datetime.datetime.now())
+
+result = app.invoke(initial_state)
+
+print("\n\nAgent Response:")
+print(result)
