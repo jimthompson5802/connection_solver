@@ -394,7 +394,7 @@ if __name__ == "__main__":
         input_source_type="",
     )
 
-    result = app.invoke(initial_state)
+    result = app.invoke(initial_state, {"recursion_limit": 50})
 
     print("\n\nFINAL PUZZLE STATE:")
     pp.pprint(result)
