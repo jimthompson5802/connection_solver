@@ -158,3 +158,16 @@ you are a helpful assistant to validate the answer for the Connection Puzzle.  y
 The connection reason must encompass a single specific idea or concept and the all the words are consistent with that single specific idea or concept.
 
 Respond with "yes" if the words and connection are consistent with the Connection Puzzle rule, otherwise respond "no".
+
+#######################
+Word Analyzer Prompt:
+for each word in this list [state, discard, energy, sham, pass, justice, play, honor, blanket, draw, keep, labor, throw, uphold, sheet, fulfill], generate up to 5 connotations that could be associated with the word.  The connotations should be related to the word in some way, such as synonyms, related concepts, or common associations.  The connotations should be a single sentence.
+
+Return your response as a JSON object with the word as the key and the connotations as a list of strings.
+
+
+#######################
+Group the words in the list by a common theme or category.  Provide a title for each group and list the words that belong to that group.
+
+
+state, discard, energy, sham, pass, justice, play, honor, blanket, draw, keep, labor, throw, uphold, sheet, fulfill
