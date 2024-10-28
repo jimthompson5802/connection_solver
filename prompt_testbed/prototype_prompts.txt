@@ -161,7 +161,7 @@ Respond with "yes" if the words and connection are consistent with the Connectio
 
 #######################
 Word Analyzer Prompt:
-for each word in this list [state, discard, energy, sham, pass, justice, play, honor, blanket, draw, keep, labor, throw, uphold, sheet, fulfill], generate up to 5 connotations that could be associated with the word.  The connotations should be related to the word in some way, such as synonyms, related concepts, or common associations.  The connotations should be a single sentence.
+for each word in this list [state, discard, energy, sham, pass, justice, play, honor, blanket, draw, keep, labor, throw, uphold, sheet, fulfill], generate up to 10 diverse connotations that could be associated with the word.  The connotations should be related to the word in some way, such as synonyms, related concepts, or common associations.  The connotations should be a single sentence.
 
 Return your response as a JSON object with the word as the key and the connotations as a list of strings.
 
@@ -171,3 +171,51 @@ Group the words in the list by a common theme or category.  Provide a title for 
 
 
 state, discard, energy, sham, pass, justice, play, honor, blanket, draw, keep, labor, throw, uphold, sheet, fulfill
+
+#######################
+To combine words with similar connotations, you can use the following prompt:
+
+---
+
+Here is a list of words, each with a list of associated connotations. create Groups of 4 words together if they share one or more similar connotations. Provide each group of words along with a brief explanation of the common theme or connotation that links them. 
+
+List of words with connotations:
+{Your list of words and connotations}
+
+For example:
+- Group words with similar connotations like 'joy,' 'happiness,' or 'pleasure' together, as they all relate to positive emotions.
+- Group words associated with 'darkness,' 'mystery,' or 'unknown' together, as they relate to themes of obscurity or enigma."
+- Group words associated with 'wheel', 'engine', 'brake', 'tire' together, as they are all parts of a car.
+- Group words associated with 'jacket', 'cab', 'bus' because the word "yellow" can be associated with all of them.
+
+
+#######################
+what are the various context the word "sham" can be used in?  Return response in a json object.
+
+Example:
+
+Certainly! Here's a JSON object representing the various contexts in which the word "sham" can be used:
+
+```json
+{
+  "contexts": [
+    {
+      "type": "Type 1",
+      "description": "Descripton Number 1."
+    },
+    {
+      "type": "Type 2",
+      "description": "Description Number 2."
+    },
+    {
+      "type": "Type 3",
+      "description": "Description Number 3."
+    }
+  ]
+}
+```
+
+This JSON object highlights the different meanings and contexts of "sham," each with a brief description.
+
+#######################
+what are the various context the word "sham" can be used in?
