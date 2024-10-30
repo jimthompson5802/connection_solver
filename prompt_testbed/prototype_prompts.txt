@@ -222,19 +222,24 @@ what are the various context the word "sham" can be used in?
 
 ################
 
-select one and only of the following actions:
+select one and only of the following actions based on the puzzle state:
 
 Actions:
-* puzzle_phase is "uninitalized" output action "puzzle_setup"
-* puzzle_phase is "puzzle_setup_complete" output action "puzzle_solving"
-* puzzle_phase is "puzzle_solving" and (remaing_words count is 0  or mist is 4 or greater) output action "puzzle_complete""puzzle_complete"
-* if none of the above output action "puzzle_solving"
+* puzzle_phase is "uninitalized" output  "puzzle_setup"
+* puzzle_phase is "puzzle_setup_complete" output "puzzle_solving"
+* puzzle_phase is "puzzle_solving" and (remaing_words count is 0  or mist is 4 or greater) output "puzzle_complete" otherwise "puzzle_solving"
+* if none of the above output "abort"
+
+output response in json format with key word "action" and the value as the output string.
 
 
+puzzle state:
+{
+  "puzzle_phase": "uninitalized",
+  "remaing_words": 0,
+  "mistake_count": 0
+}
 
-puzzle_phase is "puzzle_setup_complete"
-
-generate the output action.
 
 
 puzzle_phase is "puzzle_solving" and remaing_words count is 12 and mistake_count is 1
