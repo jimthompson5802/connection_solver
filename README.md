@@ -120,10 +120,21 @@ PLANNER_SYSTEM_MESSAGE = """
 
 `PuzzleState` is extracted as a string and passed to the LLM in the prompt to determine the next step in the agent's workflow.  The LLM's response determines the next step.
 
-**Example `PuzzleState` for the Planner's prompt**
+**Example User Prompt with`PuzzleState` for the Planner**
 
 ```python
-'{"puzzle_phase": "solve_puzzle", "words_remaining": ["uphold", "justice", "state", "honor", "energy", "keep", "labor", "fulfill"], "invalid_connections": [], "recommended_words": [], "recommended_connection": "", "recommended_correct": false, "found_yellow": false, "found_blue": true, "found_purple": false, "mistake_count": 0, "recommendation_count": 2, "llm_temperature": 0.7, "input_source_type": "file"}'
+'{"puzzle_phase": "solve_puzzle", 
+"words_remaining": ["uphold", "justice", "state", "honor", "energy", "keep", "labor", "fulfill"], "invalid_connections": [], 
+"recommended_words": [], 
+"recommended_connection": "", 
+"recommended_correct": false, 
+"found_yellow": false, 
+"found_blue": true, 
+"found_purple": false, 
+"mistake_count": 0, 
+"recommendation_count": 2, 
+"llm_temperature": 0.7, 
+"input_source_type": "file"}'
 ```
 
 ```python
