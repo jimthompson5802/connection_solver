@@ -227,7 +227,7 @@ select one and only of the following actions based on the puzzle state:
 Actions:
 * puzzle_phase is "uninitalized" output  "puzzle_setup"
 * puzzle_phase is "puzzle_setup_complete" output "puzzle_solving"
-* puzzle_phase is "puzzle_solving" and (remaing_words count is 0  or mist is 4 or greater) output "puzzle_complete" otherwise "puzzle_solving"
+* puzzle_phase is "puzzle_solving" and (remaining_words is empty list  or mistake_count is 4 or greater) output "puzzle_complete" otherwise "puzzle_solving"
 * if none of the above output "abort"
 
 output response in json format with key word "action" and the value as the output string.
@@ -235,9 +235,9 @@ output response in json format with key word "action" and the value as the outpu
 
 puzzle state:
 {
-  "puzzle_phase": "uninitalized",
-  "remaing_words": 0,
-  "mistake_count": 0
+  "puzzle_phase": "puzzle_solving",
+  "remaing_words": ["cat", "dog"],
+  "mistake_count": 3
 }
 
 
