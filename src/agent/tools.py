@@ -201,6 +201,7 @@ PLANNER_SYSTEM_MESSAGE = """
     * puzzle_phase is "uninitalized" output  "get_input_source"
     * puzzle_phase is "setup_complete" output "get_recommendation"
     * puzzle_phase is "solve_puzzle" and (remaining_words is empty list  or mistake_count is 4 or greater) output "END" otherwise "get_recommendation"
+    * puzzle_phase is "complete" output "END"
     * if none of the above output "abort"
 
     output response in json format with key word "action" and the value as the output string.
