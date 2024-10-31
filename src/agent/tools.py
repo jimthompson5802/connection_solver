@@ -159,7 +159,7 @@ SYSTEM_MESSAGE = SystemMessage(
 )
 
 
-def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
+def ask_llm_for_solution(prompt, model="gpt-4o", temperature=1.0, max_tokens=4096):
     """
     Asks the OpenAI LLM for a solution based on the provided prompt.
 
@@ -176,7 +176,7 @@ def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
     # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
     llm = ChatOpenAI(
         api_key=api_key,
-        model="gpt-4o",
+        model=model,
         temperature=temperature,
         max_tokens=max_tokens,
         model_kwargs={"response_format": {"type": "json_object"}},
@@ -184,6 +184,54 @@ def ask_llm_for_solution(prompt, temperature=1.0, max_tokens=4096):
 
     # Create a prompt by concatenating the system and human messages
     conversation = [SYSTEM_MESSAGE, prompt]
+
+    # Invoke the LLM
+    response = llm.invoke(conversation)
+
+    logger.info("Exiting ask_llm_for_solution")
+    logger.debug(f"exiting ask_llm_for_solution response {response.content}")
+
+    return response
+
+
+PLANNER_SYSTEM_MESSAGE = """
+    select one and only of the following actions based on the puzzle state:
+
+    Actions:
+    * puzzle_phase is "uninitalized" output  "get_input_source"
+    * puzzle_phase is "setup_complete" output "get_recommendation"
+    * puzzle_phase is "solve_puzzle" and (remaining_words is empty list  or mistake_count is 4 or greater) output "END" otherwise "get_recommendation"
+    * if none of the above output "abort"
+
+    output response in json format with key word "action" and the value as the output string.
+"""
+
+
+def ask_llm_for_next_step(prompt, model="gpt-4o", temperature=1.0, max_tokens=4096):
+    """
+    Asks the OpenAI LLM for a solution based on the provided prompt.
+
+    Parameters:
+    prompt (str): The input prompt to be sent to the LLM.
+    temperature (float, optional): The sampling temperature to use. Defaults to 1.0.
+    max_tokens (int, optional): The maximum number of tokens to generate. Defaults to 4096.
+
+    Returns:
+    dict: The response from the LLM in JSON format.
+    """
+    logger.info("Entering ask_llm_for_solution")
+    logger.debug(f"Entering ask_llm_for_solution Prompt: {prompt.content}")
+    # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
+    llm = ChatOpenAI(
+        api_key=api_key,
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+
+    # Create a prompt by concatenating the system and human messages
+    conversation = [PLANNER_SYSTEM_MESSAGE, prompt]
 
     # Invoke the LLM
     response = llm.invoke(conversation)
