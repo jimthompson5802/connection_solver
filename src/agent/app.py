@@ -25,6 +25,7 @@ pp = pprint.PrettyPrinter(indent=4)
 MAX_ERRORS = 4
 
 
+# enum for the different phases of the puzzle
 class PuzzlePhase(str, Enum):
     UNINITIALIZED = "uninitialized"
     SETUP = "setup"
@@ -33,6 +34,7 @@ class PuzzlePhase(str, Enum):
     COMPLETE = "complete"
 
 
+# define the state of the puzzle
 class PuzzleState(TypedDict):
     puzzle_phase: PuzzlePhase = PuzzlePhase.UNINITIALIZED
     words_remaining: List[str] = []
