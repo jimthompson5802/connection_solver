@@ -9,6 +9,18 @@ Historical NYT Connection Puzzles were used in testing the agent.  Past puzzles 
 ## Connection Puzzle Description
 Connections is a word game that challenges players to find themes between words. The user is presented with 16 words and must create groups of four items that share something in common. For example: Tropical fruit: banana, mango, pineapple, guava.
 
+## Features of the Connection Solver Virtual Assistant Agent
+* Extract puzzle words from text file to setup the puzzle
+* LLM based tools to:
+  * Extract words from an image to seutp the puzzle 
+
+    ![](./images/example_puzzle_image.png)
+  * Generate puzzle recommendations to the user
+  * Puzzle Planner Module determines the next step in the agent's workflow
+* Use of multiple LLMs:
+    * `gpt-3.5-turbo` for the agent's planner
+    * `gpt-4o` for generating puzzle recommendations and extract words from image
+
 ## Solution Strategy
 The agent uses the `PuzzleState` class to manage the agent's state and controls the agent's workflow. 
 ```python
