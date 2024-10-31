@@ -11,23 +11,30 @@ import numpy as np
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 
-from tools import read_file_to_word_list, extract_words_from_image, ask_llm_for_solution, interact_with_user
+from tools import (
+    read_file_to_word_list,
+    extract_words_from_image,
+    ask_llm_for_solution,
+    interact_with_user,
+    ask_llm_for_next_step,
+)
 from utils import chunk_words, flatten_list
 
 pp = pprint.PrettyPrinter(indent=4)
 
 MAX_ERRORS = 4
 
-# Puzzle phase enums
-PUZZLE_PHASE_UNINITIALIZED = "PUZZLE_PHASE_UNINITIALIZED"
-PUZZLE_PHASE_SETUP = "PUZZLE_PHASE_SETUP"
-PUZZLE_PHASE_SETUP_COMPLETE = "PUZZLE_PHASE_SETUP_COMPLETE"
-PUZZLE_PHASE_SOLVING = "PUZZLE_PHASE_SOLVING"
-PUZZLE_PHASE_COMPLETE = "PUZZLE_PHASE_COMPLETE"
+
+class PuzzlePhase(str, Enum):
+    UNINITIALIZED = "uninitialized"
+    SETUP = "setup"
+    SETUP_COMPLETE = "setup_complete"
+    SOLVE_PUZZLE = "solve_puzzle"
+    COMPLETE = "complete"
 
 
 class PuzzleState(TypedDict):
-    puzzle_phase: int = PUZZLE_PHASE_UNINITIALIZED
+    puzzle_phase: PuzzlePhase = PuzzlePhase.UNINITIALIZED
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
     recommended_words: List[str] = []
@@ -47,20 +54,20 @@ def run_planner(state: PuzzleState) -> PuzzleState:
     logger.info("Entering run_planner:")
     logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
 
-    if state["puzzle_phase"] == PUZZLE_PHASE_UNINITIALIZED:
-        state["puzzle_phase"] = PUZZLE_PHASE_SETUP
+    if state["puzzle_phase"] == PuzzlePhase.UNINITIALIZED:
+        state["puzzle_phase"] = PuzzlePhase.SETUP
 
-    elif state["puzzle_phase"] == PUZZLE_PHASE_SETUP_COMPLETE:
-        state["puzzle_phase"] = PUZZLE_PHASE_SOLVING
+    elif state["puzzle_phase"] == PuzzlePhase.SETUP_COMPLETE:
+        state["puzzle_phase"] = PuzzlePhase.SOLVE_PUZZLE
 
-    elif state["puzzle_phase"] == PUZZLE_PHASE_SOLVING:
+    elif state["puzzle_phase"] == PuzzlePhase.SOLVE_PUZZLE:
         if len(state["words_remaining"]) == 0 or state["mistake_count"] >= MAX_ERRORS:
-            state["puzzle_phase"] = PUZZLE_PHASE_COMPLETE
+            state["puzzle_phase"] = PuzzlePhase.COMPLETE
         else:
             # leave the puzzle phase as is
             pass
 
-    elif state["puzzle_phase"] == PUZZLE_PHASE_COMPLETE:
+    elif state["puzzle_phase"] == PuzzlePhase.COMPLETE:
         pass
     else:
         raise ValueError(f"Invalid puzzle phase {state['puzzle_phase']}")
@@ -73,15 +80,26 @@ def run_planner(state: PuzzleState) -> PuzzleState:
 def determine_next_action(state: PuzzleState) -> str:
     logger.info("Entering determine_next_action:")
     logger.debug(f"\nEntering determine_next_action State: {pp.pformat(state)}")
-    if state["puzzle_phase"] == PUZZLE_PHASE_SETUP:
-        logger.debug("Returning get_input_source")
-        return "get_input_source"
-    elif state["puzzle_phase"] == PUZZLE_PHASE_SOLVING:
-        logger.debug("Returning get_recommendation")
-        return "get_recommendation"
-    elif state["puzzle_phase"] == PUZZLE_PHASE_COMPLETE:
-        logger.debug("Returning END")
+
+    # convert state to json
+    puzzle_state = json.dumps(state)
+
+    # wrap the state in a human message
+    puzzle_state = HumanMessage(puzzle_state)
+
+    # get next action from llm
+    next_action = ask_llm_for_next_step(puzzle_state, model="gpt-3.5-turbo", temperature=0)
+
+    logger.info(f"\nNext action from llm: {next_action.content}")
+
+    next_action_string = json.loads(next_action.content)["action"]
+
+    if next_action_string == "abort":
+        raise ValueError("LLM returned abort")
+    elif next_action_string == "END":
         return END
+    else:
+        return next_action_string
 
 
 def get_input_source(state: PuzzleState) -> PuzzleState:
@@ -117,7 +135,7 @@ def read_words_from_file(state: PuzzleState) -> PuzzleState:
 
     words = read_file_to_word_list()
     state["words_remaining"] = words
-    state["puzzle_phase"] = PUZZLE_PHASE_SETUP_COMPLETE
+    state["puzzle_phase"] = PuzzlePhase.SETUP_COMPLETE
 
     print(f"\nWords read from file: {words}")
     logger.info(f"\nWords read from file: {words}")
@@ -131,7 +149,7 @@ def read_words_from_image(state: PuzzleState) -> PuzzleState:
 
     words = extract_words_from_image()
     state["words_remaining"] = words
-    state["puzzle_phase"] = PUZZLE_PHASE_SETUP_COMPLETE
+    state["puzzle_phase"] = PuzzlePhase.SETUP_COMPLETE
 
     print(f"\nWords read from image: {words}")
     logger.info(f"\nWords read from image: {words}")
@@ -378,7 +396,7 @@ if __name__ == "__main__":
     app.get_graph().draw_png("images/connection_solver_graph.png")
 
     initial_state = PuzzleState(
-        puzzle_phase=PUZZLE_PHASE_UNINITIALIZED,
+        puzzle_phase=PuzzlePhase.UNINITIALIZED,
         words_remaining=[],
         invalid_connections=[],
         recommended_words=[],
