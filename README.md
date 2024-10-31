@@ -12,15 +12,18 @@ Connections is a word game that challenges players to find themes between words.
 ## Solution Strategy
 The agent uses the `PuzzleState` class to manage the agent's state and controls the agent's workflow. 
 ```python
-# Puzzle phase enums
-PUZZLE_PHASE_UNINITIALIZED = "PUZZLE_PHASE_UNINITIALIZED"
-PUZZLE_PHASE_SETUP = "PUZZLE_PHASE_SETUP"
-PUZZLE_PHASE_SETUP_COMPLETE = "PUZZLE_PHASE_SETUP_COMPLETE"
-PUZZLE_PHASE_SOLVING = "PUZZLE_PHASE_SOLVING"
-PUZZLE_PHASE_COMPLETE = "PUZZLE_PHASE_COMPLETE"
+# enum for the different phases of the puzzle
+class PuzzlePhase(str, Enum):
+    UNINITIALIZED = "uninitialized"
+    SETUP = "setup"
+    SETUP_COMPLETE = "setup_complete"
+    SOLVE_PUZZLE = "solve_puzzle"
+    COMPLETE = "complete"
 
+
+# define the state of the puzzle
 class PuzzleState(TypedDict):
-    puzzle_phase: int = PUZZLE_PHASE_UNINITIALIZED
+    puzzle_phase: PuzzlePhase = PuzzlePhase.UNINITIALIZED
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
     recommended_words: List[str] = []
@@ -35,6 +38,7 @@ class PuzzleState(TypedDict):
     llm_temperature: float = 1.0
     input_source_type: str = ""
 ```
+
 The attributes `words_remaining` and `mistake_count` are used to determine when to terminate the agent.  When a correct group of 4 words are found, these words are removed from `words_remaining`.  If a mistake is made, then `mistake_count` is incremented.  The agent is terminated when either `words_reamaining` becomes empty or  `mistake_count` exceeds a threshold.
 
 Overall control is performed by the `run_planner()` function.  The agent's workflow is defined by the `StateGraph` class from `langgraph`.  The agent's workflow is defined by a series of nodes and edges.  The nodes are the agent's processing steps and the edges are the transitions between the processing steps.  This function determines the next step in the agent's workflow based on the `puzzle_phase` of the agent. 
@@ -95,6 +99,52 @@ Agent's workflow defintion:
 
 Diagram of the agent's workflow:
 ![Connection Solver Workflow](./images/connection_solver_graph.png)
+
+The agent's planner function uses the LLM and current `PuzzleState` to determine the next step in the workflow.  
+```python
+PLANNER_SYSTEM_MESSAGE = """
+    select one and only of the following actions based on the puzzle state:
+
+
+    Actions:
+    * puzzle_phase is "uninitalized" output  "get_input_source"
+    * puzzle_phase is "setup_complete" output "get_recommendation"
+    * puzzle_phase is "solve_puzzle" and (remaining_words is empty list  or mistake_count is 4 or greater) output "END" otherwise "get_recommendation"
+    * puzzle_phase is "complete" output "END"
+    * if none of the above output "abort"
+
+
+    output response in json format with key word "action" and the value as the output string.
+"""
+```
+
+`PuzzleState` is extracted as a string and passed to the LLM in the prompt to determine the next step in the agent's workflow.  The LLM's response determines the next step.
+
+```python
+def determine_next_action(state: PuzzleState) -> str:
+    logger.info("Entering determine_next_action:")
+    logger.debug(f"\nEntering determine_next_action State: {pp.pformat(state)}")
+
+    # convert state to json
+    puzzle_state = json.dumps(state)
+
+    # wrap the state in a human message
+    puzzle_state = HumanMessage(puzzle_state)
+
+    # get next action from llm
+    next_action = ask_llm_for_next_step(puzzle_state, model="gpt-3.5-turbo", temperature=0)
+
+    logger.info(f"\nNext action from llm: {next_action.content}")
+
+    next_action_string = json.loads(next_action.content)["action"]
+
+    if next_action_string == "abort":
+        raise ValueError("LLM returned abort")
+    elif next_action_string == "END":
+        return END
+    else:
+        return next_action_string
+```
 
 ## Repo Contents
 Major contents of the repo:
