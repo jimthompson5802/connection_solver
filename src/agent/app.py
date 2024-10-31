@@ -88,6 +88,7 @@ def determine_next_action(state: PuzzleState) -> str:
 
     # wrap the state in a human message
     puzzle_state = HumanMessage(puzzle_state)
+    logger.info(f"\nState for llm: {puzzle_state.content}")
 
     # get next action from llm
     next_action = ask_llm_for_next_step(puzzle_state, model="gpt-3.5-turbo", temperature=0)

@@ -208,21 +208,23 @@ PLANNER_SYSTEM_MESSAGE = """
 """
 
 
-def ask_llm_for_next_step(prompt, model="gpt-4o", temperature=1.0, max_tokens=4096):
+def ask_llm_for_next_step(prompt, model="gpt-3.5-turbo", temperature=0, max_tokens=4096):
     """
-    Asks the OpenAI LLM for a solution based on the provided prompt.
+    Asks the language model (LLM) for the next step based on the provided prompt.
 
-    Parameters:
-    prompt (str): The input prompt to be sent to the LLM.
-    temperature (float, optional): The sampling temperature to use. Defaults to 1.0.
-    max_tokens (int, optional): The maximum number of tokens to generate. Defaults to 4096.
+    Args:
+        prompt (AIMessage): The prompt containing the content to be sent to the LLM.
+        model (str, optional): The model to be used by the LLM. Defaults to "gpt-3.5-turbo".
+        temperature (float, optional): The temperature setting for the LLM, controlling the randomness of the output. Defaults to 0.
+        max_tokens (int, optional): The maximum number of tokens for the LLM response. Defaults to 4096.
 
     Returns:
-    dict: The response from the LLM in JSON format.
+        AIMessage: The response from the LLM containing the next step.
     """
-    logger.info("Entering ask_llm_for_solution")
-    logger.debug(f"Entering ask_llm_for_solution Prompt: {prompt.content}")
-    # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
+    logger.info("Entering ask_llm_for_next_step")
+    logger.debug(f"Entering ask_llm_for_next_step Prompt: {prompt.content}")
+
+    # Initialize the OpenAI LLM for next steps
     llm = ChatOpenAI(
         api_key=api_key,
         model=model,
@@ -237,7 +239,7 @@ def ask_llm_for_next_step(prompt, model="gpt-4o", temperature=1.0, max_tokens=40
     # Invoke the LLM
     response = llm.invoke(conversation)
 
-    logger.info("Exiting ask_llm_for_solution")
-    logger.debug(f"exiting ask_llm_for_solution response {response.content}")
+    logger.info("Exiting ask_llm_for_next_step")
+    logger.debug(f"exiting ask_llm_for_next_step response {response.content}")
 
     return response
