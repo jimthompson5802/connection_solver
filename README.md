@@ -576,3 +576,7 @@ FINAL PUZZLE STATE:
                            'harvard',
                            'natural']}
 ```
+
+## Academic References
+
+* Merino, et al, _Making New Connections: LLMs as Puzzle Generators for The New York Times' Connections Word Game_, 2024, https://arxiv.org/abs/2407.11240
