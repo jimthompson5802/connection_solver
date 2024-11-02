@@ -1,9 +1,13 @@
+from enum import Enum
 import base64
 import json
 import logging
+import pprint as pp
+from typing import List, TypedDict
 
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
+
 
 with open("/openai/api_key.json") as f:
     config = json.load(f)
@@ -13,8 +17,36 @@ api_key = config["key"]
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+pp = pp.PrettyPrinter(indent=4)
 
-def read_file_to_word_list():
+
+# enum for the different phases of the puzzle
+class PuzzlePhase(str, Enum):
+    UNINITIALIZED = "uninitialized"
+    SETUP = "setup"
+    SETUP_COMPLETE = "setup_complete"
+    SOLVE_PUZZLE = "solve_puzzle"
+    COMPLETE = "complete"
+
+
+# define the state of the puzzle
+class PuzzleState(TypedDict):
+    puzzle_phase: PuzzlePhase = PuzzlePhase.UNINITIALIZED
+    words_remaining: List[str] = []
+    invalid_connections: List[List[str]] = []
+    recommended_words: List[str] = []
+    recommended_connection: str = ""
+    recommended_correct: bool = False
+    found_yellow: bool = False
+    found_greeen: bool = False
+    found_blue: bool = False
+    found_purple: bool = False
+    mistake_count: int = 0
+    recommendation_count: int = 0
+    llm_temperature: float = 1.0
+
+
+def read_file_to_word_list(file_location: str) -> List[str]:
     """
     Reads a file and returns a list of words separated by commas on the first line of the file.
     Remainder of the file contains the correct word groupings and is ignored.
@@ -25,7 +57,7 @@ def read_file_to_word_list():
     Returns:
     list: A list of words from the file. If the file is not found or an error occurs, returns an empty list.
     """
-    file_location = input("Please enter the file location: ")
+
     logger.info(f"Reading words from file {file_location}")
     try:
         with open(file_location, "r") as file:
@@ -41,7 +73,7 @@ def read_file_to_word_list():
         return []
 
 
-def extract_words_from_image():
+def extract_words_from_image(image_fp: str) -> List[str]:
     """
     Encodes an image to base64 and sends it to the OpenAI LLM to extract words from the image.
 
@@ -51,7 +83,6 @@ def extract_words_from_image():
     Returns:
     dict: The response from the LLM in JSON format.
     """
-    image_fp = input("Please enter the image file location: ")
 
     logger.info("Entering extract_words_from_image")
     logger.debug(f"Entering extract_words_from_image image_path: {image_fp}")
@@ -86,6 +117,32 @@ def extract_words_from_image():
     logger.debug(f"Exiting extract_words_from_image response {words}")
 
     return words
+
+
+def setup_puzzle(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering setup_puzzle:")
+    logger.debug(f"\nEntering setup_puzzle State: {pp.pformat(state)}")
+
+    # prompt user for input source
+    input_source = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
+
+    if input_source == "file":
+        puzzle_word_fp = input("Please enter the word file location: ")
+        words = read_file_to_word_list(puzzle_word_fp)
+    elif input_source == "image":
+        puzzle_word_fp = input("Please enter the image file location: ")
+        words = extract_words_from_image(puzzle_word_fp)
+    else:
+        raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
+
+    print(f"Puzzle Words: {words}")
+    state["words_remaining"] = words
+    state["puzzle_phase"] = PuzzlePhase.SETUP_COMPLETE
+
+    logger.info("Exiting setup_puzzle:")
+    logger.debug(f"\nExiting setup_puzzle State: {pp.pformat(state)}")
+
+    return state
 
 
 def interact_with_user(words, connection) -> str:
@@ -198,7 +255,7 @@ PLANNER_SYSTEM_MESSAGE = """
     select one and only of the following actions based on the puzzle state:
 
     Actions:
-    * puzzle_phase is "uninitalized" output  "get_input_source"
+    * puzzle_phase is "uninitalized" output  "setup_puzzle"
     * puzzle_phase is "setup_complete" output "get_recommendation"
     * puzzle_phase is "solve_puzzle" and (remaining_words is empty list  or mistake_count is 4 or greater) output "END" otherwise "get_recommendation"
     * puzzle_phase is "complete" output "END"
