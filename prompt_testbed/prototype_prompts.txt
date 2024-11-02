@@ -243,3 +243,21 @@ puzzle state:
 
 
 puzzle_phase is "puzzle_solving" and remaing_words count is 12 and mistake_count is 1
+
+
+################
+
+use "setup_puzzle" to initialize the puzzle.
+
+After the puzzle is initialized, use "get_recommendation" to solve puzzle until remaining_words is empty list or mistake_count is 4 or greater at this point "END" the game.
+
+output response in json format with key word "tool" and the value as the output string.
+
+
+puzzle state:
+{
+  "status": "puzzle is initialized", 
+  "remaining_words": ["cat", "dog"],
+  "mistake_count": 0
+}
+
