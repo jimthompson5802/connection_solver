@@ -264,7 +264,7 @@ if __name__ == "__main__":
 
     # Create a logger instance
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     workflow = StateGraph(PuzzleState)
 

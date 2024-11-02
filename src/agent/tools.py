@@ -15,14 +15,13 @@ with open("/openai/api_key.json") as f:
 api_key = config["key"]
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 pp = pp.PrettyPrinter(indent=4)
 
 
 # define the state of the puzzle
 class PuzzleState(TypedDict):
-    # puzzle_phase: PuzzlePhase = PuzzlePhase.UNINITIALIZED
     status: str = ""
     tool_to_use: str = ""
     words_remaining: List[str] = []
