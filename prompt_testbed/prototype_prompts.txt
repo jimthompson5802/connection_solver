@@ -247,7 +247,7 @@ puzzle_phase is "puzzle_solving" and remaing_words count is 12 and mistake_count
 
 ################
 
-use "setup_puzzle" to initialize the puzzle.
+use "setup_puzzle" to initialize the puzzle if the puzzle is not initialized.
 
 After the puzzle is initialized, use "get_recommendation" to solve puzzle until remaining_words is empty list or mistake_count is 4 or greater at this point "END" the game.
 
