@@ -1,3 +1,4 @@
+import copy
 from enum import Enum
 import logging
 import pprint
@@ -240,7 +241,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         state["found_count"] += 1
     else:
         print(f"Recommendation {state['recommended_words']} is incorrect")
-        state["invalid_connections"].append(state["recommended_words"])
+        state["invalid_connections"].append(copy.deepcopy(state["recommended_words"]))
         state["recommended_correct"] = False
         state["mistake_count"] += 1
 
