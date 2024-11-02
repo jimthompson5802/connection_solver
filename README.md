@@ -1,13 +1,13 @@
 # Connection Solver Virtual Assistant Testbed
 
 Experimental project to solve the [NYT Connection puzzles](https://www.nytimes.com/games/connections) using agentic workflow based on the [`langchain` ecosystem](https://python.langchain.com/v0.2/docs/introduction/).  In particular used:
-* [`langchain`'s OpenAI LLM abstraction layer](https://python.langchain.com/v0.2/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html#chatopenai) to interact with OpenAI's `gpt-4o` model
+* [`langchain`'s OpenAI LLM abstraction layer](https://python.langchain.com/v0.2/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html#chatopenai) to interact with OpenAI's `gpt-4o` and `gpt-3.5-turbo` models
 * [`langgraph`'s stateful orchestration framework](https://langchain-ai.github.io/langgraph/tutorials/multi_agent/multi-agent-collaboration/#multi-agent-network) to manage the agent's workflow
 
 Historical NYT Connection Puzzles were used in testing the agent.  Past puzzles can be found [here](https://word.tips/todays-nyt-connections-answers/).
 
 ## Connection Puzzle Description
-Connections is a word game that challenges players to find themes between words. The user is presented with 16 words and must create groups of four items that share something in common. For example: Tropical fruit: banana, mango, pineapple, guava.
+Connections is a word game that challenges players to find themes between words. The user is presented with 16 words and must create groups of four items that share something in common. For example: **Tropical fruit**: banana, mango, pineapple, guava.
 
 ## Features of the Connection Solver Virtual Assistant Agent
 * Extract puzzle words from text file to setup the puzzle
@@ -24,18 +24,10 @@ Connections is a word game that challenges players to find themes between words.
 ## Solution Strategy
 The agent uses the `PuzzleState` class to manage the agent's state and controls the agent's workflow. 
 ```python
-# enum for the different phases of the puzzle
-class PuzzlePhase(str, Enum):
-    UNINITIALIZED = "uninitialized"
-    SETUP = "setup"
-    SETUP_COMPLETE = "setup_complete"
-    SOLVE_PUZZLE = "solve_puzzle"
-    COMPLETE = "complete"
-
-
 # define the state of the puzzle
 class PuzzleState(TypedDict):
-    puzzle_phase: PuzzlePhase = PuzzlePhase.UNINITIALIZED
+    status: str = ""
+    tool_to_use: str = ""
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
     recommended_words: List[str] = []
@@ -46,9 +38,9 @@ class PuzzleState(TypedDict):
     found_blue: bool = False
     found_purple: bool = False
     mistake_count: int = 0
+    found_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
-    input_source_type: str = ""
 ```
 
 The attributes `words_remaining` and `mistake_count` are used to determine when to terminate the agent.  When a correct group of 4 words are found, these words are removed from `words_remaining`.  If a mistake is made, then `mistake_count` is incremented.  The agent is terminated when either `words_reamaining` becomes empty or  `mistake_count` exceeds a threshold.
@@ -60,9 +52,7 @@ Agent's workflow defintion:
     workflow = StateGraph(PuzzleState)
 
     workflow.add_node("run_planner", run_planner)
-    workflow.add_node("get_input_source", get_input_source)
-    workflow.add_node("read_words_from_file", read_words_from_file)
-    workflow.add_node("read_words_from_image", read_words_from_image)
+    workflow.add_node("setup_puzzle", setup_puzzle)
     workflow.add_node("get_recommendation", get_recommendation)
     workflow.add_node("regenerate_recommendation", regenerate_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
@@ -72,23 +62,13 @@ Agent's workflow defintion:
         "run_planner",
         determine_next_action,
         {
-            "get_input_source": "get_input_source",
+            "setup_puzzle": "setup_puzzle",
             "get_recommendation": "get_recommendation",
             END: END,
         },
     )
 
-    workflow.add_conditional_edges(
-        "get_input_source",
-        route_input_source,
-        {
-            "read_words_from_file": "read_words_from_file",
-            "read_words_from_image": "read_words_from_image",
-        },
-    )
-
-    workflow.add_edge("read_words_from_file", "run_planner")
-    workflow.add_edge("read_words_from_image", "run_planner")
+    workflow.add_edge("setup_puzzle", "run_planner")
     workflow.add_edge("get_recommendation", "apply_recommendation")
     workflow.add_edge("clear_recommendation", "run_planner")
     workflow.add_edge("regenerate_recommendation", "apply_recommendation")
@@ -112,30 +92,36 @@ Agent's workflow defintion:
 Diagram of the agent's workflow:
 ![Connection Solver Workflow](./images/connection_solver_graph.png)
 
-The agent's planner function uses the LLM and current `PuzzleState` to determine the next step in the workflow.  
+The agent's planner function uses the LLM and current `PuzzleState` to determine the next step in the workflow.  The Planner's prompt consists of three parts.  First is the "system prompt":
 ```python
 PLANNER_SYSTEM_MESSAGE = """
-    select one and only of the following actions based on the puzzle state:
+    You are the planner for solving a New York Times Connection Puzzle. Your task is to
+    determine the next tool to use to solve the puzzle.
 
+    the eligible tools to use are: ["setup_puzzle", "get_recommendation", "END"]
 
-    Actions:
-    * puzzle_phase is "uninitalized" output  "get_input_source"
-    * puzzle_phase is "setup_complete" output "get_recommendation"
-    * puzzle_phase is "solve_puzzle" and (remaining_words is empty list  or mistake_count is 4 or greater) output "END" otherwise "get_recommendation"
-    * puzzle_phase is "complete" output "END"
-    * if none of the above output "abort"
+    The important information from puzzle state to consider are: "status", "words_remaining", "mistake_count".
 
+    Using the provided instructions, you will need to determine the next tool to use to solve the puzzle.
 
-    output response in json format with key word "action" and the value as the output string.
+    output response in json format with key word "tool" and the value as the output string.
+    
 """
 ```
 
-`PuzzleState` is extracted as a string and passed to the LLM in the prompt to determine the next step in the agent's workflow.  The LLM's response determines the next step.
-
-**Example User Prompt with`PuzzleState` for the Planner**
-
+The second part is game specific instructions:
 ```python
-'{"puzzle_phase": "solve_puzzle", 
+INSTRUCTIONS_MESSAGE = """
+    Instrucitons:
+    use "setup_puzzle" tool to initialize the puzzle if the puzzle is not initialized.
+
+    After the puzzle is initialized, use "get_recommendation" tool if "words_remaining" is not an empty list and "mistake_count" is less than 4, else use "END" tool.
+"""
+```
+
+The final part is the current state of the game.  `PuzzleState` is extracted as a string and passed to the LLM in the prompt to determine the next step in the agent's workflow.  The LLM's response determines the next step.
+```python
+'{"status": "puzzle is initialized", 
 "words_remaining": ["uphold", "justice", "state", "honor", "energy", "keep", "labor", "fulfill"], "invalid_connections": [], 
 "recommended_words": [], 
 "recommended_connection": "", 
@@ -147,32 +133,6 @@ PLANNER_SYSTEM_MESSAGE = """
 "recommendation_count": 2, 
 "llm_temperature": 0.7, 
 "input_source_type": "file"}'
-```
-
-```python
-def determine_next_action(state: PuzzleState) -> str:
-    logger.info("Entering determine_next_action:")
-    logger.debug(f"\nEntering determine_next_action State: {pp.pformat(state)}")
-
-    # convert state to json
-    puzzle_state = json.dumps(state)
-
-    # wrap the state in a human message
-    puzzle_state = HumanMessage(puzzle_state)
-
-    # get next action from llm
-    next_action = ask_llm_for_next_step(puzzle_state, model="gpt-3.5-turbo", temperature=0)
-
-    logger.info(f"\nNext action from llm: {next_action.content}")
-
-    next_action_string = json.loads(next_action.content)["action"]
-
-    if next_action_string == "abort":
-        raise ValueError("LLM returned abort")
-    elif next_action_string == "END":
-        return END
-    else:
-        return next_action_string
 ```
 
 ## Repo Contents
