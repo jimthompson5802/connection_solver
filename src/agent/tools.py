@@ -19,15 +19,6 @@ logger.setLevel(logging.DEBUG)
 
 pp = pp.PrettyPrinter(indent=4)
 
-# TODO: clean up
-# # enum for the different phases of the puzzle
-# class PuzzlePhase(str, Enum):
-#     UNINITIALIZED = "uninitialized"
-#     SETUP = "setup"
-#     SETUP_COMPLETE = "setup_complete"
-#     SOLVE_PUZZLE = "solve_puzzle"
-#     COMPLETE = "complete"
-
 
 # define the state of the puzzle
 class PuzzleState(TypedDict):

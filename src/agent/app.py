@@ -13,7 +13,6 @@ from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 
 from tools import (
-    # PuzzlePhase,  # TODO: cleanup
     PuzzleState,
     setup_puzzle,
     ask_llm_for_solution,
@@ -31,26 +30,7 @@ def run_planner(state: PuzzleState) -> PuzzleState:
     logger.info("Entering run_planner:")
     logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
 
-    # TODO: cleanup
-    # if state["puzzle_phase"] == PuzzlePhase.UNINITIALIZED:
-    #     state["puzzle_phase"] = PuzzlePhase.SETUP
-
-    # elif state["puzzle_phase"] == PuzzlePhase.SETUP_COMPLETE:
-    #     state["puzzle_phase"] = PuzzlePhase.SOLVE_PUZZLE
-
-    # elif state["puzzle_phase"] == PuzzlePhase.SOLVE_PUZZLE:
-    #     if len(state["words_remaining"]) == 0 or state["mistake_count"] >= MAX_ERRORS:
-    #         state["puzzle_phase"] = PuzzlePhase.COMPLETE
-    #     else:
-    #         # leave the puzzle phase as is
-    #         pass
-
-    # elif state["puzzle_phase"] == PuzzlePhase.COMPLETE:
-    #     pass
-    # else:
-    #     raise ValueError(f"Invalid puzzle phase {state['puzzle_phase']}")
-
-    # convert state to json
+    # convert state to json string
     puzzle_state = "\npuzzle state:\n" + json.dumps(state)
 
     # wrap the state in a human message
@@ -72,21 +52,6 @@ def run_planner(state: PuzzleState) -> PuzzleState:
 def determine_next_action(state: PuzzleState) -> str:
     logger.info("Entering determine_next_action:")
     logger.debug(f"\nEntering determine_next_action State: {pp.pformat(state)}")
-
-    # TODO: cleanup
-    # # convert state to json
-    # puzzle_state = json.dumps(state)
-
-    # # wrap the state in a human message
-    # puzzle_state = HumanMessage(puzzle_state)
-    # logger.info(f"\nState for llm: {puzzle_state.content}")
-
-    # # get next action from llm
-    # next_action = ask_llm_for_next_step(puzzle_state, model="gpt-3.5-turbo", temperature=0)
-
-    # logger.info(f"\nNext action from llm: {next_action.content}")
-
-    # next_action_string = json.loads(next_action.content)["action"]
 
     tool_to_use = state["tool_to_use"]
 
@@ -341,7 +306,6 @@ if __name__ == "__main__":
     app.get_graph().draw_png("images/connection_solver_graph.png")
 
     initial_state = PuzzleState(
-        # puzzle_phase=PuzzlePhase.UNINITIALIZED, # TODO: cleanup
         status="",
         tool_to_use="",
         words_remaining=[],
