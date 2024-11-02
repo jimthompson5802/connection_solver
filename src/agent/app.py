@@ -2,7 +2,7 @@ from enum import Enum
 import logging
 import pprint
 import json
-from typing import TypedDict, List
+from typing import TypedDict
 import random
 
 
@@ -12,8 +12,9 @@ from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 
 from tools import (
-    read_file_to_word_list,
-    extract_words_from_image,
+    PuzzlePhase,
+    PuzzleState,
+    setup_puzzle,
     ask_llm_for_solution,
     interact_with_user,
     ask_llm_for_next_step,
@@ -23,33 +24,6 @@ from utils import chunk_words, flatten_list
 pp = pprint.PrettyPrinter(indent=4)
 
 MAX_ERRORS = 4
-
-
-# enum for the different phases of the puzzle
-class PuzzlePhase(str, Enum):
-    UNINITIALIZED = "uninitialized"
-    SETUP = "setup"
-    SETUP_COMPLETE = "setup_complete"
-    SOLVE_PUZZLE = "solve_puzzle"
-    COMPLETE = "complete"
-
-
-# define the state of the puzzle
-class PuzzleState(TypedDict):
-    puzzle_phase: PuzzlePhase = PuzzlePhase.UNINITIALIZED
-    words_remaining: List[str] = []
-    invalid_connections: List[List[str]] = []
-    recommended_words: List[str] = []
-    recommended_connection: str = ""
-    recommended_correct: bool = False
-    found_yellow: bool = False
-    found_greeen: bool = False
-    found_blue: bool = False
-    found_purple: bool = False
-    mistake_count: int = 0
-    recommendation_count: int = 0
-    llm_temperature: float = 1.0
-    input_source_type: str = ""
 
 
 def run_planner(state: PuzzleState) -> PuzzleState:
@@ -105,21 +79,6 @@ def determine_next_action(state: PuzzleState) -> str:
         return next_action_string
 
 
-def get_input_source(state: PuzzleState) -> PuzzleState:
-    logger.info("Entering get_input_source:")
-    logger.debug(f"\nEntering get_input_source State: {pp.pformat(state)}")
-
-    # prompt user for input source
-    state["input_source_type"] = input(
-        "Enter 'file' to read words from a file or 'image' to read words from an image: "
-    )
-
-    logger.info("Exiting get_input_source:")
-    logger.debug(f"\nExiting get_input_source State: {pp.pformat(state)}")
-
-    return state
-
-
 def route_input_source(state: PuzzleState) -> str:
     logger.info("Entering route_input_source:")
     logger.debug(f"\nEntering route_input_source State: {pp.pformat(state)}")
@@ -131,34 +90,6 @@ def route_input_source(state: PuzzleState) -> str:
     else:
         print("Invalid input source type")
         return END
-
-
-def read_words_from_file(state: PuzzleState) -> PuzzleState:
-    logger.info("Entering read_words_from_file")
-
-    words = read_file_to_word_list()
-    state["words_remaining"] = words
-    state["puzzle_phase"] = PuzzlePhase.SETUP_COMPLETE
-
-    print(f"\nWords read from file: {words}")
-    logger.info(f"\nWords read from file: {words}")
-    logger.debug(f"Exiting read_words_from_file State: {pp.pformat(state)}")
-
-    return state
-
-
-def read_words_from_image(state: PuzzleState) -> PuzzleState:
-    logger.info("Entering read_words_from_image")
-
-    words = extract_words_from_image()
-    state["words_remaining"] = words
-    state["puzzle_phase"] = PuzzlePhase.SETUP_COMPLETE
-
-    print(f"\nWords read from image: {words}")
-    logger.info(f"\nWords read from image: {words}")
-    logger.debug(f"Exiting read_words_from_image State: {pp.pformat(state)}")
-
-    return state
 
 
 HUMAN_MESSAGE_BASE = """
@@ -193,11 +124,11 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     llm_response_json = json.loads(llm_response.content)
     if isinstance(llm_response_json, list):
         logger.debug(f"\nLLM response is list")
-        state["recommended_words"] = llm_response_json[0]["words"]
+        state["recommended_words"] = sorted(llm_response_json[0]["words"])
         state["recommended_connection"] = llm_response_json[0]["connection"]
     else:
         logger.debug(f"\nLLM response is dict")
-        state["recommended_words"] = llm_response_json["words"]
+        state["recommended_words"] = sorted(llm_response_json["words"])
         state["recommended_connection"] = llm_response_json["connection"]
 
     logger.info("Exiting get_recommendation")
@@ -245,11 +176,11 @@ def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
     llm_response_json = json.loads(llm_response.content)
     if isinstance(llm_response_json, list):
         logger.debug(f"\nLLM response is list")
-        state["recommended_words"] = llm_response_json[0]["words"]
+        state["recommended_words"] = sorted(llm_response_json[0]["words"])
         state["recommended_connection"] = llm_response_json[0]["connection"]
     else:
         logger.debug(f"\nLLM response is dict")
-        state["recommended_words"] = llm_response_json["words"]
+        state["recommended_words"] = sorted(llm_response_json["words"])
         state["recommended_connection"] = llm_response_json["connection"]
 
     logger.info("Exiting regenerate recommendation:")
@@ -350,9 +281,7 @@ if __name__ == "__main__":
     workflow = StateGraph(PuzzleState)
 
     workflow.add_node("run_planner", run_planner)
-    workflow.add_node("get_input_source", get_input_source)
-    workflow.add_node("read_words_from_file", read_words_from_file)
-    workflow.add_node("read_words_from_image", read_words_from_image)
+    workflow.add_node("setup_puzzle", setup_puzzle)
     workflow.add_node("get_recommendation", get_recommendation)
     workflow.add_node("regenerate_recommendation", regenerate_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
@@ -362,23 +291,13 @@ if __name__ == "__main__":
         "run_planner",
         determine_next_action,
         {
-            "get_input_source": "get_input_source",
+            "setup_puzzle": "setup_puzzle",
             "get_recommendation": "get_recommendation",
             END: END,
         },
     )
 
-    workflow.add_conditional_edges(
-        "get_input_source",
-        route_input_source,
-        {
-            "read_words_from_file": "read_words_from_file",
-            "read_words_from_image": "read_words_from_image",
-        },
-    )
-
-    workflow.add_edge("read_words_from_file", "run_planner")
-    workflow.add_edge("read_words_from_image", "run_planner")
+    workflow.add_edge("setup_puzzle", "run_planner")
     workflow.add_edge("get_recommendation", "apply_recommendation")
     workflow.add_edge("clear_recommendation", "run_planner")
     workflow.add_edge("regenerate_recommendation", "apply_recommendation")
@@ -412,7 +331,6 @@ if __name__ == "__main__":
         mistake_count=0,
         recommendation_count=0,
         llm_temperature=0.7,
-        input_source_type="",
     )
 
     result = app.invoke(initial_state, {"recursion_limit": 50})
