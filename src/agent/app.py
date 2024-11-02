@@ -12,7 +12,7 @@ from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
 
 from tools import (
-    PuzzlePhase,
+    # PuzzlePhase,  # TODO: cleanup
     PuzzleState,
     setup_puzzle,
     ask_llm_for_solution,
@@ -30,23 +30,38 @@ def run_planner(state: PuzzleState) -> PuzzleState:
     logger.info("Entering run_planner:")
     logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
 
-    if state["puzzle_phase"] == PuzzlePhase.UNINITIALIZED:
-        state["puzzle_phase"] = PuzzlePhase.SETUP
+    # TODO: cleanup
+    # if state["puzzle_phase"] == PuzzlePhase.UNINITIALIZED:
+    #     state["puzzle_phase"] = PuzzlePhase.SETUP
 
-    elif state["puzzle_phase"] == PuzzlePhase.SETUP_COMPLETE:
-        state["puzzle_phase"] = PuzzlePhase.SOLVE_PUZZLE
+    # elif state["puzzle_phase"] == PuzzlePhase.SETUP_COMPLETE:
+    #     state["puzzle_phase"] = PuzzlePhase.SOLVE_PUZZLE
 
-    elif state["puzzle_phase"] == PuzzlePhase.SOLVE_PUZZLE:
-        if len(state["words_remaining"]) == 0 or state["mistake_count"] >= MAX_ERRORS:
-            state["puzzle_phase"] = PuzzlePhase.COMPLETE
-        else:
-            # leave the puzzle phase as is
-            pass
+    # elif state["puzzle_phase"] == PuzzlePhase.SOLVE_PUZZLE:
+    #     if len(state["words_remaining"]) == 0 or state["mistake_count"] >= MAX_ERRORS:
+    #         state["puzzle_phase"] = PuzzlePhase.COMPLETE
+    #     else:
+    #         # leave the puzzle phase as is
+    #         pass
 
-    elif state["puzzle_phase"] == PuzzlePhase.COMPLETE:
-        pass
-    else:
-        raise ValueError(f"Invalid puzzle phase {state['puzzle_phase']}")
+    # elif state["puzzle_phase"] == PuzzlePhase.COMPLETE:
+    #     pass
+    # else:
+    #     raise ValueError(f"Invalid puzzle phase {state['puzzle_phase']}")
+
+    # convert state to json
+    puzzle_state = "\npuzzle state:\n" + json.dumps(state)
+
+    # wrap the state in a human message
+    puzzle_state = HumanMessage(puzzle_state)
+    logger.info(f"\nState for lmm: {puzzle_state.content}")
+
+    # get next action from llm
+    next_action = ask_llm_for_next_step(puzzle_state, model="gpt-3.5-turbo", temperature=0)
+
+    logger.info(f"\nNext action from llm: {next_action.content}")
+
+    state["tool_to_use"] = json.loads(next_action.content)["tool"]
 
     logger.info("Exiting run_planner:")
     logger.debug(f"\nExiting run_planner State: {pp.pformat(state)}")
@@ -57,26 +72,29 @@ def determine_next_action(state: PuzzleState) -> str:
     logger.info("Entering determine_next_action:")
     logger.debug(f"\nEntering determine_next_action State: {pp.pformat(state)}")
 
-    # convert state to json
-    puzzle_state = json.dumps(state)
+    # TODO: cleanup
+    # # convert state to json
+    # puzzle_state = json.dumps(state)
 
-    # wrap the state in a human message
-    puzzle_state = HumanMessage(puzzle_state)
-    logger.info(f"\nState for llm: {puzzle_state.content}")
+    # # wrap the state in a human message
+    # puzzle_state = HumanMessage(puzzle_state)
+    # logger.info(f"\nState for llm: {puzzle_state.content}")
 
-    # get next action from llm
-    next_action = ask_llm_for_next_step(puzzle_state, model="gpt-3.5-turbo", temperature=0)
+    # # get next action from llm
+    # next_action = ask_llm_for_next_step(puzzle_state, model="gpt-3.5-turbo", temperature=0)
 
-    logger.info(f"\nNext action from llm: {next_action.content}")
+    # logger.info(f"\nNext action from llm: {next_action.content}")
 
-    next_action_string = json.loads(next_action.content)["action"]
+    # next_action_string = json.loads(next_action.content)["action"]
 
-    if next_action_string == "abort":
+    tool_to_use = state["tool_to_use"]
+
+    if tool_to_use == "abort":
         raise ValueError("LLM returned abort")
-    elif next_action_string == "END":
+    elif tool_to_use == "END":
         return END
     else:
-        return next_action_string
+        return tool_to_use
 
 
 def route_input_source(state: PuzzleState) -> str:
@@ -209,7 +227,9 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         case "p":
             state["found_purple"] = True
         case "n":
-            state["mistake_count"] += 1
+            pass
+        case _:
+            raise ValueError(f"Invalid user response {found_correct_group}")
 
     # remove recommended words if we found a solution
     if found_correct_group != "n":
@@ -217,10 +237,12 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         # remove from remaining_words the words from recommended_words
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
         state["recommended_correct"] = True
+        state["found_count"] += 1
     else:
         print(f"Recommendation {state['recommended_words']} is incorrect")
         state["invalid_connections"].append(state["recommended_words"])
         state["recommended_correct"] = False
+        state["mistake_count"] += 1
 
     logger.info("Exiting apply_recommendation:")
     logger.debug(f"\nExiting apply_recommendation State: {pp.pformat(state)}")
@@ -276,7 +298,7 @@ if __name__ == "__main__":
 
     # Create a logger instance
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     workflow = StateGraph(PuzzleState)
 
@@ -318,7 +340,9 @@ if __name__ == "__main__":
     app.get_graph().draw_png("images/connection_solver_graph.png")
 
     initial_state = PuzzleState(
-        puzzle_phase=PuzzlePhase.UNINITIALIZED,
+        # puzzle_phase=PuzzlePhase.UNINITIALIZED, # TODO: cleanup
+        status="",
+        tool_to_use="",
         words_remaining=[],
         invalid_connections=[],
         recommended_words=[],
@@ -329,6 +353,7 @@ if __name__ == "__main__":
         found_purple=False,
         found_yellow=False,
         mistake_count=0,
+        found_count=0,
         recommendation_count=0,
         llm_temperature=0.7,
     )

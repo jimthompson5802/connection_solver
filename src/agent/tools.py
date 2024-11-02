@@ -15,23 +15,25 @@ with open("/openai/api_key.json") as f:
 api_key = config["key"]
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 pp = pp.PrettyPrinter(indent=4)
 
-
-# enum for the different phases of the puzzle
-class PuzzlePhase(str, Enum):
-    UNINITIALIZED = "uninitialized"
-    SETUP = "setup"
-    SETUP_COMPLETE = "setup_complete"
-    SOLVE_PUZZLE = "solve_puzzle"
-    COMPLETE = "complete"
+# TODO: clean up
+# # enum for the different phases of the puzzle
+# class PuzzlePhase(str, Enum):
+#     UNINITIALIZED = "uninitialized"
+#     SETUP = "setup"
+#     SETUP_COMPLETE = "setup_complete"
+#     SOLVE_PUZZLE = "solve_puzzle"
+#     COMPLETE = "complete"
 
 
 # define the state of the puzzle
 class PuzzleState(TypedDict):
-    puzzle_phase: PuzzlePhase = PuzzlePhase.UNINITIALIZED
+    # puzzle_phase: PuzzlePhase = PuzzlePhase.UNINITIALIZED
+    status: str = ""
+    tool_to_use: str = ""
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
     recommended_words: List[str] = []
@@ -42,6 +44,7 @@ class PuzzleState(TypedDict):
     found_blue: bool = False
     found_purple: bool = False
     mistake_count: int = 0
+    found_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
 
@@ -137,7 +140,7 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
 
     print(f"Puzzle Words: {words}")
     state["words_remaining"] = words
-    state["puzzle_phase"] = PuzzlePhase.SETUP_COMPLETE
+    state["status"] = "puzzle is initialized"
 
     logger.info("Exiting setup_puzzle:")
     logger.debug(f"\nExiting setup_puzzle State: {pp.pformat(state)}")
@@ -252,16 +255,24 @@ def ask_llm_for_solution(prompt, model="gpt-4o", temperature=1.0, max_tokens=409
 
 
 PLANNER_SYSTEM_MESSAGE = """
-    select one and only of the following actions based on the puzzle state:
+    You are the planner for solving a New York Times Connection Puzzle. Your task is to
+    determine the next tool to use to solve the puzzle.
 
-    Actions:
-    * puzzle_phase is "uninitalized" output  "setup_puzzle"
-    * puzzle_phase is "setup_complete" output "get_recommendation"
-    * puzzle_phase is "solve_puzzle" and (remaining_words is empty list  or mistake_count is 4 or greater) output "END" otherwise "get_recommendation"
-    * puzzle_phase is "complete" output "END"
-    * if none of the above output "abort"
+    the eligible tools to use are: ["setup_puzzle", "get_recommendation", "END"]
 
-    output response in json format with key word "action" and the value as the output string.
+    The important information from puzzle state to consider are: "status", "words_remaining", "mistake_count".
+
+    Using the provided instructions, you will need to determine the next tool to use to solve the puzzle.
+
+    output response in json format with key word "tool" and the value as the output string.
+    
+"""
+
+INSTRUCTIONS_MESSAGE = """
+    Instrucitons:
+    use "setup_puzzle" tool to initialize the puzzle if the puzzle is not initialized.
+
+    After the puzzle is initialized, use "get_recommendation" tool if "words_remaining" is not an empty list and "mistake_count" is less than 4, else use "END" tool.
 """
 
 
@@ -291,10 +302,14 @@ def ask_llm_for_next_step(prompt, model="gpt-3.5-turbo", temperature=0, max_toke
     )
 
     # Create a prompt by concatenating the system and human messages
-    conversation = [PLANNER_SYSTEM_MESSAGE, prompt]
+    conversation = [PLANNER_SYSTEM_MESSAGE, INSTRUCTIONS_MESSAGE, prompt]
+
+    logger.debug(f"conversation: {pp.pformat(conversation)}")
 
     # Invoke the LLM
     response = llm.invoke(conversation)
+
+    logger.debug(f"response: {pp.pformat(response)}")
 
     logger.info("Exiting ask_llm_for_next_step")
     logger.debug(f"exiting ask_llm_for_next_step response {response.content}")
