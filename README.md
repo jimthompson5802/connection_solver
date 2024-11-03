@@ -16,10 +16,12 @@ Connections is a word game that challenges players to find themes between words.
 
     ![](./images/example_puzzle_image.png)
   * Generate puzzle recommendations to the user
-  * Puzzle Planner Module determines the next step in the agent's workflow
+  * Natural Language Puzzle Planner module
 * Use of multiple LLMs:
     * `gpt-3.5-turbo` for the agent's planner
     * `gpt-4o` for generating puzzle recommendations and extract words from image
+* LLM tracing with `langsmith`
+
 
 ## Solution Strategy
 The agent uses the `PuzzleState` class to manage the agent's state and controls the agent's workflow. 
