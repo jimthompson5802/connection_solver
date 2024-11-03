@@ -557,6 +557,12 @@ FINAL PUZZLE STATE:
                            'natural']}
 ```
 
+## `langsmith` tracing
+
+The `langsmith` tracing tool was used to trace the agent's workflow and is saved on my personal account on `smith.langchain.com`.  Here is an example trace of the agent's workflow:
+
+![](./images/example_langsmith_trace.png)
+
 ## Academic References
 
 * Merino, et al, _Making New Connections: LLMs as Puzzle Generators for The New York Times' Connections Word Game_, 2024, https://arxiv.org/abs/2407.11240

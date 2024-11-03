@@ -3,6 +3,7 @@ import copy
 import logging
 import pprint
 import json
+import os
 import random
 
 
@@ -10,6 +11,8 @@ import numpy as np
 
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
+
+from langchain_core.tracers.context import tracing_v2_enabled
 
 from tools import (
     PuzzleState,
@@ -272,12 +275,25 @@ if __name__ == "__main__":
     parser.add_argument(
         "--log-level", type=str, default="INFO", help="Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
     )
+    parser.add_argument(
+        "--trace", action="store_true", default=False, help="Enable langsmith tracing for the application."
+    )
 
     # Parse arguments
     args = parser.parse_args()
 
     # Configure logging
     configure_logging(args.log_level)
+
+    # setup for tracing if specified
+    if args.trace:
+        with open("/openai/api_key.json") as f:
+            config = json.load(f)
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        # os.environ["LANGCHAIN_PROJECT"] = "Agent-With-LangGraph"
+        os.environ["LANGCHAIN_API_KEY"] = config["langsmith_key"]
+    else:
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"
 
     # Create a logger instance
     logger = logging.getLogger(__name__)
@@ -339,7 +355,8 @@ if __name__ == "__main__":
         llm_temperature=0.7,
     )
 
-    result = app.invoke(initial_state, {"recursion_limit": 50})
+    with tracing_v2_enabled("Connection_Solver_Agent"):
+        result = app.invoke(initial_state, {"recursion_limit": 50})
 
     print("\n\nFINAL PUZZLE STATE:")
     pp.pprint(result)
