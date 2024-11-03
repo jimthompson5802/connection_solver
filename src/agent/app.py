@@ -1,3 +1,4 @@
+import argparse
 import copy
 import logging
 import pprint
@@ -248,11 +249,15 @@ def is_end(state: PuzzleState) -> str:
         return "regenerate_recommendation"
 
 
-if __name__ == "__main__":
+def configure_logging(log_level):
+    # get numeric value of log level
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError(f"Invalid log level: {log_level}")
 
     # Configure the logging settings
     logging.basicConfig(
-        level=logging.WARNING,  # Set the logging level
+        level=numeric_level,  # Set the logging level
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Define the log format
         handlers=[
             logging.FileHandler("app.log"),  # Log to a file
@@ -260,9 +265,22 @@ if __name__ == "__main__":
         ],
     )
 
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Set logging level for the application.")
+    parser.add_argument(
+        "--log-level", type=str, default="INFO", help="Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
+    )
+
+    # Parse arguments
+    args = parser.parse_args()
+
+    # Configure logging
+    configure_logging(args.log_level)
+
     # Create a logger instance
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
 
     workflow = StateGraph(PuzzleState)
 

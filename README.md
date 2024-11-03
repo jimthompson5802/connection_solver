@@ -158,6 +158,26 @@ From a Virtual Coding Assistant perspective, perplexity.ai seemed to generate mo
 
 ## Sample Runs
 
+### How to Run the Agent
+```bash
+# run agent with default logging level
+$ python src/agent/app.py
+
+# run agent with DEBUG logging level
+$ python src/agent/app.py --log-level DEBUG
+```
+Command line options:
+```text
+usage: app.py [-h] [--log-level LOG_LEVEL]
+
+Set logging level for the application.
+
+options:
+  -h, --help            show this help message and exit
+  --log-level LOG_LEVEL
+                        Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+```
+
 Note: Due to the random nature of the LLM, the results vary from run to run.  For example, running the same puzzle multiple times may result in different recommendations from the LLM.  As a result, the puzzle may get solved in one run and not in another.
 
 ### Solved Connection Puzzle 1

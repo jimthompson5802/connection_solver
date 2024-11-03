@@ -14,7 +14,6 @@ with open("/openai/api_key.json") as f:
 api_key = config["key"]
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 pp = pp.PrettyPrinter(indent=4)
 
