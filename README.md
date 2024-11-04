@@ -568,7 +568,7 @@ FINAL PUZZLE STATE:
 
 ## `langsmith` tracing
 
-The `langsmith` tracing tool was used to trace the agent's workflow and is saved on my personal account on `smith.langchain.com`.  Here is an example trace of the agent's workflow:
+The `langsmith` tracing tool was used to trace the agent's workflow.  Here is an example trace of the agent solving a Connection Puzzle.:
 
 ![](./images/example_langsmith_trace.png)
 
