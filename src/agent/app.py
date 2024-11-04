@@ -65,19 +65,6 @@ def determine_next_action(state: PuzzleState) -> str:
         return tool_to_use
 
 
-def route_input_source(state: PuzzleState) -> str:
-    logger.info("Entering route_input_source:")
-    logger.debug(f"\nEntering route_input_source State: {pp.pformat(state)}")
-
-    if state["input_source_type"] == "file":
-        return "read_words_from_file"
-    elif state["input_source_type"] == "image":
-        return "read_words_from_image"
-    else:
-        print("Invalid input source type")
-        return END
-
-
 HUMAN_MESSAGE_BASE = """
     From the following candidate list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.      
     """
