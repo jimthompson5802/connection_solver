@@ -572,6 +572,16 @@ The `langsmith` tracing tool was used to trace the agent's workflow.  Here is an
 
 ![](./images/example_langsmith_trace.png)
 
+## Future Work
+* Implement automated testing
+* Implement experiment tracking
+* Experiment...experiment...experiment
+  * alternative prompts (color code?), LLM settings, e.g., temperature, top-k, top-p
+  * Handle "one away" responses, where 3 of the 4 words are correct
+  * RAG-based approach
+* Enhance Planner, rationalize workflow design
+* Incorporate more `langchain` concepts around "tools"
+
 ## Academic References
 
 * Merino, et al, _Making New Connections: LLMs as Puzzle Generators for The New York Times' Connections Word Game_, 2024, https://arxiv.org/abs/2407.11240
