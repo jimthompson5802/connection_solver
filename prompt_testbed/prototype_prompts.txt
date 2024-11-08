@@ -286,3 +286,28 @@ INSTRUCTIONS_MESSAGE = """
  
  
     After the puzzle is initialized, use "get_recommendation" tool if "words_remaining" is not an empty list and "mistake_count" is less than 4, else use "END" tool.
+
+
+######################
+You are an expert in language and knowledgeable on how words are used.
+
+Your task is to generate as many diverse definitions as possible for the a given word.  Follow these steps:
+
+1. come up with a list of all possible parts of speech that the given word can be,e.g., noun, verb, adjective, etc.
+2. for each part of speech, generate one or more examples of the given word for that parts of speech.  preappend the part of speech to the examples, e.g., "noun: example1", "verb: example2", etc.
+3. combine all examples into a single list.
+
+Return your response as a JSON object with the word as the key and the connotations as a list of strings.
+
+example:
+
+{
+  "word": [
+    "noun: example1", 
+    "noun: example2", 
+    "adjective: example3",]
+}
+
+
+
+  
