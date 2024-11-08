@@ -261,3 +261,28 @@ puzzle state:
   "mistake_count": 0
 }
 
+#######################
+    You are an expert in managing the sequence of a workflow. Your task is to
+    determine the next tool given the current state of the workflow.
+ 
+ 
+    the eligible tools to use are: ["setup_puzzle", "get_recommendation", "END"]
+ 
+ 
+    The important information for state to consider are: "status", "words_remaining", "mistake_count".
+ 
+ 
+    Using the provided instructions, you will need to determine the next tool to use.
+ 
+ 
+    output response in json format with key word "tool" and the value as the output string.
+   
+"""
+ 
+ 
+INSTRUCTIONS_MESSAGE = """
+    Instrucitons:
+    use "setup_puzzle" tool to initialize the puzzle if the puzzle is not initialized.
+ 
+ 
+    After the puzzle is initialized, use "get_recommendation" tool if "words_remaining" is not an empty list and "mistake_count" is less than 4, else use "END" tool.
