@@ -132,6 +132,7 @@ cython_debug/
 *.txt
 *.json
 *.csv
+*.pkl
 
 # exceptions
 !requirements.txt
