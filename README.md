@@ -101,14 +101,14 @@ Diagram of the agent's workflow:
 The agent's planner function uses the LLM and current `PuzzleState` to determine the next step in the workflow.  The Planner's prompt consists of three parts.  First is the "system prompt":
 ```python
 PLANNER_SYSTEM_MESSAGE = """
-    You are the planner for solving a New York Times Connection Puzzle. Your task is to
-    determine the next tool to use to solve the puzzle.
+    You are an expert in managing the sequence of a workflow. Your task is to
+    determine the next tool to use given the current state of the workflow.
 
     the eligible tools to use are: ["setup_puzzle", "get_recommendation", "END"]
 
-    The important information from puzzle state to consider are: "status", "words_remaining", "mistake_count".
+    The important information for the workflow state is to consider are: "status", "words_remaining", "mistake_count".
 
-    Using the provided instructions, you will need to determine the next tool to use to solve the puzzle.
+    Using the provided instructions, you will need to determine the next tool to use.
 
     output response in json format with key word "tool" and the value as the output string.
     
