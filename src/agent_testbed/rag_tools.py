@@ -60,3 +60,39 @@ def generate_embeddings(definitions, model="text-embedding-3-small"):
     embeddings = embed_model.embed_documents(definitions)
 
     return embeddings
+
+
+VALIDATOR_SYSTEM_MESSAGE = SystemMessage(
+    """
+    anaylyze the following set of "candidate group" of 4 words.
+    
+    For each  "candidate group"  determine if the 4 words are connected by a single theme or concept.
+
+    eliminate "candidate group" where the 4 words are not connected by a single theme or concept.
+
+    return the "candidate group" that is unlike the other word groups
+
+    if there is no  "candidate group" connected by a single theme or concept, return the group with the highest group metric.
+
+    return response in json with the
+    * key "candidate_group" for the "candidate group" that is connected by a single theme or concept that is the most unique about the "candidate group".  This is a list of 4 words.
+    * key "explanation" with the reason for the response.
+    """
+)
+
+
+def validate_recommendations(candidates, model="gpt-4o", temperature=0.7, max_tokens=4096):
+
+    # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
+    llm = ChatOpenAI(
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+
+    prompt = HumanMessage(candidates)
+    prompt = [VALIDATOR_SYSTEM_MESSAGE, prompt]
+    result = llm.invoke(prompt)
+
+    return json.loads(result.content)
