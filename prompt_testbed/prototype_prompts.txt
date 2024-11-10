@@ -309,5 +309,16 @@ example:
 }
 
 
+############VALIDATOR SYSTEM PROMPT#############
+you are an expert in laguage with a deep understanding of the nuances.
 
+Is there a common context, thought or idea that is present in all the statements.
+
+If there is commaon context, thought or idea, return "single" else "multiple"
+
+Explain the rationale for the answer.
   
+
+################GENERATE SUMMARY SYSTEM PROMPT################
+
+Provide a few word summary of the following statements.
