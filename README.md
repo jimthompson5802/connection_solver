@@ -1371,7 +1371,14 @@ FINAL PUZZLE STATE:
 
 The `langsmith` tracing tool was used to trace the agent's workflow.  Here is an example trace of the agent solving a Connection Puzzle.:
 
-![](./images/example_langsmith_trace.png)
+### Overall Trace
+![Overall Trace](./images/langsmith_overall.png)
+
+### Creating Embeddings
+![Creating Embeddings](./images/langsmith_embedvec.png)
+
+### Workflow Decision Making
+![Planner](./images/langsmith_planner.png)
 
 ## Future Work
 * Implement automated testing
