@@ -8,8 +8,8 @@ Use the table to select the appropriate tool.
 
 |puzzle_recommender| puzzle_step | tool |
 | --- | --- | --- |
-|rag_recommender| next_recommendation | get_rag_recommendation |
-|rag_recommender| have_recommendation | apply_recommendation |
+|embedvec_recommender| next_recommendation | get_embedvec_recommendation |
+|embedvec_recommender| have_recommendation | apply_recommendation |
 |fallback_recommender| next_recommendation | get_recommendation |
 |fallback_recommender| have_recommendation | apply_recommendation |
 

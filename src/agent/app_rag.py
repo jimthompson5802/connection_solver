@@ -19,11 +19,11 @@ from tools import (
     interact_with_user,
 )
 
-from rag_tools import (
+from embedvec_tools import (
     ask_llm_for_next_step,
     PuzzleState,
     setup_puzzle,
-    choose_rag_item,
+    choose_embedvec_item,
     get_candidate_words,
 )
 
@@ -127,11 +127,11 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     return state
 
 
-def get_rag_recommendation(state: PuzzleState) -> PuzzleState:
-    logger.info("Entering get_rag_recommendation")
-    logger.debug(f"Entering get_rag_recommendation State: {pp.pformat(state)}")
+def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering get_embedvec_recommendation")
+    logger.debug(f"Entering get_embedvec_recommendation State: {pp.pformat(state)}")
 
-    print("ENTERED RAG RECOMMENDATION")
+    print("\nENTERED EMBEDVEC RECOMMENDATION")
 
     # get candidate list of words
     candidate_list = get_candidate_words(state["vocabulary_df"])
@@ -139,8 +139,8 @@ def get_rag_recommendation(state: PuzzleState) -> PuzzleState:
 
     # validate the top 5 candidate list with LLM
     list_to_validate = "\n".join([str(x) for x in candidate_list[:5]])
-    recommended_group = choose_rag_item(list_to_validate)
-    print(f"Recommended group: {recommended_group}")
+    recommended_group = choose_embedvec_item(list_to_validate)
+    logger.info(f"Recommended group: {recommended_group}")
 
     state["recommended_words"] = recommended_group["candidate_group"]
     state["recommended_connection"] = recommended_group["explanation"]
@@ -148,8 +148,8 @@ def get_rag_recommendation(state: PuzzleState) -> PuzzleState:
 
     # build prompt for llm
 
-    logger.info("Exiting get_rag_recommendation")
-    logger.debug(f"Exiting get_rag_recommendation State: {pp.pformat(state)}")
+    logger.info("Exiting get_embedvec_recommendation")
+    logger.debug(f"Exiting get_embedvec_recommendation State: {pp.pformat(state)}")
 
     return state
 
@@ -182,8 +182,8 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
     if found_correct_group != "n":
         print(f"Recommendation {state['recommended_words']} is correct")
 
-        # for rag_recommender, remove the words from the vocabulary_df
-        if state["puzzle_recommender"] == "rag_recommender":
+        # for embedvec_recommender, remove the words from the vocabulary_df
+        if state["puzzle_recommender"] == "embedvec_recommender":
             # remove from remaining_words the words from recommended_words
             state["vocabulary_df"] = state["vocabulary_df"][
                 ~state["vocabulary_df"]["word"].isin(state["recommended_words"])
@@ -197,7 +197,9 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         state["invalid_connections"].append(copy.deepcopy(state["recommended_words"]))
         state["recommended_correct"] = False
         state["mistake_count"] += 1
-        state["puzzle_recommender"] = "fallback_recommender"
+        if state["puzzle_recommender"] == "embedvec_recommender":
+            print("Changing the recommender from 'embedvec_recommender' to 'fallback_recommender'")
+            state["puzzle_recommender"] = "fallback_recommender"
 
     state["recommended_words"] = []
     state["recommended_connection"] = ""
@@ -275,7 +277,7 @@ if __name__ == "__main__":
 
     workflow.add_node("run_planner", run_planner)
     workflow.add_node("setup_puzzle", setup_puzzle)
-    workflow.add_node("get_rag_recommendation", get_rag_recommendation)
+    workflow.add_node("get_embedvec_recommendation", get_embedvec_recommendation)
     workflow.add_node("get_recommendation", get_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
 
@@ -284,7 +286,7 @@ if __name__ == "__main__":
         determine_next_action,
         {
             "setup_puzzle": "setup_puzzle",
-            "get_rag_recommendation": "get_rag_recommendation",
+            "get_embedvec_recommendation": "get_embedvec_recommendation",
             "get_recommendation": "get_recommendation",
             "apply_recommendation": "apply_recommendation",
             END: END,
@@ -293,13 +295,13 @@ if __name__ == "__main__":
 
     workflow.add_edge("setup_puzzle", "run_planner")
     workflow.add_edge("get_recommendation", "run_planner")
-    workflow.add_edge("get_rag_recommendation", "run_planner")
+    workflow.add_edge("get_embedvec_recommendation", "run_planner")
     workflow.add_edge("apply_recommendation", "run_planner")
 
     workflow.set_entry_point("run_planner")
 
     app = workflow.compile()
-    app.get_graph().draw_png("images/connection_solver_rag_graph.png")
+    app.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
 
     initial_state = PuzzleState(
         puzzle_status="",
