@@ -1381,14 +1381,7 @@ The `langsmith` tracing tool was used to trace the agent's workflow.  Here is an
 ![Planner](./images/langsmith_planner.png)
 
 ## Future Work
-* Implement automated testing
-* Implement experiment tracking
-* Experiment...experiment...experiment
-  * alternative prompts (color code?), LLM settings, e.g., temperature, top-k, top-p
-  * Handle "one away" responses, where 3 of the 4 words are correct
-  * RAG-based approach
-* Enhance Planner, rationalize workflow design
-* Incorporate more `langchain` concepts around "tools"
+See https://github.com/jimthompson5802/connection_solver/issues
 
 ## Academic References
 
