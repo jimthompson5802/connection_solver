@@ -222,42 +222,6 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
     return state
 
 
-# TODO: clean up
-# def clear_recommendation(state: PuzzleState) -> PuzzleState:
-#     logger.info("Entering clear_recommendation:")
-#     logger.debug(f"\nEntering clear_recommendation State: {pp.pformat(state)}")
-
-#     state["recommended_words"] = []
-#     state["recommended_connection"] = ""
-#     state["recommended_correct"] = False
-
-#     logger.info("Exiting clear_recommendation:")
-#     logger.debug(f"\nExiting clear_recommendation State: {pp.pformat(state)}")
-
-#     return state
-
-
-# TODO: clean up
-# def is_end(state: PuzzleState) -> str:
-#     logger.info("Entering is_end:")
-#     logger.debug(f"\nEntering is_end State: {pp.pformat(state)}")
-
-#     if len(state["words_remaining"]) == 0:
-#         logger.info("SOLVED THE CONNECTION PUZZLE!!!")
-#         print("SOLVED THE CONNECTION PUZZLE!!!")
-#         return "run_planner"
-#     elif state["mistake_count"] >= MAX_ERRORS:
-#         logger.info("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
-#         print("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
-#         return "run_planner"
-#     elif state["recommended_correct"]:
-#         logger.info("Recommendation accepted, Going to clear_recommendation")
-#         return "clear_recommendation"
-#     else:
-#         logger.info("Recommendation not accepted, Going to regenerate_recommendation")
-#         return "regenerate_recommendation"
-
-
 def configure_logging(log_level):
     # get numeric value of log level
     numeric_level = getattr(logging, log_level.upper(), None)
@@ -331,20 +295,6 @@ if __name__ == "__main__":
     workflow.add_edge("get_recommendation", "run_planner")
     workflow.add_edge("get_rag_recommendation", "run_planner")
     workflow.add_edge("apply_recommendation", "run_planner")
-
-    # TODO: clean up
-    # workflow.add_edge("clear_recommendation", "run_planner")
-    # workflow.add_edge("regenerate_recommendation", "apply_recommendation")
-
-    # workflow.add_conditional_edges(
-    #     "apply_recommendation",
-    #     is_end,
-    #     {
-    #         "run_planner": "run_planner",
-    #         "clear_recommendation": "clear_recommendation",
-    #         "regenerate_recommendation": "regenerate_recommendation",
-    #     },
-    # )
 
     workflow.set_entry_point("run_planner")
 
