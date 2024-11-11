@@ -198,8 +198,8 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         state["recommended_correct"] = False
         state["mistake_count"] += 1
         if state["puzzle_recommender"] == "embedvec_recommender":
-            print("Changing the recommender from 'embedvec_recommender' to 'fallback_recommender'")
-            state["puzzle_recommender"] = "fallback_recommender"
+            print("Changing the recommender from 'embedvec_recommender' to 'llm_recommender'")
+            state["puzzle_recommender"] = "llm_recommender"
 
     state["recommended_words"] = []
     state["recommended_connection"] = ""
