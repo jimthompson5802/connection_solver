@@ -17,6 +17,7 @@ pp = pp.PrettyPrinter(indent=4)
 class PuzzleState(TypedDict):
     puzzle_status: str = ""
     puzzle_step: str = ""
+    puzzle_recommender: str = ""
     tool_to_use: str = ""
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
@@ -52,7 +53,8 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     print(f"Puzzle Words: {words}")
     state["words_remaining"] = words
     state["puzzle_status"] = "initialized"
-    state["puzzle_step"] = "get_recommendation"
+    state["puzzle_step"] = "next_recommendation"
+    state["puzzle_recommender"] = "fallback_recommender"
     state["invalid_connections"] = []
     state["mistake_count"] = 0
     state["found_count"] = 0
@@ -173,9 +175,9 @@ PLANNER_SYSTEM_MESSAGE = """
     You are an expert in managing the sequence of a workflow. Your task is to
     determine the next tool to use given the current state of the workflow.
 
-    the eligible tools to use are: ["setup_puzzle", "get_recommendation", "apply_recommendation", "END"]
+    the eligible tools to use are: ["setup_puzzle", "get_recommendation", "apply_recommendation", "get_rag_recommendation", "END"]
 
-    The important information for the workflow state is to consider are: "puzzle_status", "puzzle_step".
+    The important information for the workflow state is to consider are: "puzzle_status", "puzzle_step", and "puzzle_recommender".
 
     Using the provided instructions, you will need to determine the next tool to use.
 
@@ -184,22 +186,41 @@ PLANNER_SYSTEM_MESSAGE = """
 """
 
 INSTRUCTIONS_MESSAGE = """
-    Instrucitons:
-    use "setup_puzzle" tool to initialize the puzzle if the puzzle is not initialized.
+**Instructions**
 
-    If "puzzle_step" is "get_recommendation" use "get_recommendation" tool.
-     
-    If "puzzle_step" is "apply_recommendation", use "apply_recommendation" tool.
+use "setup_puzzle" tool to initialize the puzzle if the "puzzle_status" is not initialized.
 
-    if "puzzle_step" is "completed" use "END" tool.
-      
+if "puzzle_step" is "puzzle_completed" then use "END" tool.
+
+Based use the table to select the appropriate tool.
+
+|puzzle_recommender| puzzle_step | tool |
+| --- | --- | --- |
+|rag_recommender| next_recommendation | get_rag_recommendation |
+|rag_recommender| have_recommendation | apply_recommendation |
+|fallback_recommender| next_recommendation | get_recommendation |
+|fallback_recommender| have_recommendation | apply_recommendation |
+
+If no tool is selected, use "ABORT" tool.
 
 """
+
+#  puzzle step state:
+#  have_rag_recommendation
+#  have_fallback_recommendation
+#  recommendation_applied
+#  puzzle_completed
+
+# If "puzzle_step" is "have_recommendation" use "apply_recommendation" tool.
+
+# If "puzzle_step" is "next_recommendation", use "get_recommendation" tool.
+
+# if "puzzle_step" is "puzzle_completed" use "END" tool.
 
 # used for testing int playground
 # puzzle_state: {
 #     "puzzle_status": "initialized",
-#     "puzzle_step": "get_recommendation",
+#     "puzzle_step": "",
 # }
 
 

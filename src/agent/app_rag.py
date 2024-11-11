@@ -26,12 +26,15 @@ pp = pprint.PrettyPrinter(indent=4)
 MAX_ERRORS = 4
 
 
+KEY_PUZZLE_STATE_FIELDS = ["puzzle_status", "puzzle_step", "puzzle_recommender"]
+
+
 def run_planner(state: PuzzleState) -> PuzzleState:
     logger.info("Entering run_planner:")
     logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
 
     # convert state to json string
-    relevanat_state = {k: state[k] for k in ["puzzle_status", "puzzle_step"]}
+    relevanat_state = {k: state[k] for k in KEY_PUZZLE_STATE_FIELDS}
     puzzle_state = "\npuzzle state:\n" + json.dumps(relevanat_state)
 
     # wrap the state in a human message
@@ -106,7 +109,7 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
         state["recommended_words"] = sorted(llm_response_json["words"])
         state["recommended_connection"] = llm_response_json["connection"]
 
-    state["puzzle_step"] = "apply_recommendation"
+    state["puzzle_step"] = "have_recommendation"
 
     logger.info("Exiting get_recommendation")
     logger.debug(f"Exiting get_recommendation State: {pp.pformat(state)}")
@@ -216,10 +219,10 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
             logger.info("SOLVED THE CONNECTION PUZZLE!!!")
             print("SOLVED THE CONNECTION PUZZLE!!!")
 
-        state["puzzle_step"] = "completed"
+        state["puzzle_step"] = "puzzle_completed"
     else:
         logger.info("Going to next get_recommendation")
-        state["puzzle_step"] = "get_recommendation"
+        state["puzzle_step"] = "next_recommendation"
 
     logger.info("Exiting apply_recommendation:")
     logger.debug(f"\nExiting apply_recommendation State: {pp.pformat(state)}")
@@ -354,20 +357,7 @@ if __name__ == "__main__":
     initial_state = PuzzleState(
         puzzle_status="",
         puzzle_step="",
-        # status="",
-        # tool_to_use="",
-        # words_remaining=[],
-        # invalid_connections=[],
-        # recommended_words=[],
-        # recommended_connection="",
-        # recommended_correct=False,
-        # found_blue=False,
-        # found_green=False,
-        # found_purple=False,
-        # found_yellow=False,
-        # mistake_count=0,
-        # found_count=0,
-        # recommendation_count=0,
+        puzzle_recommender="",
         llm_temperature=0.7,
     )
 
