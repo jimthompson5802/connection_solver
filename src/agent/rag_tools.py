@@ -109,6 +109,8 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
         raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
 
     print(f"Puzzle Words: {words}")
+
+    # initialize the state
     state["words_remaining"] = words
     state["puzzle_status"] = "initialized"
     state["puzzle_step"] = "next_recommendation"
@@ -120,7 +122,26 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     state["recommended_words"] = []
 
     # read in pre-built vocabulary for testing
-    state["vocabulary_df"] = pd.read_pickle("src/agent_testbed/word_list1.pkl")
+    # state["vocabulary_df"] = pd.read_pickle("src/agent_testbed/word_list1.pkl")
+
+    # generate vocabulary for the words
+    print("generating vocabulary for the words...this may take about a minute")
+    vocabulary = generate_vocabulary(state["words_remaining"])
+
+    # Convert dictionary to DataFrame
+    rows = []
+    for word, definitions in vocabulary.items():
+        for definition in definitions:
+            rows.append({"word": word, "definition": definition})
+    df = pd.DataFrame(rows)
+
+    # Generate embeddings
+    print("generating embeddings for the definitions")
+    embeddings = generate_embeddings(df["definition"].tolist())
+    df["embedding"] = [np.array(v) for v in np.array(embeddings).tolist()]
+
+    # store the vocabulary in the state
+    state["vocabulary_df"] = df
 
     # read in the workflow specification
     # TODO: support specifying the workflow specification file path in config
