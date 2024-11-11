@@ -20,7 +20,7 @@ pp = pp.PrettyPrinter(indent=4)
 
 # define the state of the puzzle
 class PuzzleState(TypedDict):
-    status: str = ""
+    puzzle_status: str = "not initialized"
     tool_to_use: str = ""
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
@@ -128,7 +128,12 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
 
     print(f"Puzzle Words: {words}")
     state["words_remaining"] = words
-    state["status"] = "puzzle is initialized"
+    state["puzzle_status"] = "initialized"
+    state["invalid_connections"] = []
+    state["mistake_count"] = 0
+    state["found_count"] = 0
+    state["recommendation_count"] = 0
+    state["recommended_words"] = []
 
     logger.info("Exiting setup_puzzle:")
     logger.debug(f"\nExiting setup_puzzle State: {pp.pformat(state)}")
