@@ -33,6 +33,10 @@ def run_planner(state: PuzzleState) -> PuzzleState:
     logger.info("Entering run_planner:")
     logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
 
+    # workflow instructions
+    instructions = HumanMessage(state["workflow_instructions"])
+    logger.debug(f"\nWorkflow instructions:\n{instructions.content}")
+
     # convert state to json string
     relevanat_state = {k: state[k] for k in KEY_PUZZLE_STATE_FIELDS}
     puzzle_state = "\npuzzle state:\n" + json.dumps(relevanat_state)
@@ -42,7 +46,7 @@ def run_planner(state: PuzzleState) -> PuzzleState:
     logger.info(f"\nState for lmm: {puzzle_state.content}")
 
     # get next action from llm
-    next_action = ask_llm_for_next_step(puzzle_state, model="gpt-3.5-turbo", temperature=0)
+    next_action = ask_llm_for_next_step(instructions, puzzle_state, model="gpt-3.5-turbo", temperature=0)
 
     logger.info(f"\nNext action from llm: {next_action.content}")
 
@@ -59,7 +63,7 @@ def determine_next_action(state: PuzzleState) -> str:
 
     tool_to_use = state["tool_to_use"]
 
-    if tool_to_use == "abort":
+    if tool_to_use == "ABORT":
         raise ValueError("LLM returned abort")
     elif tool_to_use == "END":
         return END
@@ -358,6 +362,7 @@ if __name__ == "__main__":
         puzzle_status="",
         puzzle_step="",
         puzzle_recommender="",
+        workflow_instructions="",
         llm_temperature=0.7,
     )
 

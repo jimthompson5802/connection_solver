@@ -18,6 +18,7 @@ class PuzzleState(TypedDict):
     puzzle_status: str = ""
     puzzle_step: str = ""
     puzzle_recommender: str = ""
+    workflow_instructions: str = ""
     tool_to_use: str = ""
     words_remaining: List[str] = []
     invalid_connections: List[List[str]] = []
@@ -60,6 +61,14 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     state["found_count"] = 0
     state["recommendation_count"] = 0
     state["recommended_words"] = []
+
+    # read in the workflow specification
+    # TODO: support specifying the workflow specification file path in config
+    workflow_spec_fp = "src/agent/rag_workflow_specification.md"
+    with open(workflow_spec_fp, "r") as f:
+        state["workflow_instructions"] = f.read()
+
+    logger.debug(f"Workflow Specification: {state['workflow_instructions']}")
 
     logger.info("Exiting setup_puzzle:")
     logger.debug(f"\nExiting setup_puzzle State: {pp.pformat(state)}")
@@ -185,25 +194,26 @@ PLANNER_SYSTEM_MESSAGE = """
     
 """
 
-INSTRUCTIONS_MESSAGE = """
-**Instructions**
+# TODO: clean up the instructions message
+# INSTRUCTIONS_MESSAGE = """
+# **Instructions**
 
-use "setup_puzzle" tool to initialize the puzzle if the "puzzle_status" is not initialized.
+# use "setup_puzzle" tool to initialize the puzzle if the "puzzle_status" is not initialized.
 
-if "puzzle_step" is "puzzle_completed" then use "END" tool.
+# if "puzzle_step" is "puzzle_completed" then use "END" tool.
 
-Based use the table to select the appropriate tool.
+# Based use the table to select the appropriate tool.
 
-|puzzle_recommender| puzzle_step | tool |
-| --- | --- | --- |
-|rag_recommender| next_recommendation | get_rag_recommendation |
-|rag_recommender| have_recommendation | apply_recommendation |
-|fallback_recommender| next_recommendation | get_recommendation |
-|fallback_recommender| have_recommendation | apply_recommendation |
+# |puzzle_recommender| puzzle_step | tool |
+# | --- | --- | --- |
+# |rag_recommender| next_recommendation | get_rag_recommendation |
+# |rag_recommender| have_recommendation | apply_recommendation |
+# |fallback_recommender| next_recommendation | get_recommendation |
+# |fallback_recommender| have_recommendation | apply_recommendation |
 
-If no tool is selected, use "ABORT" tool.
+# If no tool is selected, use "ABORT" tool.
 
-"""
+# """
 
 #  puzzle step state:
 #  have_rag_recommendation
@@ -224,7 +234,7 @@ If no tool is selected, use "ABORT" tool.
 # }
 
 
-def ask_llm_for_next_step(prompt, model="gpt-3.5-turbo", temperature=0, max_tokens=4096):
+def ask_llm_for_next_step(instructions, puzzle_state, model="gpt-3.5-turbo", temperature=0, max_tokens=4096):
     """
     Asks the language model (LLM) for the next step based on the provided prompt.
 
@@ -238,7 +248,8 @@ def ask_llm_for_next_step(prompt, model="gpt-3.5-turbo", temperature=0, max_toke
         AIMessage: The response from the LLM containing the next step.
     """
     logger.info("Entering ask_llm_for_next_step")
-    logger.debug(f"Entering ask_llm_for_next_step Prompt: {prompt.content}")
+    logger.debug(f"Entering ask_llm_for_next_step Instructions: {instructions.content}")
+    logger.debug(f"Entering ask_llm_for_next_step Prompt: {puzzle_state.content}")
 
     # Initialize the OpenAI LLM for next steps
     llm = ChatOpenAI(
@@ -249,7 +260,7 @@ def ask_llm_for_next_step(prompt, model="gpt-3.5-turbo", temperature=0, max_toke
     )
 
     # Create a prompt by concatenating the system and human messages
-    conversation = [PLANNER_SYSTEM_MESSAGE, INSTRUCTIONS_MESSAGE, prompt]
+    conversation = [PLANNER_SYSTEM_MESSAGE, instructions, puzzle_state]
 
     logger.debug(f"conversation: {pp.pformat(conversation)}")
 
