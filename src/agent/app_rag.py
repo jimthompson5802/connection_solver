@@ -19,7 +19,13 @@ from tools import (
     interact_with_user,
 )
 
-from rag_tools import ask_llm_for_next_step, PuzzleState, setup_puzzle
+from rag_tools import (
+    ask_llm_for_next_step,
+    PuzzleState,
+    setup_puzzle,
+    choose_rag_item,
+    get_candidate_words,
+)
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -106,11 +112,11 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     llm_response_json = json.loads(llm_response.content)
     if isinstance(llm_response_json, list):
         logger.debug(f"\nLLM response is list")
-        state["recommended_words"] = sorted(llm_response_json[0]["words"])
+        state["recommended_words"] = llm_response_json[0]["words"]
         state["recommended_connection"] = llm_response_json[0]["connection"]
     else:
         logger.debug(f"\nLLM response is dict")
-        state["recommended_words"] = sorted(llm_response_json["words"])
+        state["recommended_words"] = llm_response_json["words"]
         state["recommended_connection"] = llm_response_json["connection"]
 
     state["puzzle_step"] = "have_recommendation"
@@ -121,57 +127,31 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     return state
 
 
-# TODO:  Clean up
-# REGENERATE_MESSAGE_PART1 = """
-#     I am working on solving a word grouping puzzle where I need to select 4 words that fit into a specific category from a list of remaining words. The current recommended set of 4 words is incorrect, with one or more words being wrong. Please help me regenerate a new set of 4 words that better fits the category. Below is the relevant information:\n
-#     """
-# Remaining words: [list the remaining words]
-# Current recommended set (incorrect): [list the 4 words]
-# REGNERTE_MESSAGE_PART2 = """
-#     Please suggest a completely new set of 4 words based on the remaining words and correct the errors in the current set and do not use any know invalid groups.
-#     """
+def get_rag_recommendation(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering get_rag_recommendation")
+    logger.debug(f"Entering get_rag_recommendation State: {pp.pformat(state)}")
 
+    print("ENTERED RAG RECOMMENDATION")
 
-# def regenerate_recommendation(state: PuzzleState) -> PuzzleState:
-#     logger.info("Entering regenerate recommendation:")
-#     logger.debug(f"\nEntering regenerate recommendation State: {pp.pformat(state)}")
+    # get candidate list of words
+    candidate_list = get_candidate_words(state["vocabulary_df"])
+    print(f"candidate_lists size: {len(candidate_list)}")
 
-#     # build prompt for llm
-#     prompt = REGENERATE_MESSAGE_PART1
-#     # scramble the remaining words for more robust group selection
-#     random.shuffle(state["words_remaining"])
-#     prompt += f"\nRemaining words: {', '.join(state['words_remaining'])}\n"
-#     prompt += f"\nCurrent recommended set (incorrect): {', '.join(state['recommended_words'])}\n"
-#     if len(state["invalid_connections"]) > 0:
-#         prompt += "\n\nDo not include word groups that are known to be invalid."
-#         prompt += "\n"
-#         prompt += "Invalid word groups:\n"
-#         for invalid_connection in state["invalid_connections"]:
-#             prompt += f"{', '.join(invalid_connection)}\n"
+    # validate the top 5 candidate list with LLM
+    list_to_validate = "\n".join([str(x) for x in candidate_list[:5]])
+    recommended_group = choose_rag_item(list_to_validate)
+    print(f"Recommended group: {recommended_group}")
 
-#     prompt += REGNERTE_MESSAGE_PART2
+    state["recommended_words"] = recommended_group["candidate_group"]
+    state["recommended_connection"] = recommended_group["explanation"]
+    state["puzzle_step"] = "have_recommendation"
 
-#     prompt = HumanMessage(prompt)
+    # build prompt for llm
 
-#     logger.info(f"\nPrompt for llm: {prompt.content}")
+    logger.info("Exiting get_rag_recommendation")
+    logger.debug(f"Exiting get_rag_recommendation State: {pp.pformat(state)}")
 
-#     # get recommendation from llm
-#     llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
-
-#     llm_response_json = json.loads(llm_response.content)
-#     if isinstance(llm_response_json, list):
-#         logger.debug(f"\nLLM response is list")
-#         state["recommended_words"] = sorted(llm_response_json[0]["words"])
-#         state["recommended_connection"] = llm_response_json[0]["connection"]
-#     else:
-#         logger.debug(f"\nLLM response is dict")
-#         state["recommended_words"] = sorted(llm_response_json["words"])
-#         state["recommended_connection"] = llm_response_json["connection"]
-
-#     logger.info("Exiting regenerate recommendation:")
-#     logger.debug(f"\nExiting regenerate recommendation State: {pp.pformat(state)}")
-
-#     return state
+    return state
 
 
 def apply_recommendation(state: PuzzleState) -> PuzzleState:
@@ -181,7 +161,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
     state["recommendation_count"] += 1
 
     # display recommended words to user and get user response
-    found_correct_group = interact_with_user(state["recommended_words"], state["recommended_connection"])
+    found_correct_group = interact_with_user(sorted(state["recommended_words"]), state["recommended_connection"])
 
     # process user response
     match found_correct_group:
@@ -201,7 +181,14 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
     # remove recommended words if we found a solution
     if found_correct_group != "n":
         print(f"Recommendation {state['recommended_words']} is correct")
-        # remove from remaining_words the words from recommended_words
+
+        # for rag_recommender, remove the words from the vocabulary_df
+        if state["puzzle_recommender"] == "rag_recommender":
+            # remove from remaining_words the words from recommended_words
+            state["vocabulary_df"] = state["vocabulary_df"][
+                ~state["vocabulary_df"]["word"].isin(state["recommended_words"])
+            ]
+
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
         state["recommended_correct"] = True
         state["found_count"] += 1
@@ -210,6 +197,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         state["invalid_connections"].append(copy.deepcopy(state["recommended_words"]))
         state["recommended_correct"] = False
         state["mistake_count"] += 1
+        state["puzzle_recommender"] = "fallback_recommender"
 
     state["recommended_words"] = []
     state["recommended_connection"] = ""
@@ -234,6 +222,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
     return state
 
 
+# TODO: clean up
 # def clear_recommendation(state: PuzzleState) -> PuzzleState:
 #     logger.info("Entering clear_recommendation:")
 #     logger.debug(f"\nEntering clear_recommendation State: {pp.pformat(state)}")
@@ -248,24 +237,25 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
 #     return state
 
 
-def is_end(state: PuzzleState) -> str:
-    logger.info("Entering is_end:")
-    logger.debug(f"\nEntering is_end State: {pp.pformat(state)}")
+# TODO: clean up
+# def is_end(state: PuzzleState) -> str:
+#     logger.info("Entering is_end:")
+#     logger.debug(f"\nEntering is_end State: {pp.pformat(state)}")
 
-    if len(state["words_remaining"]) == 0:
-        logger.info("SOLVED THE CONNECTION PUZZLE!!!")
-        print("SOLVED THE CONNECTION PUZZLE!!!")
-        return "run_planner"
-    elif state["mistake_count"] >= MAX_ERRORS:
-        logger.info("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
-        print("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
-        return "run_planner"
-    elif state["recommended_correct"]:
-        logger.info("Recommendation accepted, Going to clear_recommendation")
-        return "clear_recommendation"
-    else:
-        logger.info("Recommendation not accepted, Going to regenerate_recommendation")
-        return "regenerate_recommendation"
+#     if len(state["words_remaining"]) == 0:
+#         logger.info("SOLVED THE CONNECTION PUZZLE!!!")
+#         print("SOLVED THE CONNECTION PUZZLE!!!")
+#         return "run_planner"
+#     elif state["mistake_count"] >= MAX_ERRORS:
+#         logger.info("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
+#         print("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
+#         return "run_planner"
+#     elif state["recommended_correct"]:
+#         logger.info("Recommendation accepted, Going to clear_recommendation")
+#         return "clear_recommendation"
+#     else:
+#         logger.info("Recommendation not accepted, Going to regenerate_recommendation")
+#         return "regenerate_recommendation"
 
 
 def configure_logging(log_level):
@@ -321,16 +311,16 @@ if __name__ == "__main__":
 
     workflow.add_node("run_planner", run_planner)
     workflow.add_node("setup_puzzle", setup_puzzle)
+    workflow.add_node("get_rag_recommendation", get_rag_recommendation)
     workflow.add_node("get_recommendation", get_recommendation)
-    # workflow.add_node("regenerate_recommendation", regenerate_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
-    # workflow.add_node("clear_recommendation", clear_recommendation)
 
     workflow.add_conditional_edges(
         "run_planner",
         determine_next_action,
         {
             "setup_puzzle": "setup_puzzle",
+            "get_rag_recommendation": "get_rag_recommendation",
             "get_recommendation": "get_recommendation",
             "apply_recommendation": "apply_recommendation",
             END: END,
@@ -339,7 +329,10 @@ if __name__ == "__main__":
 
     workflow.add_edge("setup_puzzle", "run_planner")
     workflow.add_edge("get_recommendation", "run_planner")
+    workflow.add_edge("get_rag_recommendation", "run_planner")
     workflow.add_edge("apply_recommendation", "run_planner")
+
+    # TODO: clean up
     # workflow.add_edge("clear_recommendation", "run_planner")
     # workflow.add_edge("regenerate_recommendation", "apply_recommendation")
 
