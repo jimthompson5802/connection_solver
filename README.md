@@ -20,7 +20,7 @@ Connections is a word game that challenges players to find themes between words.
 
     ![](./images/example_puzzle_image.png)
   * LLM generator to create embedding vectors
-  * LLM selector for candidate candidate word groups based embedding vectors
+  * LLM selector for candidate word groups based created by embedding vectors
   * LLM word group recommendation generator and selector
   * Natural Language Puzzle Planner workflow using markdown in an external file
 * Two phase solver process
