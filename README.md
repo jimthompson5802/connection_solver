@@ -20,8 +20,8 @@ Connections is a word game that challenges players to find themes between words.
 
     ![](./images/example_puzzle_image.png)
   * LLM generator to create embedding vectors
-  * Embedding vector based puzzle recommendation generator  
-  * LLM puzzle recommendation generator
+  * LLM selector for candidate candidate word groups based embedding vectors
+  * LLM word group recommendation generator and selector
   * Natural Language Puzzle Planner workflow using markdown in an external file
 * Two phase solver process
     * Phase 1: Use Embedding Vecotor recommendation generation
@@ -38,6 +38,55 @@ The agent uses a two-phase solver process.  The first phase uses an Embedding Ve
 
 **Note**: See [here](./docs/README_LLM.md) for a description of the original LLM-based solver.
 
+### Embedding Vector-based Recommendation Generator
+After setting up the puzzle with the 16 words, an LLM is used to generate embedding vectors for the words.  This generaton is done with this prompt:
+
+```text
+You are an expert in language and knowledgeable on how words are used.
+
+Your task is to generate as many diverse definitions as possible for the given word.  Follow these steps:
+
+1. come up with a list of all possible parts of speech that the given word can be,e.g., noun, verb, adjective, etc.
+2. for each part of speech, generate one or more examples of the given word for that parts of speech.  preappend the part of speech to the examples, e.g., "noun: example1", "verb: example2", etc.
+3. combine all examples into a single list.
+
+Return your response as a JSON object with the word as the key and the connotations as a list of strings.
+
+example:
+
+{
+  "word": [
+    "noun: example1", 
+    "noun: example2", 
+    "adjective: example3",]
+}
+```
+
+The word and their definitions are stored in a `pandas` DataFrame.  The genereted definitions are used to create embedding vectors for the words.  This results in a DataFrame with the word and its embedding vector.
+![](./images/vocab_df_example.png)
+
+
+The agent then uses the embedding vectors to generate recommendations for the puzzle with this function `embedvec_tools.get_candidate_words()`.  The agent uses the cosine similarity between the embedding vectors to find the three closest words to the target word.  Since a word could overlap into multiple groupings, the `embedvec_tools.choose_embedvec_item()` function uses an LLM to identitfy the most likely word group from the candidate groupings derived by `get_candidate_words()` with this prompt:
+
+```text
+    anaylyze the following set of "candidate group" of 4 words.
+    
+    For each  "candidate group"  determine if the 4 words are connected by a single theme or concept.
+
+    eliminate "candidate group" where the 4 words are not connected by a single theme or concept.
+
+    return the "candidate group" that is unlike the other word groups
+
+    if there is no  "candidate group" connected by a single theme or concept, return the group with the highest group metric.
+
+    return response in json with the
+    * key "candidate_group" for the "candidate group" that is connected by a single theme or concept that is the most unique about the "candidate group".  This is a list of 4 words.
+    * key "explanation" with a few word summary for the reason for the response.
+```
+
+The agent will continue to use the embedding vector-based recommendation generator until it encounters a mistake.  The agent will then switch to the LLM-based recommendation generator.
+
+### Workflow
 The agent uses the `PuzzleState` class to manage the agent's state and controls the agent's workflow. 
 ```python
 # define the state of the puzzle
