@@ -575,11 +575,11 @@ Index: [],
 
 **Puzzle Grid Screenshot**
 
-![Connection Puzzle Grid](./data/connection_puzzle_2024_10_23.png)
+![Connection Puzzle Grid](../data/connection_puzzle_2024_10_23.png)
 
 **Expected Solution**
 
-![Connection Puzzle Solution](./data/connection_solution_2024_10_23.png)
+![Connection Puzzle Solution](../data/connection_solution_2024_10_23.png)
 
 **Example Run**
 ```text
@@ -690,11 +690,11 @@ FINAL PUZZLE STATE:
 
 **Puzzle Grid Screenshot**
 
-![Connection Puzzle Grid](./data/connection_puzzle_2024_10_26.png)
+![Connection Puzzle Grid](../data/connection_puzzle_2024_10_26.png)
 
 **Expected Solution**
 
-![Connection Puzzle Solution](./data/connection_solution_2024_10_26.png)
+![Connection Puzzle Solution](../data/connection_solution_2024_10_26.png)
 
 **Example Run**
 ```text
@@ -793,11 +793,11 @@ Index: [],
 
 **Puzzle Grid Screenshot**
 
-![Connection Puzzle Grid](./data/connection_puzzle_2024_10_27.png)
+![Connection Puzzle Grid](../data/connection_puzzle_2024_10_27.png)
 
 **Expected Solution**
 
-![Connection Puzzle Solution](./data/connection_solution_2024_10_27.png)
+![Connection Puzzle Solution](../data/connection_solution_2024_10_27.png)
 
 **Example Run**
 ```text
@@ -914,11 +914,11 @@ FINAL PUZZLE STATE:
 
 **Puzzle Grid Screenshot**
 
-![Connection Puzzle Grid](./data/connection_puzzle_2024_10_28.png)
+![Connection Puzzle Grid](../data/connection_puzzle_2024_10_28.png)
 
 **Expected Solution**
 
-![Connection Puzzle Solution](./data/connection_solution_2024_10_28.png)
+![Connection Puzzle Solution](../data/connection_solution_2024_10_28.png)
 
 **Example Run**
 ```text
@@ -1030,11 +1030,11 @@ FINAL PUZZLE STATE:
 
 **Puzzle Grid Screenshot**
 
-![Connection Puzzle Grid](./data/connection_puzzle_2024_11_02.png)
+![Connection Puzzle Grid](../data/connection_puzzle_2024_11_02.png)
 
 **Expected Solution**
 
-![Connection Puzzle Solution](./data/connection_solution_2024_11_02.png)
+![Connection Puzzle Solution](../data/connection_solution_2024_11_02.png)
 
 **Example Run**
 ```text
