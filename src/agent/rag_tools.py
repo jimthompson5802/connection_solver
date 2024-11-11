@@ -1,9 +1,68 @@
 import json
-import os
-import pickle
+import logging
+import pprint as pp
+from typing import List, TypedDict
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+from tools import extract_words_from_image, read_file_to_word_list
+
+
+logger = logging.getLogger(__name__)
+pp = pp.PrettyPrinter(indent=4)
+
+
+# define the state of the puzzle
+class PuzzleState(TypedDict):
+    puzzle_status: str = ""
+    puzzle_step: str = ""
+    tool_to_use: str = ""
+    words_remaining: List[str] = []
+    invalid_connections: List[List[str]] = []
+    recommended_words: List[str] = []
+    recommended_connection: str = ""
+    recommended_correct: bool = False
+    found_yellow: bool = False
+    found_greeen: bool = False
+    found_blue: bool = False
+    found_purple: bool = False
+    mistake_count: int = 0
+    found_count: int = 0
+    recommendation_count: int = 0
+    llm_temperature: float = 1.0
+
+
+def setup_puzzle(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering setup_puzzle:")
+    logger.debug(f"\nEntering setup_puzzle State: {pp.pformat(state)}")
+
+    # prompt user for input source
+    input_source = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
+
+    if input_source == "file":
+        puzzle_word_fp = input("Please enter the word file location: ")
+        words = read_file_to_word_list(puzzle_word_fp)
+    elif input_source == "image":
+        puzzle_word_fp = input("Please enter the image file location: ")
+        words = extract_words_from_image(puzzle_word_fp)
+    else:
+        raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
+
+    print(f"Puzzle Words: {words}")
+    state["words_remaining"] = words
+    state["puzzle_status"] = "initialized"
+    state["puzzle_step"] = "get_recommendation"
+    state["invalid_connections"] = []
+    state["mistake_count"] = 0
+    state["found_count"] = 0
+    state["recommendation_count"] = 0
+    state["recommended_words"] = []
+
+    logger.info("Exiting setup_puzzle:")
+    logger.debug(f"\nExiting setup_puzzle State: {pp.pformat(state)}")
+
+    return state
 
 
 SYSTEM_MESSAGE = SystemMessage(
@@ -108,3 +167,77 @@ def choose_rag_item(candidates, model="gpt-4o", temperature=0.7, max_tokens=4096
     result = llm.invoke(prompt)
 
     return json.loads(result.content)
+
+
+PLANNER_SYSTEM_MESSAGE = """
+    You are an expert in managing the sequence of a workflow. Your task is to
+    determine the next tool to use given the current state of the workflow.
+
+    the eligible tools to use are: ["setup_puzzle", "get_recommendation", "apply_recommendation", "END"]
+
+    The important information for the workflow state is to consider are: "puzzle_status", "puzzle_step".
+
+    Using the provided instructions, you will need to determine the next tool to use.
+
+    output response in json format with key word "tool" and the value as the output string.
+    
+"""
+
+INSTRUCTIONS_MESSAGE = """
+    Instrucitons:
+    use "setup_puzzle" tool to initialize the puzzle if the puzzle is not initialized.
+
+    If "puzzle_step" is "get_recommendation" use "get_recommendation" tool.
+     
+    If "puzzle_step" is "apply_recommendation", use "apply_recommendation" tool.
+
+    if "puzzle_step" is "completed" use "END" tool.
+      
+
+"""
+
+# used for testing int playground
+# puzzle_state: {
+#     "puzzle_status": "initialized",
+#     "puzzle_step": "get_recommendation",
+# }
+
+
+def ask_llm_for_next_step(prompt, model="gpt-3.5-turbo", temperature=0, max_tokens=4096):
+    """
+    Asks the language model (LLM) for the next step based on the provided prompt.
+
+    Args:
+        prompt (AIMessage): The prompt containing the content to be sent to the LLM.
+        model (str, optional): The model to be used by the LLM. Defaults to "gpt-3.5-turbo".
+        temperature (float, optional): The temperature setting for the LLM, controlling the randomness of the output. Defaults to 0.
+        max_tokens (int, optional): The maximum number of tokens for the LLM response. Defaults to 4096.
+
+    Returns:
+        AIMessage: The response from the LLM containing the next step.
+    """
+    logger.info("Entering ask_llm_for_next_step")
+    logger.debug(f"Entering ask_llm_for_next_step Prompt: {prompt.content}")
+
+    # Initialize the OpenAI LLM for next steps
+    llm = ChatOpenAI(
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+
+    # Create a prompt by concatenating the system and human messages
+    conversation = [PLANNER_SYSTEM_MESSAGE, INSTRUCTIONS_MESSAGE, prompt]
+
+    logger.debug(f"conversation: {pp.pformat(conversation)}")
+
+    # Invoke the LLM
+    response = llm.invoke(conversation)
+
+    logger.debug(f"response: {pp.pformat(response)}")
+
+    logger.info("Exiting ask_llm_for_next_step")
+    logger.info(f"exiting ask_llm_for_next_step response {response.content}")
+
+    return response
