@@ -1,10 +1,10 @@
 # Log for First Time Live Solves
 ## Agent with Embeddings Results for First Time Live Game
 
-|Date|Solved|Mistakes|
-|---|:---:|:---:|
-|2024-11-12|Yes|1|
-|2024-11-13|Yes|0|
+|Date|Solved|Mistakes|NYT Difficulty Rating (out of 5)|
+|---|:---:|:---:|:---:|
+|2024-11-12|Yes|1|2?|
+|2024-11-13|Yes|0|3|
 
 ## Transcript
 ### 2024-11-12
