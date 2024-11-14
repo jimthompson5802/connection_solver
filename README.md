@@ -16,7 +16,7 @@ Connections is a word game that challenges players to find themes between words.
 ## Features of the Connection Solver Virtual Assistant Agent `app_embedvec.py`
 * Extract puzzle words from text file to setup the puzzle
 * LLM based tools to:
-  * Extract words from an image to seutp the puzzle 
+  * Extract words from an image to setup the puzzle 
 
     ![](./images/example_puzzle_image.png)
   * LLM generator to create embedding vectors
@@ -39,7 +39,7 @@ The agent uses a two-phase solver process.  The first phase uses an Embedding Ve
 **Note**: See [here](./docs/README_LLM.md) for a description of the original LLM-based solver.
 
 ### Embedding Vector-based Recommendation Generator
-After setting up the puzzle with the 16 words, an LLM is used to generate embedding vectors for the words.  This generaton is done with this prompt:
+After setting up the puzzle with the 16 words, an LLM is used to generate embedding vectors for the words.  This generation is done with this prompt:
 
 ```text
 You are an expert in language and knowledgeable on how words are used.
