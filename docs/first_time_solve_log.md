@@ -5,6 +5,7 @@
 |---|:---:|:---:|:---:|:---:|
 |2024-11-12|v0.5.0|Yes|1|2?|
 |2024-11-13|v0.5.0|Yes|0|3|
+|2024-11-14|v0.5.0|No|4|3|
 
 ## Transcript
 ### 2024-11-12
@@ -103,4 +104,39 @@ Is the recommendation accepted? (y/g/b/p/n): p
 Recommendation ['colonel', 'pharaoh', 'wednesday', 'worcestershire'] is correct
 SOLVED THE CONNECTION PUZZLE!!!
 
+```
+
+### 2024-11-14
+```text
+ python src/agent/app_embedvec.py 
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: /desktop/Screenshot-2024-11-14-at-06.08.24.png
+Puzzle Words: ['grain', 'drain', 'total', 'cube', 'syrup', 'shred', 'signature', 'sap', 'jam', 'tax', 'powder', 'rock', 'empty', 'groove', 'tip', 'exhaust']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC RECOMMENDATION
+(122, 122)
+(122, 122)
+candidate_lists size: 83
+
+RECOMMENDED WORDS ['cube', 'grain', 'powder', 'shred'] with connection These words all relate to forms or methods of reducing or processing materials.
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['cube', 'grain', 'powder', 'shred'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+RECOMMENDED WORDS ['drain', 'groove', 'jam', 'rock'] with connection Music-related terms
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['jam', 'groove', 'rock', 'drain'] is incorrect
+
+RECOMMENDED WORDS ['drain', 'jam', 'sap', 'syrup'] with connection Things that can flow
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['syrup', 'sap', 'jam', 'drain'] is incorrect
+
+RECOMMENDED WORDS ['grain', 'powder', 'sap', 'syrup'] with connection Substances
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['syrup', 'sap', 'powder', 'grain'] is incorrect
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
 ```
