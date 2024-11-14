@@ -248,6 +248,8 @@ Historical NYT Connection Puzzles were used in testing the agent.  Past puzzles 
 
 Results for the 10 puzzles used for testing can be found [here](./docs/Example_Runs.md).
 
+Starting 2024-11-12 used the agent to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log.md).
+
 ### How to Run the Agent
 ```bash
 # run agent with default logging level
