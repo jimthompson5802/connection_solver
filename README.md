@@ -233,15 +233,15 @@ Major contents of the repo:
 
 ## Setup
 ### devcontianer
-The project is setup to run in a devcontainer. If the `.devcontainer/devcontainer.json` setup is to be used, this environment variable `VSCODE_ROOT_DIR` must be set.  The environment variable is used to speficify the location where the OPENAI and `langsmith` API keys can be found on the local host.  
+The project is run in a devcontainer. The `.devcontainer/devcontainer.json` setup is to be used to mount the location where the OPENAI and `langsmith` API Keys can be found.  The environment variable `NCPA_ROOT_DIR` is used to speficify the location on the local host where a json configuration file containing the API Keys.  
 ```json
 	// mount local source folder into container
 	"mounts": [
-		"source=${localEnv:VSCODE_ROOT_DIR}/.openai,target=/openai,type=bind,consistency=cached",
-		"source=${localEnv:VSCODE_ROOT_DIR},target=/desktop,type=bind,consistency=cached"
+		"source=${localEnv:NCPA_ROOT_DIR}/.openai,target=/openai,type=bind,consistency=cached",
+		"source=${localEnv:NCPA_ROOT_DIR},target=/desktop,type=bind,consistency=cached"
 	],
 ```
-The above assumes the `.openai` directory contains the `api_key.json` file and `.openai` is a subdirectory of the directory pointed to by the environment variable `$VSCODE_ROOT_DIR`.
+The above assumes the `.openai` directory contains the `api_key.json` file and `.openai` is a subdirectory of the directory pointed to by the environment variable `$NCPA_ROOT_DIR`.
 
 
 ### Credentials for OpenAI and `langsmith`

@@ -13,8 +13,8 @@
 
 	// mount local source folder into container
 	"mounts": [
-		"source=${localEnv:VSCODE_ROOT_DIR}/.openai,target=/openai,type=bind,consistency=cached",
-		"source=${localEnv:VSCODE_ROOT_DIR},target=/desktop,type=bind,consistency=cached"
+		"source=${localEnv:NCPA_ROOT_DIR}/.openai,target=/openai,type=bind,consistency=cached",
+		"source=${localEnv:NCPA_ROOT_DIR},target=/desktop,type=bind,consistency=cached"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
