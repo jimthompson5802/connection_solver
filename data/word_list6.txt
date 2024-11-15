@@ -1,0 +1,9 @@
+grain, drain, total, cube, syrup, shred, signature, sap, jam, tax, powder, rock, empty, groove, tip, exhaust
+
+
+
+
+🟡 DEPLETE: DRAIN, EMPTY, EXHAUST, SAP
+🟢 PLAY MUSIC WITH PASSION: GROOVE, JAM, ROCK, SHRED
+🔵 WORDS ON A RESTAURANT RECEIPT: TAX, TIP, TOTAL, SIGNATURE
+🟣 FORMS OF SUGAR: CUBE, GRAIN, POWDER, SYRUP

@@ -5,8 +5,8 @@
 |---|:---:|:---:|:---:|:---:|---|
 |2024-11-12|v0.5.0|Yes|1|2?||
 |2024-11-13|v0.5.0|Yes|0|3||
-|2024-11-14|v0.5.0|No|4|3||
-|2024-11-15|v0.5.0|No|4|3|NCPA stuck in repeating previous invalid group|
+|2024-11-14|v0.5.0|No|4|3|3 of the 4 errors were "one away"|
+|2024-11-15|v0.5.0|No|4|3|two "one away" errors, NCPA stuck in repeating previous invalid group|
 
 ## Transcript
 ### 2024-11-12
