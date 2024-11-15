@@ -1,11 +1,12 @@
 # Log for First Time Solves
 ## Agent with Embeddings Results for First Time Live Game
 
-|Date|Agent Tag|Solved|Mistakes|NYT Difficulty Rating (out of 5)|
-|---|:---:|:---:|:---:|:---:|
-|2024-11-12|v0.5.0|Yes|1|2?|
-|2024-11-13|v0.5.0|Yes|0|3|
-|2024-11-14|v0.5.0|No|4|3|
+|Date|Agent Tag|Solved|Mistakes|NYT Difficulty Rating (out of 5)|Comments|
+|---|:---:|:---:|:---:|:---:|---|
+|2024-11-12|v0.5.0|Yes|1|2?||
+|2024-11-13|v0.5.0|Yes|0|3||
+|2024-11-14|v0.5.0|No|4|3||
+|2024-11-15|v0.5.0|No|4|3|NCPA stuck in repeating previous invalid group|
 
 ## Transcript
 ### 2024-11-12
@@ -138,5 +139,50 @@ Recommendation ['syrup', 'sap', 'jam', 'drain'] is incorrect
 RECOMMENDED WORDS ['grain', 'powder', 'sap', 'syrup'] with connection Substances
 Is the recommendation accepted? (y/g/b/p/n): n
 Recommendation ['syrup', 'sap', 'powder', 'grain'] is incorrect
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+```
+
+### 2024-11-15
+```text
+python src/agent/app_embedvec.py 
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: /desktop/Screenshot-2024-11-15-at-05.40.47.png
+Puzzle Words: ['pipe', 'phrase', 'jug', 'passage', 'leak', 'letter', 'waste', 'whistle', 'nick', 'crack', 'recorder', 'word', 'hole', 'sands', 'sentence', 'puncture']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC RECOMMENDATION
+(117, 117)
+(117, 117)
+candidate_lists size: 80
+
+RECOMMENDED WORDS ['passage', 'phrase', 'sentence', 'word'] with connection This group is uniquely thematically connected by language and text structure.
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['passage', 'phrase', 'sentence', 'word'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+RECOMMENDED WORDS ['jug', 'pipe', 'recorder', 'whistle'] with connection Musical instruments or devices that produce sound
+Is the recommendation accepted? (y/g/b/p/n): b
+Recommendation ['whistle', 'pipe', 'jug', 'recorder'] is correct
+
+RECOMMENDED WORDS ['crack', 'hole', 'leak', 'puncture'] with connection Ways things can be damaged or let things through
+Is the recommendation accepted? (y/g/b/p/n): y
+Recommendation ['leak', 'hole', 'crack', 'puncture'] is correct
+
+RECOMMENDED WORDS ['letter', 'nick', 'sands', 'waste'] with connection Four-letter words
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['nick', 'waste', 'sands', 'letter'] is incorrect
+
+<<<AT THIS POINT NCPA REPEATED PREVIOUS INVALID GUESS, HAD TO MANUALLY SELECT OTHER WORDS ALLOW PROGRESS>>>
+
+RECOMMENDED WORDS ['passage', 'phrase', 'sentence', 'word'] with connection Linguistic components
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['passage', 'phrase', 'sentence', 'word'] is incorrect
+
+RECOMMENDED WORDS ['letter', 'nick', 'sands', 'waste'] with connection four-letter words
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['nick', 'waste', 'sands', 'letter'] is incorrect
 FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
 ```
