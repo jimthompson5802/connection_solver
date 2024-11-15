@@ -231,6 +231,16 @@ Major contents of the repo:
 | `data/` | Directory containing past NYT Connection Puzzles for testing. |
 | `prompt_testbed/` | Directory containing sample prompts used in testing with the OpenAI Playground. |
 
+## Credentials for OpenAI and `langsmith`
+The code assumes the existence of this json file in this location: `/openai/api_key.json`.  The file should contain the following:
+```json
+{
+    "org": "<OPENAI-ORG>",
+    "key": "<OPENAI-API-KEY>",
+    "langsmith_key": "<LANGSMITH-API-KEY>"
+}
+```
+
 ## Some Lessons Learned
 While prompt engineering is a critical component to the agent's success, an equally critical function is setting up the right data structures to be used by the LLM.  Speficially, randomizing the order of the words in `words_remaining` seemed to allow the LLM to get unstuck from invalid groupings. 
 
