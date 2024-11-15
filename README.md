@@ -231,7 +231,20 @@ Major contents of the repo:
 | `data/` | Directory containing past NYT Connection Puzzles for testing. |
 | `prompt_testbed/` | Directory containing sample prompts used in testing with the OpenAI Playground. |
 
-## Credentials for OpenAI and `langsmith`
+## Setup
+### devcontianer
+The project is setup to run in a devcontainer. If the `.devcontainer/devcontainer.json` setup is to be used, this environment variable `VSCODE_ROOT_DIR` must be set.  The environment variable is used to speficify the location where the OPENAI and `langsmith` API keys can be found on the local host.  
+```json
+	// mount local source folder into container
+	"mounts": [
+		"source=${localEnv:VSCODE_ROOT_DIR}/.openai,target=/openai,type=bind,consistency=cached",
+		"source=${localEnv:VSCODE_ROOT_DIR},target=/desktop,type=bind,consistency=cached"
+	],
+```
+The above assumes the `.openai` directory contains the `api_key.json` file and `.openai` is a subdirectory of the directory pointed to by the environment variable `$VSCODE_ROOT_DIR`.
+
+
+### Credentials for OpenAI and `langsmith`
 The code assumes the existence of this json file in this location: `/openai/api_key.json`.  The file should contain the following:
 ```json
 {
