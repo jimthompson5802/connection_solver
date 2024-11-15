@@ -2,7 +2,7 @@ grain, drain, total, cube, syrup, shred, signature, sap, jam, tax, powder, rock,
 
 
 
-
+Puzzle from 2024-11-14
 🟡 DEPLETE: DRAIN, EMPTY, EXHAUST, SAP
 🟢 PLAY MUSIC WITH PASSION: GROOVE, JAM, ROCK, SHRED
 🔵 WORDS ON A RESTAURANT RECEIPT: TAX, TIP, TOTAL, SIGNATURE
