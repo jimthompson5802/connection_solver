@@ -1,12 +1,13 @@
 # Log for First Time Solves
 ## Agent with Embeddings Results for First Time Live Game
 
-|Date|Agent Tag|Solved|Mistakes|NYT Difficulty Rating (out of 5)|Comments|
-|---|:---:|:---:|:---:|:---:|---|
-|2024-11-12|v0.5.0|Yes|1|2?||
-|2024-11-13|v0.5.0|Yes|0|3||
-|2024-11-14|v0.5.0|No|4|3|3 of the 4 errors were "one away"|
-|2024-11-15|v0.5.0|No|4|3|two "one away" errors, NCPA stuck in repeating previous invalid group|
+|Date|Agent Tag|Solved|Correct Groups|Mistakes|NYT Difficulty Rating (out of 5)|Comments|
+|---|:---:|:---:|:---:|:---:|:---:|---|
+|2024-11-12|v0.5.0|Yes|4|1|2?||
+|2024-11-13|v0.5.0|Yes|4|4|0|3||
+|2024-11-14|v0.5.0|No|0|4|3|3 of the 4 errors were "one away"|
+|2024-11-15|v0.5.0|No|2|4|3|two "one away" errors, NCPA stuck in repeating previous invalid group|
+|2024-11-16|v0.5.0|No|2|4|5|2 one away mistakes|
 
 ## Transcript
 ### 2024-11-12
@@ -184,5 +185,58 @@ Recommendation ['passage', 'phrase', 'sentence', 'word'] is incorrect
 RECOMMENDED WORDS ['letter', 'nick', 'sands', 'waste'] with connection four-letter words
 Is the recommendation accepted? (y/g/b/p/n): n
 Recommendation ['nick', 'waste', 'sands', 'letter'] is incorrect
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+```
+
+### 2024-11-16
+```text
+python src/agent/app_embedvec.py 
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: /desktop/connection_puzzle_2024_11_16.png
+Puzzle Words: ['rogue', 'cap', 'gator', 'seal', 'beret', 'wolverine', 'commando', 'figure', 'volunteer', 'derby', 'pillbox', 'cover', 'plug', 'snapback', 'sooner', 'bananas']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC RECOMMENDATION
+(103, 103)
+(103, 103)
+candidate_lists size: 64
+
+RECOMMENDED WORDS ['cap', 'cover', 'plug', 'seal'] with connection These words are connected by the theme of closing or covering an opening or surface.
+Is the recommendation accepted? (y/g/b/p/n): y
+Recommendation ['cap', 'cover', 'plug', 'seal'] is correct
+
+ENTERED EMBEDVEC RECOMMENDATION
+(64, 64)
+(64, 64)
+candidate_lists size: 39
+
+RECOMMENDED WORDS ['beret', 'derby', 'pillbox', 'snapback'] with connection All four words are types of hats.
+Is the recommendation accepted? (y/g/b/p/n): g
+Recommendation ['beret', 'derby', 'pillbox', 'snapback'] is correct
+
+ENTERED EMBEDVEC RECOMMENDATION
+(46, 46)
+(46, 46)
+candidate_lists size: 23
+
+RECOMMENDED WORDS ['bananas', 'commando', 'rogue', 'volunteer'] with connection The words have a playful and informal theme, often used to describe unconventional or unexpected behavior or actions.
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['bananas', 'commando', 'rogue', 'volunteer'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+RECOMMENDED WORDS ['figure', 'gator', 'sooner', 'wolverine'] with connection University sports team mascots
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['sooner', 'figure', 'gator', 'wolverine'] is incorrect
+
+RECOMMENDED WORDS ['commando', 'gator', 'rogue', 'wolverine'] with connection Military or Aggressive Themes
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['rogue', 'commando', 'wolverine', 'gator'] is incorrect
+
+RECOMMENDED WORDS ['bananas', 'figure', 'sooner', 'volunteer'] with connection Informal terms for people or things
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['sooner', 'figure', 'volunteer', 'bananas'] is incorrect
 FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
 ```
