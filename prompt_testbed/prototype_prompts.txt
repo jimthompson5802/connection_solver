@@ -380,3 +380,15 @@ Based on the definitions below, determine whether the sentence themes represent 
 **Situation 2**: All four sentences **share a common theme**.
 
 Your response should clearly state "Situation 1" or "Situation 2" and include your reasoning.
+
+################ONE AWAY ANALYZER 3 FOR EMBEDDING VECTOR CONNECTION ################
+you are an expert in the nuance of the english language.
+
+You will be given four sentences.  you must determine if the four sentences all relate to a single concept or if there are multiple concepts.
+
+To make that determination, consider the following:
+* Are the sentence subjects related to a single topic or idea?
+* are the verbs in the sentences related to a single action or concept?
+
+
+Respond with either "single" or "multiple".  Provide an explanation for the response.
