@@ -32,6 +32,15 @@ Connections is a word game that challenges players to find themes between words.
 * LLM tracing with `langsmith`
 
 
+## Sample Runs
+
+Historical NYT Connection Puzzles were used in testing the agent.  Past puzzles can be found [here](https://word.tips/todays-nyt-connections-answers/).
+
+Results for the 10 puzzles used for testing can be found [here](./docs/Example_Runs.md).
+
+Starting 2024-11-12 the agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log.md).
+
+
 ## Solution Strategy
 
 The agent uses a two-phase solver process.  The first phase uses an Embedding Vector-based recommendation generator.  If the agent encounters a mistake, the second phase uses an LLM-based recommendation generator.  
@@ -254,6 +263,8 @@ The code assumes the existence of this json file in this location: `/openai/api_
 }
 ```
 
+**Note**: The `langsmith_key` is only used if the `--trace` CLI option is specified.  
+
 ## Some Lessons Learned
 While prompt engineering is a critical component to the agent's success, an equally critical function is setting up the right data structures to be used by the LLM.  Speficially, randomizing the order of the words in `words_remaining` seemed to allow the LLM to get unstuck from invalid groupings. 
 
@@ -265,13 +276,6 @@ Experiment tracking is needed.  As different designs of the workflow and changes
 
 From a Virtual Coding Assistant perspective, perplexity.ai seemed to generate more useful code for `langchain` and `langgraph`.  Github Copilot generated code for these libraries generated code that was not compatible with the current version of the libraries.  This is probably due to GH Copilot is trained on code in public repos vs perplexity.ai uses a RAG based approach on current content in the web.  perplexity.ai appears to support better at code generation for new and quickly evolving packages.  However, once I have some code in the Visual Studio Code IDE, then GH Copilot reduced the effort to refactor and revise the code.  For long standing packages, e.g, `pandas`, `numpy`, `matplotlib`, GH Copilot generates useful code snippets.
 
-## Sample Runs
-
-Historical NYT Connection Puzzles were used in testing the agent.  Past puzzles can be found [here](https://word.tips/todays-nyt-connections-answers/).
-
-Results for the 10 puzzles used for testing can be found [here](./docs/Example_Runs.md).
-
-Starting 2024-11-12 used the agent to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log.md).
 
 ### How to Run the Agent
 ```bash
