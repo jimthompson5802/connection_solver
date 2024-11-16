@@ -1,3 +1,18 @@
+# Test Summary
+
+|File|Agent Tag|Solved|Correct Groups|Mistakes|Comments|
+|---|:---:|:---:|:---:|:---:|---|
+|data/word_list1.txt|v0.5.0|No|1|4||
+|data/word_list2.txt|v0.5.0|Yes|4|2||
+|data/word_list3.txt|v0.5.0|No|2|4||
+|data/word_list4.txt|v0.5.0|Yes|4|1||
+|data/word_list5.txt|v0.5.0|Yes|4|0||
+|data/connection_puzzle_2024_10_23.png|v0.5.0|No|0|4||
+|data/connection_puzzle_2024_10_26.png|v0.5.0|Yes|4|0||
+|data/connection_puzzle_2024_10_27.png|v0.5.0|Yes|4|2||
+|data/connection_puzzle_2024_10_28.png|v0.5.0|No|2|4||
+|data/connection_puzzle_2024_11_02.png|v0.5.0|No|1|4||
+
 ### Connections Puzzle 1
 **Expected Solution**
 ```text
