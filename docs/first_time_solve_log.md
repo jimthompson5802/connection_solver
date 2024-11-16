@@ -4,7 +4,7 @@
 |Date|Agent Tag|Solved|Correct Groups|Mistakes|NYT Difficulty Rating (out of 5)|Comments|
 |---|:---:|:---:|:---:|:---:|:---:|---|
 |2024-11-12|v0.5.0|Yes|4|1|2?||
-|2024-11-13|v0.5.0|Yes|4|4|0|3||
+|2024-11-13|v0.5.0|Yes|4|0|3||
 |2024-11-14|v0.5.0|No|0|4|3|3 of the 4 errors were "one away"|
 |2024-11-15|v0.5.0|No|2|4|3|two "one away" errors, NCPA stuck in repeating previous invalid group|
 |2024-11-16|v0.5.0|No|2|4|5|2 one away mistakes|
