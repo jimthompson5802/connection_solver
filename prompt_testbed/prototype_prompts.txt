@@ -348,3 +348,35 @@ return response in json with the
 ################GENERATE SUMMARY SYSTEM PROMPT################
 
 Provide a few word summary of the following statements.
+
+################ONE AWAY ANALYZER FOR EMBEDDING VECTOR CONNECTION ################
+I will provide you with four sentences. Your task is to analyze them and determine whether:
+
+Three of the sentences share a common theme while the fourth sentence is close but not entirely consistent with the theme.
+OR
+All four sentences share a common theme.
+
+For your analysis:
+
+Respond with "Yes" if the 4 sentences have a common theme, otherwise respond "No."
+Identify the common theme if one exists.
+Explain why one of the sentences might not fully align with the others if they don't all share the same theme.
+Provide a detailed explanation of your reasoning.
+
+################ONE AWAY ANALYZER 2 FOR EMBEDDING VECTOR CONNECTION ################
+Analyze the following four sentences:
+
+[First sentence]
+[Second sentence]
+[Third sentence]
+[Fourth sentence]
+
+For each sentence identify the central theme of that sentence.
+
+Based on the definitions below, determine whether the sentence themes represent **Situation 1** or **Situation 2**, and provide a brief explanation for your choice.
+
+**Situation 1**: A group of four sentences where **three of the four sentences share a common theme**, but the **fourth sentence is closely related but not exactly like the other three sentences**.
+
+**Situation 2**: All four sentences **share a common theme**.
+
+Your response should clearly state "Situation 1" or "Situation 2" and include your reasoning.
