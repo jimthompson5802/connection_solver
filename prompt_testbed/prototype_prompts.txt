@@ -392,3 +392,15 @@ To make that determination, consider the following:
 
 
 Respond with either "single" or "multiple".  Provide an explanation for the response.
+
+################ONE AWAY ANALYZER 4 FOR EMBEDDING VECTOR CONNECTION ################
+you will be given a list called the "anchor_words".  These words share a common connection. 
+
+You will be given list of "candidate_words", select the one word that is most higly connected to the "anchor_words".
+
+Steps:
+1. First identify the common connection in the "anchor_words".
+
+2. Now test each word from the "candidate_words" and decide which one has the highest degree of connection to the "anchor_words".    
+
+3. Return the word that is most connected to the "anchor_words" and the reason for its selection in json structure.  The word should have the key "word" and the explanation should have the key "explanation".
