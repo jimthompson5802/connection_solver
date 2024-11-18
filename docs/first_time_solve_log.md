@@ -9,6 +9,7 @@
 |2024-11-15|v0.5.0|No|2|4|3|two "one away" errors, NCPA stuck in repeating previous invalid group|
 |2024-11-16|v0.5.0|No|2|4|5|2 one away mistakes|
 |2024-11-17|v0.5.0|Yes with manual assist|2|2|4|2 one aways mistakes, repeated previous incorrect guess, manual override to solve puzzle|
+|2024-11-18|v0.5.0|Yes with manual assist|2|3|1|2 one away mistake, repeated previous incorrect guess, manual override to solve puzzle|
 
 ## Transcript
 ### 2024-11-12
@@ -311,4 +312,117 @@ Is the recommendation accepted? (y/g/b/p/n): ^CTraceback (most recent call last)
     user_response = input(user_instruction)
                     ^^^^^^^^^^^^^^^^^^^^^^^
 KeyboardInterrupt
+```
+
+### 2024-11-18
+```text
+python src/agent/app_embedvec.py 
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: /desktop/connection_puzzle_2024_11_18.png
+Puzzle Words: ['domino', 'dryer', 'fiddler', 'ladybug', 'internet', 'horseshoe', 'spider', 'rent', 'hairspray', 'gas', 'dalmatian', 'comb', 'phone', 'hermit', 'rollers', 'die']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC RECOMMENDATION
+(89, 89)
+(89, 89)
+candidate_lists size: 69
+
+RECOMMENDED WORDS ['comb', 'dryer', 'hairspray', 'rollers'] with connection All words relate to hair styling tools or products.
+Is the recommendation accepted? (y/g/b/p/n): y
+Recommendation ['comb', 'dryer', 'hairspray', 'rollers'] is correct
+
+ENTERED EMBEDVEC RECOMMENDATION
+(70, 70)
+(70, 70)
+candidate_lists size: 48
+
+RECOMMENDED WORDS ['die', 'domino', 'horseshoe', 'ladybug'] with connection These words are connected by the theme of games or gaming elements, each word being associated with a different type of game or gaming component.
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['die', 'domino', 'horseshoe', 'ladybug'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+RECOMMENDED WORDS ['dalmatian', 'fiddler', 'hermit', 'spider'] with connection types of crabs
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['hermit', 'spider', 'fiddler', 'dalmatian'] is incorrect
+
+RECOMMENDED WORDS ['gas', 'internet', 'phone', 'rent'] with connection Monthly bills
+Is the recommendation accepted? (y/g/b/p/n): g
+Recommendation ['internet', 'rent', 'gas', 'phone'] is correct
+
+RECOMMENDED WORDS ['dalmatian', 'fiddler', 'hermit', 'spider'] with connection types of crabs
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['hermit', 'spider', 'fiddler', 'dalmatian'] is incorrect
+
+<<<<<<<<<MANUAL OVERRIDE>>>>>>>>>
+
+RECOMMENDED WORDS ['die', 'domino', 'horseshoe', 'ladybug'] with connection objects with dots
+Is the recommendation accepted? (y/g/b/p/n): n
+Recommendation ['die', 'domino', 'ladybug', 'horseshoe'] is incorrect
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{   'found_count': 2,
+    'found_yellow': True,
+    'invalid_connections': [   ['die', 'domino', 'horseshoe', 'ladybug'],
+                               ['hermit', 'spider', 'fiddler', 'dalmatian'],
+                               ['hermit', 'spider', 'fiddler', 'dalmatian'],
+                               ['die', 'domino', 'ladybug', 'horseshoe']],
+    'llm_temperature': 0.7,
+    'mistake_count': 4,
+    'puzzle_recommender': 'llm_recommender',
+    'puzzle_status': 'initialized',
+    'puzzle_step': 'puzzle_completed',
+    'recommendation_count': 6,
+    'recommended_connection': '',
+    'recommended_correct': False,
+    'recommended_words': [],
+    'tool_to_use': 'END',
+    'vocabulary_df':       word                                         definition                                          embedding
+0   domino  noun: a small rectangular block used in a game...  [-0.004941530060023069, -0.03690853342413902, ...
+1   domino  noun: a mask covering the upper part of the fa...  [0.006687359884381294, -0.0017951596528291702,...
+2   domino  noun: a costume consisting of a hooded robe an...  [0.002258528955280781, 0.027565332129597664, -...
+3   domino  noun: a flat rectangular piece used in the gam...  [-0.0062496112659573555, -0.027894018217921257...
+4   domino  noun: a sequence of events where one event tri...  [-0.005767492577433586, -0.0046396274119615555...
+..     ...                                                ...                                                ...
+84     die         verb: To cease living or to stop existing.  [0.06427039206027985, 0.01502362359315157, -0....
+85     die                verb: To lose vitality or strength.  [0.029067249968647957, 0.039251022040843964, -...
+86     die              verb: To disappear or fade gradually.  [0.0060878656804561615, 0.014454088173806667, ...
+87     die  verb: To experience extreme distress or discom...  [0.024204669520258904, 0.019408902153372765, -...
+88     die  verb: To suffer a lack of something, as in 'to...  [-0.0017180006252601743, 0.010351576842367649,...
+
+[70 rows x 3 columns],
+    'words_remaining': [   'spider',
+                           'fiddler',
+                           'die',
+                           'hermit',
+                           'domino',
+                           'dalmatian',
+                           'ladybug',
+                           'horseshoe'],
+    'workflow_instructions': '**Instructions**\n'
+                             '\n'
+                             'use "setup_puzzle" tool to initialize the puzzle '
+                             'if the "puzzle_status" is not initialized.\n'
+                             '\n'
+                             'if "puzzle_step" is "puzzle_completed" then use '
+                             '"END" tool.\n'
+                             '\n'
+                             'Use the table to select the appropriate tool.\n'
+                             '\n'
+                             '|puzzle_recommender| puzzle_step | tool |\n'
+                             '| --- | --- | --- |\n'
+                             '|embedvec_recommender| next_recommendation | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| next_recommendation | '
+                             'get_recommendation |\n'
+                             '|llm_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '\n'
+                             'If no tool is selected, use "ABORT" tool.\n'}
 ```
