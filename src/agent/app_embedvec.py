@@ -161,6 +161,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
     state["recommendation_count"] += 1
 
     # display recommended words to user and get user response
+    print(f"\nwords remainings: {state['words_remaining']}")
     found_correct_group = interact_with_user(sorted(state["recommended_words"]), state["recommended_connection"])
 
     # process user response
