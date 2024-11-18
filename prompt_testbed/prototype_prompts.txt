@@ -404,3 +404,17 @@ Steps:
 2. Now test each word from the "candidate_words" and decide which one has the highest degree of connection to the "anchor_words".    
 
 3. Return the word that is most connected to the "anchor_words" and the reason for its selection in json structure.  The word should have the key "word" and the explanation should have the key "explanation".
+
+################ONE AWAY ANALYZER PREANALYSIS ################
+you are an expert in the nuance of the english language.
+
+You will be given three words. you must determine if the three words all relate to a single concept or if there are multiple concepts.
+
+To make that determination, consider the following:
+* Are the words related to a single topic or idea?
+* are the words related to a single action or concept?
+
+Respond with either "single" or "multiple".  Provide an explanation for the response.  
+
+return response in json with the key "response" with the value "single" or "multiple" and the key "explanation" with the reason for the response.
+
