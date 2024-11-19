@@ -98,9 +98,10 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     #     for invalid_connection in state["invalid_connections"]:
     #         prompt += f"{', '.join(invalid_connection)}\n"
     # prompt += "\n\n"
-    retry_count = 0
+    attempt_count = 0
     while True:
-        print(f"retry_count: {retry_count}")
+        attempt_count += 1
+        print(f"attempt_count: {attempt_count}")
         prompt = HUMAN_MESSAGE_BASE
         # scramble the remaining words for more robust group selection
         if np.random.uniform() < 0.5:
@@ -129,8 +130,12 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
 
         if (
             compute_group_id(recommended_words) not in set(x[0] for x in state["invalid_connections"])
-        ) or retry_count > 5:
+        ) or attempt_count > 5:
             break
+        else:
+            print(
+                f"\nrepeat invalid group detected: group_id {compute_group_id(recommended_words)}, recommendation: {recommended_words}"
+            )
 
     state["recommended_words"] = recommended_words
     state["recommended_connection"] = recommended_connection
@@ -177,7 +182,6 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
     state["recommendation_count"] += 1
 
     # display recommended words to user and get user response
-    print(f"\nwords remainings: {state['words_remaining']}")
     found_correct_group = interact_with_user(sorted(state["recommended_words"]), state["recommended_connection"])
 
     # process user response
