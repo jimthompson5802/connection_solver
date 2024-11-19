@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import json
 import logging
 import pprint as pp
-from typing import List, TypedDict, Optional
+from typing import List, TypedDict, Optional, Tuple
 import hashlib
 import itertools
 
@@ -21,6 +21,10 @@ logger = logging.getLogger(__name__)
 pp = pp.PrettyPrinter(indent=4)
 
 
+def compute_group_id(word_group: list) -> str:
+    return hashlib.md5("".join(sorted(word_group)).encode()).hexdigest()
+
+
 # used by the embedvec tool to store the candidate groups
 @dataclass
 class ConnectionGroup:
@@ -35,7 +39,7 @@ class ConnectionGroup:
         if len(self.candidate_pairs) < 4:
             self.candidate_pairs.append((word, connection))
             if len(self.candidate_pairs) == 4:
-                self.group_id = self._compute_group_id()
+                self.group_id = compute_group_id(self.get_candidate_words())
         else:
             raise ValueError("Group is full, cannot add more entries")
 
@@ -51,9 +55,6 @@ class ConnectionGroup:
         stripped_connections = [x[1].split(":", 1)[1].strip() if ":" in x[1] else x[1] for x in sorted_pairs]
 
         return stripped_connections
-
-    def _compute_group_id(self):
-        return hashlib.md5("".join(self.get_candidate_words()).encode()).hexdigest()
 
     def __repr__(self):
         return_string = f"group metric: {self.group_metric}, "
@@ -78,7 +79,7 @@ class PuzzleState(TypedDict):
     vocabulary_df: pd.DataFrame = None
     tool_to_use: str = ""
     words_remaining: List[str] = []
-    invalid_connections: List[List[str]] = []
+    invalid_connections: List[Tuple[str, List[str]]] = []
     recommended_words: List[str] = []
     recommended_connection: str = ""
     recommended_correct: bool = False
@@ -87,6 +88,7 @@ class PuzzleState(TypedDict):
     found_blue: bool = False
     found_purple: bool = False
     mistake_count: int = 0
+    llm_retry_count: int = 0
     found_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
@@ -119,6 +121,7 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     state["mistake_count"] = 0
     state["found_count"] = 0
     state["recommendation_count"] = 0
+    state["llm_retry_count"] = 0
     state["recommended_words"] = []
 
     # read in pre-built vocabulary for testing

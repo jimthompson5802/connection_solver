@@ -25,6 +25,7 @@ from embedvec_tools import (
     setup_puzzle,
     choose_embedvec_item,
     get_candidate_words,
+    compute_group_id,
 )
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -88,36 +89,51 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
 
     # build prompt for llm
     prompt = HUMAN_MESSAGE_BASE
-    if len(state["invalid_connections"]) > 0:
-        prompt += " Do not include word groups that are known to be invalid."
-        prompt += "\n\n"
-        prompt += "Invalid word groups:\n"
-        for invalid_connection in state["invalid_connections"]:
-            prompt += f"{', '.join(invalid_connection)}\n"
-    prompt += "\n\n"
-    # scramble the remaining words for more robust group selection
-    if np.random.uniform() < 0.5:
-        random.shuffle(state["words_remaining"])
-    else:
-        state["words_remaining"].reverse()
-    prompt += f"candidate list: {', '.join(state['words_remaining'])}\n"
 
-    prompt = HumanMessage(prompt)
+    # TODO: Clean up the code below
+    # if len(state["invalid_connections"]) > 0:
+    #     prompt += " Do not include word groups that are known to be invalid."
+    #     prompt += "\n\n"
+    #     prompt += "Invalid word groups:\n"
+    #     for invalid_connection in state["invalid_connections"]:
+    #         prompt += f"{', '.join(invalid_connection)}\n"
+    # prompt += "\n\n"
+    retry_count = 0
+    while True:
+        print(f"retry_count: {retry_count}")
+        prompt = HUMAN_MESSAGE_BASE
+        # scramble the remaining words for more robust group selection
+        if np.random.uniform() < 0.5:
+            random.shuffle(state["words_remaining"])
+        else:
+            state["words_remaining"].reverse()
+        print(f"words_remaining: {state['words_remaining']}")
+        prompt += f"candidate list: {', '.join(state['words_remaining'])}\n"
 
-    logger.info(f"\nPrompt for llm: {prompt.content}")
+        prompt = HumanMessage(prompt)
 
-    # get recommendation from llm
-    llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
+        logger.info(f"\nPrompt for llm: {prompt.content}")
 
-    llm_response_json = json.loads(llm_response.content)
-    if isinstance(llm_response_json, list):
-        logger.debug(f"\nLLM response is list")
-        state["recommended_words"] = llm_response_json[0]["words"]
-        state["recommended_connection"] = llm_response_json[0]["connection"]
-    else:
-        logger.debug(f"\nLLM response is dict")
-        state["recommended_words"] = llm_response_json["words"]
-        state["recommended_connection"] = llm_response_json["connection"]
+        # get recommendation from llm
+        llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
+
+        llm_response_json = json.loads(llm_response.content)
+        if isinstance(llm_response_json, list):
+            logger.debug(f"\nLLM response is list")
+            recommended_words = llm_response_json[0]["words"]
+            recommended_connection = llm_response_json[0]["connection"]
+        else:
+            logger.debug(f"\nLLM response is dict")
+            recommended_words = llm_response_json["words"]
+            recommended_connection = llm_response_json["connection"]
+
+        if (
+            compute_group_id(recommended_words) not in set(x[0] for x in state["invalid_connections"])
+        ) or retry_count > 5:
+            break
+
+    state["recommended_words"] = recommended_words
+    state["recommended_connection"] = recommended_connection
 
     state["puzzle_step"] = "have_recommendation"
 
@@ -195,7 +211,9 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         state["found_count"] += 1
     else:
         print(f"Recommendation {state['recommended_words']} is incorrect")
-        state["invalid_connections"].append(copy.deepcopy(state["recommended_words"]))
+        invalid_group = state["recommended_words"]
+        invalid_group_id = compute_group_id(invalid_group)
+        state["invalid_connections"].append((invalid_group_id, invalid_group))
         state["recommended_correct"] = False
         state["mistake_count"] += 1
         if state["puzzle_recommender"] == "embedvec_recommender":
