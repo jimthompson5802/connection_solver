@@ -33,6 +33,15 @@ Connections is a word game that challenges players to find themes between words.
 * LLM tracing with `langsmith`
 * Code-based invalid group detection
 
+## Release History
+| Tag | Description |
+| --- | --- |
+| v0.1.0 | agent with programmatic planner |
+| v0.2.0 | Puzzle Planner converted to use LLM |
+| v0.3.0 | Puzzle Planner enhanced for NLP instructions |
+| v0.4.0 | integrate with langsmith for tracing |
+| v0.5.0 | embedding vector recommender |
+| v0.6.0 | one-away analyzer & code-based invalid group detection |
 
 ## Sample Runs
 
