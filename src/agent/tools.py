@@ -146,7 +146,7 @@ def interact_with_user(words, connection) -> str:
     logger.info(recommendation_message)
     print(recommendation_message)
 
-    user_instruction = "Is the recommendation accepted? (y/g/b/p/n): "
+    user_instruction = "Is the recommendation accepted? (y/g/b/p/o/n): "
     logger.info(user_instruction)
     user_response = input(user_instruction)
 

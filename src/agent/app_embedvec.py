@@ -26,6 +26,7 @@ from embedvec_tools import (
     choose_embedvec_item,
     get_candidate_words,
     compute_group_id,
+    one_away_analyzer,
 )
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -196,11 +197,13 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
             state["found_purple"] = True
         case "n":
             pass
+        case "o":
+            pass
         case _:
             raise ValueError(f"Invalid user response {found_correct_group}")
 
     # remove recommended words if we found a solution
-    if found_correct_group != "n":
+    if found_correct_group in ["y", "g", "b", "p"]:
         print(f"Recommendation {state['recommended_words']} is correct")
 
         # for embedvec_recommender, remove the words from the vocabulary_df
@@ -213,6 +216,21 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
         state["recommended_correct"] = True
         state["found_count"] += 1
+    elif found_correct_group == "o":
+        print(f"Recommendation {state['recommended_words']} is incorrect, one away from correct")
+        invalid_group = state["recommended_words"]
+        invalid_group_id = compute_group_id(invalid_group)
+        state["invalid_connections"].append((invalid_group_id, invalid_group))
+        state["recommended_correct"] = False
+        state["mistake_count"] += 1
+
+        # perform one-away analysis
+        one_away_groups = one_away_analyzer(invalid_group, state["words_remaining"])
+
+        # recommended group from one-away analysis
+        one_away_choice = random.choice(one_away_groups)
+        one_away_recommendation = one_away_choice.words
+        one_away_connection = one_away_choice.connection_description
     else:
         print(f"Recommendation {state['recommended_words']} is incorrect")
         invalid_group = state["recommended_words"]
@@ -237,6 +255,10 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
             print("SOLVED THE CONNECTION PUZZLE!!!")
 
         state["puzzle_step"] = "puzzle_completed"
+    elif found_correct_group == "o":
+        state["recommended_words"] = one_away_recommendation
+        state["recommended_connection"] = one_away_connection
+        state["puzzle_step"] = "apply_recommendation"
     else:
         logger.info("Going to next get_recommendation")
         state["puzzle_step"] = "next_recommendation"
