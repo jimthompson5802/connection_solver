@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import json
 import logging
 import pprint as pp
-from typing import List, TypedDict, Optional
+from typing import List, TypedDict, Optional, Tuple
 import hashlib
 import itertools
 
@@ -21,6 +21,10 @@ logger = logging.getLogger(__name__)
 pp = pp.PrettyPrinter(indent=4)
 
 
+def compute_group_id(word_group: list) -> str:
+    return hashlib.md5("".join(sorted(word_group)).encode()).hexdigest()
+
+
 # used by the embedvec tool to store the candidate groups
 @dataclass
 class ConnectionGroup:
@@ -35,7 +39,7 @@ class ConnectionGroup:
         if len(self.candidate_pairs) < 4:
             self.candidate_pairs.append((word, connection))
             if len(self.candidate_pairs) == 4:
-                self.group_id = self._compute_group_id()
+                self.group_id = compute_group_id(self.get_candidate_words())
         else:
             raise ValueError("Group is full, cannot add more entries")
 
@@ -52,9 +56,6 @@ class ConnectionGroup:
 
         return stripped_connections
 
-    def _compute_group_id(self):
-        return hashlib.md5("".join(self.get_candidate_words()).encode()).hexdigest()
-
     def __repr__(self):
         return_string = f"group metric: {self.group_metric}, "
         return_string += f"root word: {self.root_word}, group id: {self.group_id}\n"
@@ -69,6 +70,15 @@ class ConnectionGroup:
         return set(self.get_candidate_words()) == set(other.get_candidate_words())
 
 
+@dataclass
+class RecommendedGroup:
+    words: List[str]
+    connection_description: str
+
+    def __repr__(self):
+        return f"Recommended Group: {self.words}\nConnection Description: {self.connection_description}"
+
+
 # define the state of the puzzle
 class PuzzleState(TypedDict):
     puzzle_status: str = ""
@@ -78,7 +88,7 @@ class PuzzleState(TypedDict):
     vocabulary_df: pd.DataFrame = None
     tool_to_use: str = ""
     words_remaining: List[str] = []
-    invalid_connections: List[List[str]] = []
+    invalid_connections: List[Tuple[str, List[str]]] = []
     recommended_words: List[str] = []
     recommended_connection: str = ""
     recommended_correct: bool = False
@@ -87,6 +97,7 @@ class PuzzleState(TypedDict):
     found_blue: bool = False
     found_purple: bool = False
     mistake_count: int = 0
+    llm_retry_count: int = 0
     found_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
@@ -119,6 +130,7 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     state["mistake_count"] = 0
     state["found_count"] = 0
     state["recommendation_count"] = 0
+    state["llm_retry_count"] = 0
     state["recommended_words"] = []
 
     # read in pre-built vocabulary for testing
@@ -381,3 +393,79 @@ def get_candidate_words(df: pd.DataFrame) -> list:
             found_groups.add(candidate.group_id)
 
     return unique_candidate_list
+
+
+def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096):
+
+    # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
+    llm = ChatOpenAI(
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        model_kwargs={"response_format": {"type": "json_object"}},
+    )
+
+    result = llm.invoke(prompt)
+
+    return json.loads(result.content)
+
+
+ANCHOR_WORDS_SYSTEM_PROMPT = (
+    "you are an expert in the nuance of the english language.\n\n"
+    "You will be given three words. you must determine if the three words can be related to a single topic.\n\n"
+    "To make that determination, do the following:\n"
+    "* Determine common contexts for each word. \n"
+    "* Determine if there is a context that is shared by all three words.\n"
+    "* respond 'single' if a single topic can be found that applies to all three words, otherwise 'multiple'.\n"
+    "* Provide an explanation for the response.\n\n"
+    "return response in json with the key 'response' with the value 'single' or 'multiple' and the key 'explanation' with the reason for the response."
+)
+
+CREATE_GROUP_SYSTEM_PROMPT = """
+you will be given a list called the "anchor_words".  These words share a "common_connection". 
+
+You will be given list of "candidate_words", select the one word that is most higly connected to the "anchor_words".
+
+Steps:
+1. First identify the common connection that is present in all the "anchor_words".  If each word has multiple meanings, consider the meaning that is most common among the "anchor_words".
+
+2. Now test each word from the "candidate_words" and decide which one has the highest degree of connection to the "anchor_words".    
+
+3. Return the word that is most connected to the "anchor_words" and the reason for its selection in json structure.  The word should have the key "word" and the explanation should have the key "explanation".
+"""
+
+
+def one_away_analyzer(one_away_group: List[str], words_remaining: List[str]) -> List[Tuple[str, List[str]]]:
+    single_topic_groups = []
+    group_recommendations = []
+    possible_anchor_words_list = list(itertools.combinations(one_away_group, 3))
+
+    for anchor_list in possible_anchor_words_list:
+        # determine if the anchor words can be related to a single topic
+        anchor_words = "\n\n" + ", ".join(anchor_list)
+        prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), HumanMessage(anchor_words)]
+        response = chat_with_llm(prompt)
+
+        # print(response)
+
+        if response["response"] == "single":
+
+            single_topic_groups.append(
+                RecommendedGroup(words=anchor_list, connection_description=response["explanation"])
+            )
+
+    for word_group in single_topic_groups:
+        # remove anchor words from the remaining word list
+        words_to_test = [x for x in words_remaining if x not in word_group.words]
+        user_prompt = (
+            "\n\n anchor_words: " + ", ".join(anchor_list) + "\n\ncommon_connection: " + response["explanation"]
+        )
+        user_prompt += "\n\n" + "candidate_words: " + ", ".join(words_to_test)
+        prompt = [SystemMessage(CREATE_GROUP_SYSTEM_PROMPT), HumanMessage(user_prompt)]
+
+        response = chat_with_llm(prompt)
+        # print(response)
+        new_group = list(word_group.words) + [response["word"]]
+        group_recommendations.append(RecommendedGroup(words=new_group, connection_description=response["explanation"]))
+
+    return group_recommendations
