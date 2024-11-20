@@ -23,6 +23,7 @@ Connections is a word game that challenges players to find themes between words.
   * LLM selector for candidate word groups based created by embedding vectors
   * LLM word group recommendation generator and selector
   * Natural Language Puzzle Planner workflow using markdown in an external file
+  * LLM one-away error analyzer
 * Two phase solver process
     * Phase 1: Use Embedding Vecotor recommendation generation
     * Phase 2: Use LLM puzzle recommendation generation if Phase 1 encounters a mistake
@@ -30,6 +31,7 @@ Connections is a word game that challenges players to find themes between words.
     * `gpt-3.5-turbo` for the agent's planner
     * `gpt-4o` for generating puzzle recommendations and extract words from image
 * LLM tracing with `langsmith`
+* Code-based invalid group detection
 
 
 ## Sample Runs
@@ -38,7 +40,9 @@ Historical NYT Connection Puzzles were used in testing the agent.  Past puzzles 
 
 Results for the 10 puzzles used for testing can be found [here](./docs/Example_Runs.md).
 
-Starting 2024-11-12 the agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log.md).
+Starting 2024-11-12 the v0.5.0 agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_5_0.md).
+
+Starting 2024-11-20 the v0.6.0 agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_6_0.md).
 
 
 ## Solution Strategy
