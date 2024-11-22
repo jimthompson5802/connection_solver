@@ -4,7 +4,8 @@
 |Date|Agent Tag|Solved|Correct Groups|Mistakes|NYT Difficulty Rating (out of 5)|Comments|
 |---|:---:|:---:|:---:|:---:|:---:|---|
 |2024-11-20|v0.6.0|Yes|4|0|2||
-|2024-11-20|v0.6.0|Yes|4|2|4|one-away analysis worked, last group connection was hallucination.|
+|2024-11-21|v0.6.0|Yes|4|2|4|one-away analysis worked, last group connection was hallucination.|
+|2024-11-22|v0.6.0|No|0|4|4|No one-away mistakes, seemed to get stuck on Photography connection.|
 
 ## Transcipt
 ### 2024-11-20
@@ -192,6 +193,122 @@ FINAL PUZZLE STATE:
 
 [70 rows x 3 columns],
     'words_remaining': [],
+    'workflow_instructions': '**Instructions**\n'
+                             '\n'
+                             'use "setup_puzzle" tool to initialize the puzzle '
+                             'if the "puzzle_status" is not initialized.\n'
+                             '\n'
+                             'if "puzzle_step" is "puzzle_completed" then use '
+                             '"END" tool.\n'
+                             '\n'
+                             'Use the table to select the appropriate tool.\n'
+                             '\n'
+                             '|puzzle_recommender| puzzle_step | tool |\n'
+                             '| --- | --- | --- |\n'
+                             '|embedvec_recommender| next_recommendation | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| next_recommendation | '
+                             'get_recommendation |\n'
+                             '|llm_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '\n'
+                             'If no tool is selected, use "ABORT" tool.\n'}
+```
+
+### 2024-11-22
+```text
+python src/agent/app_embedvec.py 
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: /desktop/connection_puzzle_2024_11_22.png
+Puzzle Words: ['fantasy', 'teams', 'love', 'attention', 'lens', 'exposure', 'position', 'meet', 'zoom', 'shutter', 'press', 'angle', 'treasure', 'coverage', 'perspective', 'slack']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC RECOMMENDATION
+(108, 108)
+(108, 108)
+candidate_lists size: 71
+
+RECOMMENDED WORDS ['attention', 'love', 'press', 'treasure'] with connection This group uniquely centers around concepts of cherishing and advancing with determination, which are loosely related to the theme of love and care.
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['attention', 'love', 'press', 'treasure'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+attempt_count: 1
+words_remaining: ['attention', 'coverage', 'shutter', 'slack', 'angle', 'fantasy', 'treasure', 'lens', 'position', 'perspective', 'teams', 'exposure', 'press', 'love', 'meet', 'zoom']
+
+RECOMMENDED WORDS ['exposure', 'lens', 'shutter', 'zoom'] with connection Photography terms
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['shutter', 'lens', 'exposure', 'zoom'] is incorrect
+attempt_count: 1
+words_remaining: ['press', 'meet', 'perspective', 'slack', 'zoom', 'position', 'lens', 'attention', 'teams', 'shutter', 'treasure', 'exposure', 'coverage', 'love', 'angle', 'fantasy']
+
+RECOMMENDED WORDS ['exposure', 'lens', 'press', 'shutter'] with connection Photography terms
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['press', 'lens', 'shutter', 'exposure'] is incorrect
+attempt_count: 1
+words_remaining: ['fantasy', 'angle', 'love', 'coverage', 'exposure', 'treasure', 'shutter', 'teams', 'attention', 'lens', 'position', 'zoom', 'slack', 'perspective', 'meet', 'press']
+
+RECOMMENDED WORDS ['coverage', 'exposure', 'lens', 'zoom'] with connection Photography terms
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['coverage', 'exposure', 'lens', 'zoom'] is incorrect
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{   'found_count': 0,
+    'invalid_connections': [   (   '24b83630a1f997ad0fbc2e3da1126abf',
+                                   ['attention', 'love', 'press', 'treasure']),
+                               (   '1baac07726d3a45c7277b8edc6c26381',
+                                   ['shutter', 'lens', 'exposure', 'zoom']),
+                               (   'bf4346e3ee7c574479ff910fa1735fcb',
+                                   ['press', 'lens', 'shutter', 'exposure']),
+                               (   'c42203af01e95d06dae93e43bd0db31e',
+                                   ['coverage', 'exposure', 'lens', 'zoom'])],
+    'llm_retry_count': 0,
+    'llm_temperature': 0.7,
+    'mistake_count': 4,
+    'puzzle_recommender': 'llm_recommender',
+    'puzzle_status': 'initialized',
+    'puzzle_step': 'puzzle_completed',
+    'recommendation_count': 4,
+    'recommended_connection': '',
+    'recommended_correct': False,
+    'recommended_words': [],
+    'tool_to_use': 'END',
+    'vocabulary_df':         word                                         definition                                          embedding
+0    fantasy  noun: A genre of speculative fiction involving...  [-0.012583005242049694, 0.005267239175736904, ...
+1    fantasy  noun: An imaginative or fanciful idea; a produ...  [0.04120891913771629, -0.015935884788632393, -...
+2    fantasy  noun: A mental image or scenario that reflects...  [-0.011632467620074749, -0.04445076361298561, ...
+3    fantasy  noun: A musical composition with a free or imp...  [0.013447731733322144, -0.0006519872113130987,...
+4    fantasy  verb: To imagine or daydream about something u...  [0.0015864011365920305, -0.03958539292216301, ...
+..       ...                                                ...                                                ...
+103    slack  verb: to decrease in activity or intensity, su...  [0.015493140555918217, 0.037673212587833405, -...
+104    slack  verb: to neglect one's duties or responsibilities  [0.02011452242732048, 0.021754495799541473, 0....
+105    slack                adjective: not taut or tight; loose  [0.02682087942957878, 0.01814001426100731, -0....
+106    slack  adjective: slow-moving or sluggish, often used...  [0.01050816010683775, 0.038118667900562286, -0...
+107    slack  adjective: lacking in diligence or care; negli...  [0.05222530663013458, 0.021172748878598213, -0...
+
+[108 rows x 3 columns],
+    'words_remaining': [   'fantasy',
+                           'angle',
+                           'love',
+                           'coverage',
+                           'exposure',
+                           'treasure',
+                           'shutter',
+                           'teams',
+                           'attention',
+                           'lens',
+                           'position',
+                           'zoom',
+                           'slack',
+                           'perspective',
+                           'meet',
+                           'press'],
     'workflow_instructions': '**Instructions**\n'
                              '\n'
                              'use "setup_puzzle" tool to initialize the puzzle '
