@@ -1,5 +1,21 @@
 # Test Summary
 
+## Test for v0.6.0
+|File|Agent Tag|Solved|Correct Groups|Mistakes|Comments|
+|---|:---:|:---:|:---:|:---:|---|
+|data/word_list1.txt|v0.6.0|No|0|4|most mistake trying for yellow group|
+|data/word_list2.txt|v0.6.0|Yes|4|1||
+|data/word_list3.txt|v0.6.0|No|1|4|1 embedvec correct, abnormal termination due to empty one-away list|
+|data/word_list4.txt|v0.6.0|No|1|4|one away stuck on blue group|
+|data/word_list5.txt|v0.6.0|Yes|4|0|embedvec found all groups|
+|data/connection_puzzle_2024_10_23.png|v0.6.0|No|0|2|abnormal termination due to empty one-away list|
+|data/connection_puzzle_2024_10_26.png|v0.6.0|Yes|4|0|embedvec found all groups|
+|data/connection_puzzle_2024_10_27.png|v0.6.0|Yes|4|1||
+|data/connection_puzzle_2024_10_28.png|v0.6.0|No|1|4||
+|data/connection_puzzle_2024_11_02.png|v0.6.0|No|1|4||
+
+
+## Test for v0.5.0
 |File|Agent Tag|Solved|Correct Groups|Mistakes|Comments|
 |---|:---:|:---:|:---:|:---:|---|
 |data/word_list1.txt|v0.5.0|No|1|4||
@@ -13,6 +29,7 @@
 |data/connection_puzzle_2024_10_28.png|v0.5.0|No|2|4||
 |data/connection_puzzle_2024_11_02.png|v0.5.0|No|1|4||
 
+## Example Runs for v0.5.0
 ### Connections Puzzle 1
 **Expected Solution**
 ```text
