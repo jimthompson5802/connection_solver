@@ -29,6 +29,9 @@ from embedvec_tools import (
     one_away_analyzer,
 )
 
+# specify the version of the agent
+__version__ = "0.6.2"
+
 pp = pprint.PrettyPrinter(indent=4)
 
 MAX_ERRORS = 4
@@ -285,6 +288,8 @@ def configure_logging(log_level):
 
 
 if __name__ == "__main__":
+
+    print(f"Running Connection Solver Agent with EmbedVec Recommender {__version__}")
 
     parser = argparse.ArgumentParser(description="Set logging level for the application.")
     parser.add_argument(
