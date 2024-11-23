@@ -437,7 +437,6 @@ Steps:
 
 def one_away_analyzer(one_away_group: List[str], words_remaining: List[str]) -> List[Tuple[str, List[str]]]:
     single_topic_groups = []
-    group_recommendations = []
     possible_anchor_words_list = list(itertools.combinations(one_away_group, 3))
 
     for anchor_list in possible_anchor_words_list:
@@ -454,18 +453,27 @@ def one_away_analyzer(one_away_group: List[str], words_remaining: List[str]) -> 
                 RecommendedGroup(words=anchor_list, connection_description=response["explanation"])
             )
 
-    for word_group in single_topic_groups:
-        # remove anchor words from the remaining word list
-        words_to_test = [x for x in words_remaining if x not in word_group.words]
-        user_prompt = (
-            "\n\n anchor_words: " + ", ".join(anchor_list) + "\n\ncommon_connection: " + response["explanation"]
-        )
-        user_prompt += "\n\n" + "candidate_words: " + ", ".join(words_to_test)
-        prompt = [SystemMessage(CREATE_GROUP_SYSTEM_PROMPT), HumanMessage(user_prompt)]
+    print(f"\n>>>Number of single topic groups: {len(single_topic_groups)}")
+    if len(single_topic_groups) == 1:
+        for word_group in single_topic_groups:
+            # remove anchor words from the remaining word list
+            words_to_test = [x for x in words_remaining if x not in word_group.words]
+            user_prompt = (
+                "\n\n anchor_words: " + ", ".join(anchor_list) + "\n\ncommon_connection: " + response["explanation"]
+            )
+            user_prompt += "\n\n" + "candidate_words: " + ", ".join(words_to_test)
+            prompt = [SystemMessage(CREATE_GROUP_SYSTEM_PROMPT), HumanMessage(user_prompt)]
 
-        response = chat_with_llm(prompt)
-        # print(response)
-        new_group = list(word_group.words) + [response["word"]]
-        group_recommendations.append(RecommendedGroup(words=new_group, connection_description=response["explanation"]))
+            response = chat_with_llm(prompt)
+            # print(response)
+            new_group = list(word_group.words) + [response["word"]]
+            one_away_group_recommendation = RecommendedGroup(
+                words=new_group, connection_description=response["explanation"]
+            )
+        print(f"\n>>>One-away group recommendations:")
+        print(one_away_group_recommendation)
+    else:
+        # if no single topic groups are found, single None
+        one_away_group_recommendation = None
 
-    return group_recommendations
+    return one_away_group_recommendation

@@ -131,7 +131,7 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
 
         if (
             compute_group_id(recommended_words) not in set(x[0] for x in state["invalid_connections"])
-        ) or attempt_count > 5:
+        ) or attempt_count > 10:
             break
         else:
             print(
@@ -183,28 +183,22 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
     state["recommendation_count"] += 1
 
     # display recommended words to user and get user response
-    found_correct_group = interact_with_user(sorted(state["recommended_words"]), state["recommended_connection"])
+    found_correct_group = interact_with_user(
+        sorted(state["recommended_words"]), state["recommended_connection"], state["puzzle_recommender"]
+    )
 
-    # process user response
-    match found_correct_group:
-        case "y":
-            state["found_yellow"] = True
-        case "g":
-            state["found_green"] = True
-        case "b":
-            state["found_blue"] = True
-        case "p":
-            state["found_purple"] = True
-        case "n":
-            pass
-        case "o":
-            pass
-        case _:
-            raise ValueError(f"Invalid user response {found_correct_group}")
-
-    # remove recommended words if we found a solution
+    # process result of user response
     if found_correct_group in ["y", "g", "b", "p"]:
         print(f"Recommendation {state['recommended_words']} is correct")
+        match found_correct_group:
+            case "y":
+                state["found_yellow"] = True
+            case "g":
+                state["found_green"] = True
+            case "b":
+                state["found_blue"] = True
+            case "p":
+                state["found_purple"] = True
 
         # for embedvec_recommender, remove the words from the vocabulary_df
         if state["puzzle_recommender"] == "embedvec_recommender":
@@ -216,35 +210,30 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
         state["recommended_correct"] = True
         state["found_count"] += 1
-    elif found_correct_group == "o":
-        print(f"Recommendation {state['recommended_words']} is incorrect, one away from correct")
+    elif found_correct_group in ["n", "o"]:
         invalid_group = state["recommended_words"]
         invalid_group_id = compute_group_id(invalid_group)
         state["invalid_connections"].append((invalid_group_id, invalid_group))
         state["recommended_correct"] = False
         state["mistake_count"] += 1
 
-        # perform one-away analysis
-        one_away_groups = one_away_analyzer(invalid_group, state["words_remaining"])
+        if state["mistake_count"] < MAX_ERRORS:
+            match found_correct_group:
+                case "o":
+                    print(f"Recommendation {state['recommended_words']} is incorrect, one away from correct")
 
-        # recommended group from one-away analysis
-        one_away_choice = random.choice(one_away_groups)
-        one_away_recommendation = one_away_choice.words
-        one_away_connection = one_away_choice.connection_description
-    else:
-        print(f"Recommendation {state['recommended_words']} is incorrect")
-        invalid_group = state["recommended_words"]
-        invalid_group_id = compute_group_id(invalid_group)
-        state["invalid_connections"].append((invalid_group_id, invalid_group))
-        state["recommended_correct"] = False
-        state["mistake_count"] += 1
-        if state["puzzle_recommender"] == "embedvec_recommender":
-            print("Changing the recommender from 'embedvec_recommender' to 'llm_recommender'")
-            state["puzzle_recommender"] = "llm_recommender"
+                    # perform one-away analysis
+                    one_away_group_recommendation = one_away_analyzer(invalid_group, state["words_remaining"])
 
-    state["recommended_words"] = []
-    state["recommended_connection"] = ""
-    state["recommended_correct"] = False
+                case "n":
+                    print(f"Recommendation {state['recommended_words']} is incorrect")
+                    if state["puzzle_recommender"] == "embedvec_recommender":
+                        print("Changing the recommender from 'embedvec_recommender' to 'llm_recommender'")
+                        state["puzzle_recommender"] = "llm_recommender"
+        else:
+            state["recommended_words"] = []
+            state["recommended_connection"] = ""
+            state["recommended_correct"] = False
 
     if len(state["words_remaining"]) == 0 or state["mistake_count"] >= MAX_ERRORS:
         if state["mistake_count"] >= MAX_ERRORS:
@@ -256,9 +245,16 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
         state["puzzle_step"] = "puzzle_completed"
     elif found_correct_group == "o":
-        state["recommended_words"] = one_away_recommendation
-        state["recommended_connection"] = one_away_connection
-        state["puzzle_step"] = "apply_recommendation"
+        if one_away_group_recommendation:
+            print(f"using one_away_group_recommendation")
+            state["recommended_words"] = one_away_group_recommendation.words
+            state["recommended_connection"] = one_away_group_recommendation.connection_description
+            state["puzzle_step"] = "have_recommendation"
+        else:
+            print(f"no one_away_group_recommendation, let llm find recommendation")
+            state["recommended_words"] = []
+            state["recommended_connection"] = ""
+            state["puzzle_step"] = "next_recommendation"
     else:
         logger.info("Going to next get_recommendation")
         state["puzzle_step"] = "next_recommendation"
