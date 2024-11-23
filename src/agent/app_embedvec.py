@@ -230,6 +230,15 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
                     # perform one-away analysis
                     one_away_group_recommendation = one_away_analyzer(invalid_group, state["words_remaining"])
 
+                    # check if one_away_group_recommendation is a prior mistake
+                    if one_away_group_recommendation:
+                        one_away_group_id = compute_group_id(one_away_group_recommendation.words)
+                        if one_away_group_id in set(x[0] for x in state["invalid_connections"]):
+                            print(f"one_away_group_recommendation is a prior mistake")
+                            one_away_group_recommendation = None
+                        else:
+                            print(f"one_away_group_recommendation is a new recommendation")
+
                 case "n":
                     print(f"Recommendation {sorted(state['recommended_words'])} is incorrect")
                     if state["puzzle_recommender"] == "embedvec_recommender":
@@ -256,7 +265,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
             state["recommended_connection"] = one_away_group_recommendation.connection_description
             state["puzzle_step"] = "have_recommendation"
         else:
-            print(f"no one_away_group_recommendation, let llm find recommendation")
+            print(f"no one_away_group_recommendation, let llm_recommender try again")
             state["recommended_words"] = []
             state["recommended_connection"] = ""
             state["puzzle_step"] = "next_recommendation"
