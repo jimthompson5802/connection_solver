@@ -42,6 +42,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.4.0 | integrate with langsmith for tracing |
 | v0.5.0 | embedding vector recommender |
 | v0.6.0 | one-away analyzer & code-based invalid group detection |
+| v0.6.1 | fix empty one-away list error |
 
 ## Sample Runs
 

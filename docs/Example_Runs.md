@@ -1,18 +1,147 @@
 # Test Summary
 
-## Test for v0.6.0
-|File|Agent Tag|Solved|Correct Groups|Mistakes|Comments|
-|---|:---:|:---:|:---:|:---:|---|
-|data/word_list1.txt|v0.6.0|No|0|4|most mistake trying for yellow group|
-|data/word_list2.txt|v0.6.0|Yes|4|1||
-|data/word_list3.txt|v0.6.0|No|1|4|1 embedvec correct, abnormal termination due to empty one-away list|
-|data/word_list4.txt|v0.6.0|No|1|4|one away stuck on blue group|
-|data/word_list5.txt|v0.6.0|Yes|4|0|embedvec found all groups|
-|data/connection_puzzle_2024_10_23.png|v0.6.0|No|0|2|abnormal termination due to empty one-away list|
-|data/connection_puzzle_2024_10_26.png|v0.6.0|Yes|4|0|embedvec found all groups|
-|data/connection_puzzle_2024_10_27.png|v0.6.0|Yes|4|1||
-|data/connection_puzzle_2024_10_28.png|v0.6.0|No|1|4||
-|data/connection_puzzle_2024_11_02.png|v0.6.0|No|1|4||
+## Test for v0.6.1
+|File|Agent Tag|Solved|Correct Groups|Mistakes|Embed Correct|Comments|
+|---|:---:|:---:|:---:|:---:|:---:|---|
+|data/word_list1.txt|v0.6.1|No|2|4|1|difficulty with blue & purple groups|
+|data/word_list2.txt|v0.6.1|Yes|4|1|2||
+|data/word_list3.txt|v0.6.1|Yes|4|1|1||
+|data/word_list4.txt|v0.6.1|Yes|4|1|2||
+|data/word_list5.txt|v0.6.1|Yes|4|1|1||
+|data/connection_puzzle_2024_10_23.png|v0.6.1|No|0|4|0||
+|data/connection_puzzle_2024_10_26.png|v0.6.1|Yes|4|0|4||
+|data/connection_puzzle_2024_10_27.png|v0.6.1|No|1|4|0|one-away worked, hallucinated two puzzle words Issue #25|
+|data/connection_puzzle_2024_10_28.png|v0.6.1|No|1|4|0||
+|data/connection_puzzle_2024_11_02.png|v0.6.1|No|2|4|1|one-away worked|
+
+### Example of one-away working
+```text
+python src/agent/app_embedvec.py 
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: data/connection_puzzle_2024_11_02.png
+Puzzle Words: ['board', 'drop', 'plank', 'sink', 'range', 'panel', 'stud', 'boat', 'chandelier', 'counter', 'cabinet', 'crunch', 'council', 'mountain climber', 'fridge', 'hoop']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC RECOMMENDATION
+(111, 111)
+(111, 111)
+candidate_lists size: 76
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['board', 'cabinet', 'council', 'panel'] with connection These words are connected by the theme of 'decision-making or advisory groups'.
+Is the recommendation accepted? (y/g/b/p/o/n): g
+Recommendation ['board', 'cabinet', 'council', 'panel'] is correct
+
+ENTERED EMBEDVEC RECOMMENDATION
+(84, 84)
+(84, 84)
+candidate_lists size: 53
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['crunch', 'drop', 'plank', 'sink'] with connection These words relate to actions involving downward movement or positioning.
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['crunch', 'drop', 'plank', 'sink'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+attempt_count: 1
+words_remaining: ['hoop', 'fridge', 'mountain climber', 'crunch', 'counter', 'chandelier', 'boat', 'stud', 'range', 'sink', 'plank', 'drop']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['counter', 'hoop', 'range', 'sink'] with connection kitchen items
+Is the recommendation accepted? (y/g/b/p/o/n): o
+Recommendation ['hoop', 'counter', 'sink', 'range'] is incorrect, one away from correct
+
+>>>Number of single topic groups: 1
+
+>>>One-away group recommendations:
+Recommended Group: ['counter', 'sink', 'range', 'fridge']
+Connection Description: The word 'fridge' is most connected to the anchor words 'counter', 'sink', and 'range' through the common connection of a kitchen setting. A 'fridge' is an essential kitchen appliance used for storing food, similar to how a 'counter', 'sink', and 'range' are features or equipment commonly found in a kitchen.
+using one_away_group_recommendation
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['counter', 'fridge', 'range', 'sink'] with connection The word 'fridge' is most connected to the anchor words 'counter', 'sink', and 'range' through the common connection of a kitchen setting. A 'fridge' is an essential kitchen appliance used for storing food, similar to how a 'counter', 'sink', and 'range' are features or equipment commonly found in a kitchen.
+Is the recommendation accepted? (y/g/b/p/o/n): y
+Recommendation ['counter', 'sink', 'range', 'fridge'] is correct
+attempt_count: 1
+words_remaining: ['crunch', 'boat', 'mountain climber', 'drop', 'chandelier', 'hoop', 'plank', 'stud']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['crunch', 'drop', 'hoop', 'plank'] with connection exercise moves
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['crunch', 'drop', 'plank', 'hoop'] is incorrect
+attempt_count: 1
+words_remaining: ['stud', 'plank', 'hoop', 'chandelier', 'drop', 'mountain climber', 'boat', 'crunch']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['chandelier', 'hoop', 'plank', 'stud'] with connection Types of Jewelry or Ornaments
+Is the recommendation accepted? (y/g/b/p/o/n): o
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{   'found_count': 2,
+    'found_yellow': True,
+    'invalid_connections': [   (   '7bb7b7c46da39a4482168b08c206b83f',
+                                   ['crunch', 'drop', 'plank', 'sink']),
+                               (   '9e13c461f52514df8d561595a077dae6',
+                                   ['hoop', 'counter', 'sink', 'range']),
+                               (   '0287ce63790ae4dae2e62ebfc6055070',
+                                   ['crunch', 'drop', 'plank', 'hoop']),
+                               (   'ff1022807d633f7bc4e0756356409c88',
+                                   ['stud', 'plank', 'hoop', 'chandelier'])],
+    'llm_retry_count': 0,
+    'llm_temperature': 0.7,
+    'mistake_count': 4,
+    'puzzle_recommender': 'llm_recommender',
+    'puzzle_status': 'initialized',
+    'puzzle_step': 'puzzle_completed',
+    'recommendation_count': 6,
+    'recommended_connection': '',
+    'recommended_correct': False,
+    'recommended_words': [],
+    'tool_to_use': 'END',
+    'vocabulary_df':      word  ...                                          embedding
+8    drop  ...  [0.00634157657623291, 0.000708345090970397, -0...
+9    drop  ...  [0.028417417779564857, 0.01165621168911457, -0...
+10   drop  ...  [0.022679604589939117, 0.005510931834578514, 0...
+11   drop  ...  [0.033691562712192535, -0.0004736323026008904,...
+12   drop  ...  [-0.024791566655039787, -0.02297668159008026, ...
+..    ...  ...                                                ...
+106  hoop  ...  [0.025540487840771675, 0.040016502141952515, -...
+107  hoop  ...  [0.025241505354642868, 0.010754874907433987, 0...
+108  hoop  ...  [0.052456941455602646, 0.015394971705973148, -...
+109  hoop  ...  [0.012448335066437721, -0.019924946129322052, ...
+110  hoop  ...  [0.0051789600402116776, -0.018043240532279015,...
+
+[84 rows x 3 columns],
+    'words_remaining': [   'stud',
+                           'plank',
+                           'hoop',
+                           'chandelier',
+                           'drop',
+                           'mountain climber',
+                           'boat',
+                           'crunch'],
+    'workflow_instructions': '**Instructions**\n'
+                             '\n'
+                             'use "setup_puzzle" tool to initialize the puzzle '
+                             'if the "puzzle_status" is not initialized.\n'
+                             '\n'
+                             'if "puzzle_step" is "puzzle_completed" then use '
+                             '"END" tool.\n'
+                             '\n'
+                             'Use the table to select the appropriate tool.\n'
+                             '\n'
+                             '|puzzle_recommender| puzzle_step | tool |\n'
+                             '| --- | --- | --- |\n'
+                             '|embedvec_recommender| next_recommendation | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| next_recommendation | '
+                             'get_recommendation |\n'
+                             '|llm_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '\n'
+                             'If no tool is selected, use "ABORT" tool.\n'}
+```
+
 
 
 ## Test for v0.5.0
