@@ -220,13 +220,13 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
         if state["mistake_count"] < MAX_ERRORS:
             match found_correct_group:
                 case "o":
-                    print(f"Recommendation {state['recommended_words']} is incorrect, one away from correct")
+                    print(f"Recommendation {sorted(state['recommended_words'])} is incorrect, one away from correct")
 
                     # perform one-away analysis
                     one_away_group_recommendation = one_away_analyzer(invalid_group, state["words_remaining"])
 
                 case "n":
-                    print(f"Recommendation {state['recommended_words']} is incorrect")
+                    print(f"Recommendation {sorted(state['recommended_words'])} is incorrect")
                     if state["puzzle_recommender"] == "embedvec_recommender":
                         print("Changing the recommender from 'embedvec_recommender' to 'llm_recommender'")
                         state["puzzle_recommender"] = "llm_recommender"

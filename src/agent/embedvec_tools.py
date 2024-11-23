@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 import json
 import logging
 import pprint as pp
+import random
 from typing import List, TypedDict, Optional, Tuple
 import hashlib
 import itertools
@@ -422,7 +423,7 @@ ANCHOR_WORDS_SYSTEM_PROMPT = (
 )
 
 CREATE_GROUP_SYSTEM_PROMPT = """
-you will be given a list called the "anchor_words".  These words share a "common_connection". 
+you will be given a list called the "anchor_words".
 
 You will be given list of "candidate_words", select the one word that is most higly connected to the "anchor_words".
 
@@ -445,7 +446,8 @@ def one_away_analyzer(one_away_group: List[str], words_remaining: List[str]) -> 
         prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), HumanMessage(anchor_words)]
         response = chat_with_llm(prompt)
 
-        # print(response)
+        logger.info(f"\n>>>Anchor Words: {anchor_list}")
+        logger.info(response)
 
         if response["response"] == "single":
 
@@ -454,24 +456,37 @@ def one_away_analyzer(one_away_group: List[str], words_remaining: List[str]) -> 
             )
 
     print(f"\n>>>Number of single topic groups: {len(single_topic_groups)}")
-    if len(single_topic_groups) == 1:
-        for word_group in single_topic_groups:
-            # remove anchor words from the remaining word list
-            words_to_test = [x for x in words_remaining if x not in word_group.words]
-            user_prompt = (
-                "\n\n anchor_words: " + ", ".join(anchor_list) + "\n\ncommon_connection: " + response["explanation"]
-            )
-            user_prompt += "\n\n" + "candidate_words: " + ", ".join(words_to_test)
-            prompt = [SystemMessage(CREATE_GROUP_SYSTEM_PROMPT), HumanMessage(user_prompt)]
+    if len(single_topic_groups) > 1:
+        # if more than one single topic group is found, select one at random
+        print(f"More than one single-topic group recommendations, selecting one at random.")
+        selected_word_group = random.choice(single_topic_groups)
+    elif len(single_topic_groups) == 1:
+        # if only one single topic group is found, select that one
+        print(f"Only one single-topic group recommendation found.")
+        selected_word_group = single_topic_groups[0]
+    else:
+        # if no single topic groups are found, select None
+        print(f"No single-topic group recommendations found.")
+        selected_word_group = None
 
-            response = chat_with_llm(prompt)
-            # print(response)
-            new_group = list(word_group.words) + [response["word"]]
-            one_away_group_recommendation = RecommendedGroup(
-                words=new_group, connection_description=response["explanation"]
-            )
+    if selected_word_group:
+        print(f"\n>>>Selected single-topic group:\n{selected_word_group}")
+        # remove original one-away invalid group from the remaining word list
+        words_to_test = [x for x in words_remaining if x not in one_away_group]
+        user_prompt = "\n\nanchor_words: " + ", ".join(selected_word_group.words)
+        user_prompt += "\n\n" + "candidate_words: " + ", ".join(words_to_test)
+        logger.info(f"single-topic user prompt:\n {user_prompt}")
+
+        prompt = [SystemMessage(CREATE_GROUP_SYSTEM_PROMPT), HumanMessage(user_prompt)]
+
+        response = chat_with_llm(prompt)
+        logger.info(response)
+        new_group = list(selected_word_group.words) + [response["word"]]
+        one_away_group_recommendation = RecommendedGroup(
+            words=new_group, connection_description=response["explanation"]
+        )
         print(f"\n>>>One-away group recommendations:")
-        print(one_away_group_recommendation)
+        logger.info(one_away_group_recommendation)
     else:
         # if no single topic groups are found, single None
         one_away_group_recommendation = None
