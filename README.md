@@ -110,6 +110,87 @@ The agent then uses the embedding vectors to generate recommendations for the pu
 
 The agent will continue to use the embedding vector-based recommendation generator until it encounters a mistake.  The agent will then switch to the LLM-based recommendation generator.
 
+### One-Away Error Analyzer
+
+The `one_away_analyzer` function in `embedvec_tools.py` analyzes a group of words to identify subgroups that are related to a single topic and recommends a new word to add to the group. It generates all possible combinations of three words from the input group and uses a language model to determine if each three-word combination can be related to a single topic. If multiple single-topic groups are found, one is selected at random; if only one is found, it is selected; otherwise, no group is selected.
+
+If a single-topic group is selected, the function creates a new prompt with the selected group's three-words and the remaining words, and sends it to the language model to get a fourth word recommendation. The recommended fourth word is combined with the original three word group to form a new group of four words, which is then returned as the Connection Puzzle recommendation. If no single-topic groups are found, the function returns `None`.
+
+Here is an example run demonstrating the one-away error analyzer:
+```text
+python src/agent/app_embedvec.py 
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: data/connection_puzzle_2024_11_23.png
+Puzzle Words: ['ball-in-cup', 'balance sheet', 'latex', 'lollipop', 'account', 'checkers', 'cotton swab', 'licorice', 'gum', 'corn dog', 'story', 'sap', 'chronicle', 'resin', 'roulette', 'description']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC RECOMMENDATION
+(94, 94)
+(94, 94)
+candidate_lists size: 45
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['corn dog', 'gum', 'licorice', 'lollipop'] with connection The group is uniquely connected by the theme of snack or confectionery items.
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['corn dog', 'gum', 'licorice', 'lollipop'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+attempt_count: 1
+words_remaining: ['corn dog', 'description', 'account', 'licorice', 'story', 'roulette', 'chronicle', 'ball-in-cup', 'gum', 'checkers', 'cotton swab', 'sap', 'lollipop', 'resin', 'balance sheet', 'latex']
+
+repeat invalid group detected: group_id dc6363b6c4a8b2ea8f142d8b40b227c6, recommendation: ['corn dog', 'licorice', 'gum', 'lollipop']
+attempt_count: 2
+words_remaining: ['latex', 'cotton swab', 'corn dog', 'story', 'chronicle', 'lollipop', 'balance sheet', 'ball-in-cup', 'description', 'resin', 'roulette', 'checkers', 'licorice', 'sap', 'gum', 'account']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['account', 'chronicle', 'description', 'story'] with connection Narrative forms
+Is the recommendation accepted? (y/g/b/p/o/n): y
+Recommendation ['story', 'chronicle', 'description', 'account'] is correct
+attempt_count: 1
+words_remaining: ['lollipop', 'gum', 'ball-in-cup', 'roulette', 'corn dog', 'checkers', 'resin', 'licorice', 'cotton swab', 'sap', 'balance sheet', 'latex']
+
+repeat invalid group detected: group_id dc6363b6c4a8b2ea8f142d8b40b227c6, recommendation: ['lollipop', 'gum', 'licorice', 'corn dog']
+attempt_count: 2
+words_remaining: ['latex', 'balance sheet', 'sap', 'cotton swab', 'licorice', 'resin', 'checkers', 'corn dog', 'roulette', 'ball-in-cup', 'gum', 'lollipop']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['cotton swab', 'gum', 'licorice', 'lollipop'] with connection Candy or Confectionery
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['cotton swab', 'gum', 'licorice', 'lollipop'] is incorrect
+attempt_count: 1
+words_remaining: ['cotton swab', 'roulette', 'ball-in-cup', 'resin', 'latex', 'corn dog', 'gum', 'checkers', 'lollipop', 'balance sheet', 'licorice', 'sap']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['corn dog', 'cotton swab', 'licorice', 'lollipop'] with connection Items commonly associated with sticks
+Is the recommendation accepted? (y/g/b/p/o/n): o
+Recommendation ['corn dog', 'cotton swab', 'licorice', 'lollipop'] is incorrect, one away from correct
+
+>>>Number of single topic groups: 2
+More than one single-topic group recommendations, selecting one at random.
+
+>>>Selected single-topic group:
+Recommended Group: ('cotton swab', 'corn dog', 'lollipop')
+Connection Description: All three items can be related to the single topic of 'items on a stick.' Cotton swabs often have a stick-like structure for handling, corn dogs are typically served on a stick for easy consumption, and lollipops are known for being candies mounted on sticks. Therefore, they can all be related to the concept of items that are typically attached to or associated with a stick.
+
+>>>One-away group recommendations:
+using one_away_group_recommendation
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['ball-in-cup', 'corn dog', 'cotton swab', 'lollipop'] with connection The common connection among the anchor words 'cotton swab', 'corn dog', and 'lollipop' is that they all involve a stick-like element as a central structural feature. A 'ball-in-cup' toy also includes a stick as part of its design, making it the candidate word most connected to the anchor words. The other candidate words do not share this common structural characteristic.
+Is the recommendation accepted? (y/g/b/p/o/n): b
+Recommendation ['cotton swab', 'corn dog', 'lollipop', 'ball-in-cup'] is correct
+attempt_count: 1
+words_remaining: ['sap', 'checkers', 'balance sheet', 'gum', 'latex', 'roulette', 'resin', 'licorice']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['gum', 'latex', 'resin', 'sap'] with connection Tree exudates or products
+Is the recommendation accepted? (y/g/b/p/o/n): g
+Recommendation ['sap', 'gum', 'latex', 'resin'] is correct
+attempt_count: 1
+words_remaining: ['licorice', 'balance sheet', 'checkers', 'roulette']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['balance sheet', 'checkers', 'licorice', 'roulette'] with connection Games
+Is the recommendation accepted? (y/g/b/p/o/n): p
+Recommendation ['licorice', 'balance sheet', 'checkers', 'roulette'] is correct
+SOLVED THE CONNECTION PUZZLE!!!
+```
+
 ### Workflow
 The agent uses the `PuzzleState` class to manage the agent's state and controls the agent's workflow. 
 ```python
