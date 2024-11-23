@@ -141,8 +141,8 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     return state
 
 
-def interact_with_user(words, connection) -> str:
-    recommendation_message = f"\nRECOMMENDED WORDS {words} with connection {connection}"
+def interact_with_user(words, connection, recommender) -> str:
+    recommendation_message = f"\n{recommender.upper()}: RECOMMENDED WORDS {words} with connection {connection}"
     logger.info(recommendation_message)
     print(recommendation_message)
 
