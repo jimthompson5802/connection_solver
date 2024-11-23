@@ -6,6 +6,7 @@
 |2024-11-20|v0.6.0|Yes|4|0|2||
 |2024-11-21|v0.6.0|Yes|4|2|4|one-away analysis worked, last group connection was hallucination.|
 |2024-11-22|v0.6.0|No|0|4|4|No one-away mistakes, seemed to get stuck on Photography connection.|
+|2024-11-23|v0.6.1|No|2|4|3|One away recommendation had an error, returned invalid 4 words instead of the recommended 4th word based on the analysis. Issue #26|
 
 ## Transcipt
 ### 2024-11-20
@@ -309,6 +310,143 @@ FINAL PUZZLE STATE:
                            'perspective',
                            'meet',
                            'press'],
+    'workflow_instructions': '**Instructions**\n'
+                             '\n'
+                             'use "setup_puzzle" tool to initialize the puzzle '
+                             'if the "puzzle_status" is not initialized.\n'
+                             '\n'
+                             'if "puzzle_step" is "puzzle_completed" then use '
+                             '"END" tool.\n'
+                             '\n'
+                             'Use the table to select the appropriate tool.\n'
+                             '\n'
+                             '|puzzle_recommender| puzzle_step | tool |\n'
+                             '| --- | --- | --- |\n'
+                             '|embedvec_recommender| next_recommendation | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| next_recommendation | '
+                             'get_recommendation |\n'
+                             '|llm_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '\n'
+                             'If no tool is selected, use "ABORT" tool.\n'}
+```
+
+### 2024-11-23
+```text
+python src/agent/app_embedvec.py 
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: /desktop/connection_puzzle_2024_11_23.png
+Puzzle Words: ['ball-in-cup', 'balance sheet', 'latex', 'lollipop', 'account', 'checkers', 'cotton swab', 'licorice', 'gum', 'corn dog', 'story', 'sap', 'chronicle', 'resin', 'roulette', 'description']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC RECOMMENDATION
+(85, 85)
+(85, 85)
+candidate_lists size: 44
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['corn dog', 'gum', 'licorice', 'lollipop'] with connection The words are all related to sweets and snacks, specifically candies and treats.
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['corn dog', 'gum', 'licorice', 'lollipop'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+attempt_count: 1
+words_remaining: ['description', 'roulette', 'resin', 'chronicle', 'sap', 'story', 'corn dog', 'gum', 'licorice', 'cotton swab', 'checkers', 'account', 'lollipop', 'latex', 'balance sheet', 'ball-in-cup']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['gum', 'latex', 'resin', 'sap'] with connection Natural substances often used for adhesives or rubber
+Is the recommendation accepted? (y/g/b/p/o/n): g
+Recommendation ['resin', 'sap', 'gum', 'latex'] is correct
+attempt_count: 1
+words_remaining: ['description', 'ball-in-cup', 'licorice', 'story', 'balance sheet', 'chronicle', 'lollipop', 'roulette', 'checkers', 'cotton swab', 'account', 'corn dog']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['account', 'chronicle', 'description', 'story'] with connection Narrative or Report
+Is the recommendation accepted? (y/g/b/p/o/n): y
+Recommendation ['description', 'story', 'chronicle', 'account'] is correct
+attempt_count: 1
+words_remaining: ['ball-in-cup', 'roulette', 'licorice', 'lollipop', 'checkers', 'cotton swab', 'corn dog', 'balance sheet']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['balance sheet', 'ball-in-cup', 'checkers', 'roulette'] with connection things that can involve strategy or balance
+Is the recommendation accepted? (y/g/b/p/o/n): o
+Recommendation ['ball-in-cup', 'roulette', 'checkers', 'balance sheet'] is incorrect, one away from correct
+
+>>>Number of single topic groups: 0
+no one_away_group_recommendation, let llm find recommendation
+attempt_count: 1
+words_remaining: ['licorice', 'checkers', 'ball-in-cup', 'lollipop', 'cotton swab', 'balance sheet', 'corn dog', 'roulette']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['corn dog', 'cotton swab', 'licorice', 'lollipop'] with connection Items on a stick
+Is the recommendation accepted? (y/g/b/p/o/n): o
+Recommendation ['licorice', 'lollipop', 'cotton swab', 'corn dog'] is incorrect, one away from correct
+
+>>>Number of single topic groups: 1
+
+>>>One-away group recommendations:
+Recommended Group: ['licorice', 'lollipop', 'corn dog', 'ball-in-cup']
+Connection Description: The common connection among the anchor words 'lollipop,' 'cotton swab,' and 'corn dog' is that they all have a stick component. A lollipop and a corn dog are both items of food on a stick, while a cotton swab has a stick as part of its structure. Among the candidate words, 'ball-in-cup' is a traditional toy that involves a ball attached to a stick, which aligns with the stick component shared by the anchor words.
+using one_away_group_recommendation
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['ball-in-cup', 'corn dog', 'licorice', 'lollipop'] with connection The common connection among the anchor words 'lollipop,' 'cotton swab,' and 'corn dog' is that they all have a stick component. A lollipop and a corn dog are both items of food on a stick, while a cotton swab has a stick as part of its structure. Among the candidate words, 'ball-in-cup' is a traditional toy that involves a ball attached to a stick, which aligns with the stick component shared by the anchor words.
+Is the recommendation accepted? (y/g/b/p/o/n): n
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{   'found_count': 2,
+    'found_yellow': True,
+    'invalid_connections': [   (   'dc6363b6c4a8b2ea8f142d8b40b227c6',
+                                   ['corn dog', 'gum', 'licorice', 'lollipop']),
+                               (   '1a1345c3bc9e93f446f1ec1735cf83db',
+                                   [   'ball-in-cup',
+                                       'roulette',
+                                       'checkers',
+                                       'balance sheet']),
+                               (   'f85b1215c2ae09cc890eef9c4349e767',
+                                   [   'licorice',
+                                       'lollipop',
+                                       'cotton swab',
+                                       'corn dog']),
+                               (   'baaeedf7531e9ed51cbd20e886c77f9b',
+                                   [   'licorice',
+                                       'lollipop',
+                                       'corn dog',
+                                       'ball-in-cup'])],
+    'llm_retry_count': 0,
+    'llm_temperature': 0.7,
+    'mistake_count': 4,
+    'puzzle_recommender': 'llm_recommender',
+    'puzzle_status': 'initialized',
+    'puzzle_step': 'puzzle_completed',
+    'recommendation_count': 6,
+    'recommended_connection': '',
+    'recommended_correct': False,
+    'recommended_words': [],
+    'tool_to_use': 'END',
+    'vocabulary_df':              word  ...                                          embedding
+0     ball-in-cup  ...  [0.005690179765224457, 0.017428142949938774, -...
+1     ball-in-cup  ...  [-0.018105868250131607, -0.0004366760258562863...
+2     ball-in-cup  ...  [0.015846120193600655, 0.011262019164860249, -...
+3     ball-in-cup  ...  [-0.0064096394926309586, 0.00916942860931158, ...
+4   balance sheet  ...  [0.016284411773085594, -0.01667068339884281, -...
+..            ...  ...                                                ...
+80    description  ...  [0.05436806380748749, 0.006818344816565514, -0...
+81    description  ...  [-0.015145743265748024, 0.012568247504532337, ...
+82    description  ...  [-0.003265290055423975, -0.04702017456293106, ...
+83    description  ...  [0.005330637563019991, 0.05106128007173538, -0...
+84    description  ...  [-0.014670341275632381, -0.018418913707137108,...
+
+[85 rows x 3 columns],
+    'words_remaining': [   'licorice',
+                           'checkers',
+                           'ball-in-cup',
+                           'lollipop',
+                           'cotton swab',
+                           'balance sheet',
+                           'corn dog',
+                           'roulette'],
     'workflow_instructions': '**Instructions**\n'
                              '\n'
                              'use "setup_puzzle" tool to initialize the puzzle '
