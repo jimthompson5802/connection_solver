@@ -88,6 +88,8 @@ def get_recommendation(state: PuzzleState) -> PuzzleState:
     logger.info("Entering get_recommendation")
     logger.debug(f"Entering get_recommendation State: {pp.pformat(state)}")
 
+    print(f"\nENTERED {state['puzzle_recommender'].upper()}")
+
     # build prompt for llm
     prompt = HUMAN_MESSAGE_BASE
 
@@ -153,7 +155,7 @@ def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
     logger.info("Entering get_embedvec_recommendation")
     logger.debug(f"Entering get_embedvec_recommendation State: {pp.pformat(state)}")
 
-    print("\nENTERED EMBEDVEC RECOMMENDATION")
+    print(f"\nENTERED {state['puzzle_recommender'].upper()}")
 
     # get candidate list of words
     candidate_list = get_candidate_words(state["vocabulary_df"])
@@ -189,7 +191,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
     # process result of user response
     if found_correct_group in ["y", "g", "b", "p"]:
-        print(f"Recommendation {state['recommended_words']} is correct")
+        print(f"Recommendation {sorted(state['recommended_words'])} is correct")
         match found_correct_group:
             case "y":
                 state["found_yellow"] = True
