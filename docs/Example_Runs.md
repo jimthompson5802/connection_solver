@@ -1,6 +1,6 @@
 # Test Summary
 
-## Test for v0.6.1
+## Test for v0.6.x
 |File|Agent Tag|Solved|Correct Groups|Mistakes|Embed Correct|Comments|
 |---|:---:|:---:|:---:|:---:|:---:|---|
 |data/word_list1.txt|v0.6.1|No|2|4|1|difficulty with blue & purple groups|
@@ -10,9 +10,9 @@
 |data/word_list5.txt|v0.6.1|Yes|4|1|1||
 |data/connection_puzzle_2024_10_23.png|v0.6.1|No|0|4|0||
 |data/connection_puzzle_2024_10_26.png|v0.6.1|Yes|4|0|4||
-|data/connection_puzzle_2024_10_27.png|v0.6.1|No|1|4|0|one-away worked, hallucinated two puzzle words Issue #25|
-|data/connection_puzzle_2024_10_28.png|v0.6.1|No|1|4|0||
-|data/connection_puzzle_2024_11_02.png|v0.6.1|No|2|4|1|one-away worked|
+|data/connection_puzzle_2024_10_27.png|v0.6.2|Yes|4|1|0||
+|data/connection_puzzle_2024_10_28.png|v0.6.2|No|1|4|0||
+|data/connection_puzzle_2024_11_02.png|v0.6.2|No|1|4|1|one-away failed mulitple single-topic groups,random selection wrong one.|
 
 ### Example of one-away working
 ```text
