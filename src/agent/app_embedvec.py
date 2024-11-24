@@ -30,7 +30,7 @@ from embedvec_tools import (
 )
 
 # specify the version of the agent
-__version__ = "0.6.2"
+__version__ = "0.6.3"
 
 pp = pprint.PrettyPrinter(indent=4)
 
