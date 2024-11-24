@@ -44,6 +44,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.6.0 | one-away analyzer & code-based invalid group detection |
 | v0.6.1 | fix empty one-away list error |
 | v0.6.2 | fix incorrect one-away recommendation |
+| v0.6.3 | includes fix #30 repeated one-away invalid group |
 
 ## Sample Runs
 
