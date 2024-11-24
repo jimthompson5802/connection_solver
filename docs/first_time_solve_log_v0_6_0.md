@@ -1,12 +1,14 @@
-# Log for First Time Solves v0.6.0
+# Log for First Time Solves v0.6.x
 ## Agent with Embeddings Results for First Time Live Game
 
-|Date|Agent Tag|Solved|Correct Groups|Mistakes|NYT Difficulty Rating (out of 5)|Comments|
-|---|:---:|:---:|:---:|:---:|:---:|---|
-|2024-11-20|v0.6.0|Yes|4|0|2||
-|2024-11-21|v0.6.0|Yes|4|2|4|one-away analysis worked, last group connection was hallucination.|
-|2024-11-22|v0.6.0|No|0|4|4|No one-away mistakes, seemed to get stuck on Photography connection.|
-|2024-11-23|v0.6.1|No|2|4|3|One away recommendation had an error, returned invalid 4 words instead of the recommended 4th word based on the analysis. Issue #26|
+|Date|Agent Tag|Solved|Total Correct Groups|Embed Correct|LLM Correct|Mistakes|NYT Difficulty Rating (out of 5)|Comments|
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
+|2024-11-20|v0.6.0|Yes|4|4|0|0|2||
+|2024-11-21|v0.6.0|Yes|4|1|3|2|4|one-away analysis worked|
+|2024-11-22|v0.6.0|No|0|0|0|4|4|No one-away mistakes, seemed to get stuck on Photography connection.|
+|2024-11-23|v0.6.1|No|2|0|2|4|3|One away recommendation had an error, returned invalid 4 words instead of the recommended 4th word based on the analysis. Issue #26|
+|2024-11-24|v0.6.2|Yes|4|1|3|1|4||
+
 
 ## Transcipt
 ### 2024-11-20
@@ -447,6 +449,120 @@ FINAL PUZZLE STATE:
                            'balance sheet',
                            'corn dog',
                            'roulette'],
+    'workflow_instructions': '**Instructions**\n'
+                             '\n'
+                             'use "setup_puzzle" tool to initialize the puzzle '
+                             'if the "puzzle_status" is not initialized.\n'
+                             '\n'
+                             'if "puzzle_step" is "puzzle_completed" then use '
+                             '"END" tool.\n'
+                             '\n'
+                             'Use the table to select the appropriate tool.\n'
+                             '\n'
+                             '|puzzle_recommender| puzzle_step | tool |\n'
+                             '| --- | --- | --- |\n'
+                             '|embedvec_recommender| next_recommendation | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| next_recommendation | '
+                             'get_recommendation |\n'
+                             '|llm_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '\n'
+                             'If no tool is selected, use "ABORT" tool.\n'}
+```
+
+### 2024-11-24
+```text
+python src/agent/app_embedvec.py 
+Running Connection Solver Agent with EmbedVec Recommender 0.6.2
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: /desktop/connection_puzzle_2024_11_24.png
+Puzzle Words: ['lurch', 'trance', 'tree', 'thing', 'tray', 'reel', 'wednesday', 'jungle', 'pitch', 'idea', 'heave', 'person', 'blond', 'house', 'ambient', 'place']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC_RECOMMENDER
+(106, 106)
+(106, 106)
+candidate_lists size: 73
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['heave', 'lurch', 'pitch', 'reel'] with connection The words are connected by the theme of movement, specifically abrupt or unsteady motion.
+Is the recommendation accepted? (y/g/b/p/o/n): y
+Recommendation ['heave', 'lurch', 'pitch', 'reel'] is correct
+
+ENTERED EMBEDVEC_RECOMMENDER
+(73, 73)
+(73, 73)
+candidate_lists size: 43
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['house', 'person', 'place', 'thing'] with connection These words are connected by the theme of 'nouns representing entities or concepts' in a general sense.
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['house', 'person', 'place', 'thing'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+attempt_count: 1
+words_remaining: ['wednesday', 'blond', 'jungle', 'thing', 'tray', 'place', 'house', 'person', 'tree', 'ambient', 'idea', 'trance']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['idea', 'person', 'place', 'thing'] with connection Nouns used in 'person, place, thing, idea' definition of a noun
+Is the recommendation accepted? (y/g/b/p/o/n): g
+Recommendation ['idea', 'person', 'place', 'thing'] is correct
+
+ENTERED LLM_RECOMMENDER
+attempt_count: 1
+words_remaining: ['trance', 'ambient', 'tree', 'house', 'tray', 'jungle', 'blond', 'wednesday']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['ambient', 'house', 'jungle', 'trance'] with connection Genres of Electronic Music
+Is the recommendation accepted? (y/g/b/p/o/n): b
+Recommendation ['ambient', 'house', 'jungle', 'trance'] is correct
+
+ENTERED LLM_RECOMMENDER
+attempt_count: 1
+words_remaining: ['wednesday', 'blond', 'tray', 'tree']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['blond', 'tray', 'tree', 'wednesday'] with connection Words that are also used as surnames
+Is the recommendation accepted? (y/g/b/p/o/n): p
+Recommendation ['blond', 'tray', 'tree', 'wednesday'] is correct
+SOLVED THE CONNECTION PUZZLE!!!
+
+
+FINAL PUZZLE STATE:
+{   'found_blue': True,
+    'found_count': 4,
+    'found_purple': True,
+    'found_yellow': True,
+    'invalid_connections': [   (   '303aa7b54da963b12ab3c0539259f145',
+                                   ['house', 'person', 'place', 'thing'])],
+    'llm_retry_count': 0,
+    'llm_temperature': 0.7,
+    'mistake_count': 1,
+    'puzzle_recommender': 'llm_recommender',
+    'puzzle_status': 'initialized',
+    'puzzle_step': 'puzzle_completed',
+    'recommendation_count': 5,
+    'recommended_connection': 'Words that are also used as surnames',
+    'recommended_correct': True,
+    'recommended_words': ['wednesday', 'blond', 'tray', 'tree'],
+    'tool_to_use': 'END',
+    'vocabulary_df':        word                                         definition                                          embedding
+4    trance  noun: A state of altered consciousness resembl...  [0.0015800325199961662, 0.04656819999217987, -...
+5    trance  noun: A condition of daydreaming or being lost...  [0.013507326133549213, -0.006640705745667219, ...
+6    trance  noun: A genre of electronic dance music charac...  [-0.024239417165517807, -0.011076419614255428,...
+7    trance  verb: To put someone into a trance or hypnotic...  [-0.014866442419588566, -0.026106923818588257,...
+8    trance  verb: To be absorbed deeply in thought or cont...  [0.03066338039934635, -0.020754165947437286, -...
+..      ...                                                ...                                                ...
+101   place  verb: To put or set something in a particular ...  [0.004372925031930208, -0.0321015827357769, -0...
+102   place  verb: To assign a rank or position to someone ...  [-0.00040116775198839605, -0.02589253522455692...
+103   place  verb: To arrange or organize, e.g., 'They plac...  [-0.018253443762660027, -0.023801442235708237,...
+104   place  verb: To deposit or leave something, e.g., 'He...  [0.011833795346319675, -0.016633694991469383, ...
+105   place  verb: To allocate or assign a task or responsi...  [0.04755646735429764, -0.02892444096505642, -0...
+
+[73 rows x 3 columns],
+    'words_remaining': [],
     'workflow_instructions': '**Instructions**\n'
                              '\n'
                              'use "setup_puzzle" tool to initialize the puzzle '
