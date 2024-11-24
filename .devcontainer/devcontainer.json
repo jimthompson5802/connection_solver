@@ -12,6 +12,7 @@
 	// "features": {},
 
 	// mount local source folder into container
+	// Ensure that you have the NCPA_ROOT_DIR environment variable set to allow the container to access the following directories
 	"mounts": [
 		"source=${localEnv:NCPA_ROOT_DIR}/.openai,target=/openai,type=bind,consistency=cached",
 		"source=${localEnv:NCPA_ROOT_DIR},target=/desktop,type=bind,consistency=cached"
@@ -31,7 +32,8 @@
 				"Gruntfuggly.todo-tree",
 				"donjayamanne.githistory",
 				"ms-python.flake8",
-				"ms-python.black-formatter"
+				"ms-python.black-formatter",
+				"ms-toolsai.tensorboard"
 			]
 		}
 	}

@@ -134,6 +134,9 @@ cython_debug/
 *.csv
 *.pkl
 
+# tensorboard logs
+tb_logs/
+
 # exceptions
 !requirements.txt
 !.devcontainer/devcontainer.json
