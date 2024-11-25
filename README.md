@@ -207,6 +207,84 @@ Recommendation ['licorice', 'balance sheet', 'checkers', 'roulette'] is correct
 SOLVED THE CONNECTION PUZZLE!!!
 ```
 
+### Heuristics used by the Agent
+
+In the files `app_embedvec.py` and `embedvec_tools.py`, several heuristics are used to manage the puzzle-solving process and generate recommendations. Here are some key heuristics:
+
+#### Heuristics in `app_embedvec.py`
+
+1. **Random Shuffling of Words**:
+   - In the `get_recommendation` function, the remaining words are randomly shuffled or reversed to ensure robust group selection.
+   ```python
+   if np.random.uniform() < 0.5:
+       random.shuffle(state["words_remaining"])
+   else:
+       state["words_remaining"].reverse()
+   ```
+
+2. **Retry Mechanism**:
+   - The `get_recommendation` function includes a retry mechanism to attempt multiple times to get a valid recommendation.
+   ```python
+   attempt_count = 0
+   while True:
+       attempt_count += 1
+       # ...
+       if attempt_count > 10:
+           break
+   ```
+
+3. **One-Away Error Analysis**:
+   - The `apply_recommendation` function uses the `one_away_analyzer` to analyze groups that are one word away from being correct.
+   ```python
+   one_away_group_recommendation = one_away_analyzer(invalid_group, state["words_remaining"])
+   ```
+
+4. **Switching Recommenders**:
+   - The `apply_recommendation` function switches from the embedding vector-based recommender to the LLM-based recommender if a mistake is made by the embedding vector-based recommender.
+   ```python
+    case "n":
+        print(f"Recommendation {sorted(state['recommended_words'])} is incorrect")
+        if state["puzzle_recommender"] == "embedvec_recommender":
+            print("Changing the recommender from 'embedvec_recommender' to 'llm_recommender'")
+            state["puzzle_recommender"] = "llm_recommender"
+   ```
+
+#### Heuristics in `embedvec_tools.py`
+
+1. **Cosine Similarity**:
+   - The `get_candidate_words` function uses cosine similarity to find the three closest words to the target word.
+   ```python
+   cosine_similarities = cosine_similarity(df['embedding'].tolist())
+   ```
+
+2. **Group Metric Calculation**:
+   - The `get_candidate_words` function calculates a group metric as the average cosine similarity of all combinations of words in the group.
+   ```python
+   candidate_group.group_metric = np.array([cosine_similarities[r, c] for r, c in combinations]).mean()
+   ```
+
+3. **Removing Duplicate Groups**:
+   - The `get_candidate_words` function removes duplicate groups by checking the group ID.
+   ```python
+   found_groups = set()
+   unique_candidate_list = []
+   for candidate in candidate_list:
+       if candidate.group_id not in found_groups:
+           unique_candidate_list.append(candidate)
+           found_groups.add(candidate.group_id)
+   ```
+
+4. **LLM-Based Validation**:
+   - The `get_embedvec_recomendation` function uses an LLM to validate the top candidate groups and select the most likely word group `choose_embedvec_item`.
+   ```python
+    # validate the top 5 candidate list with LLM
+    list_to_validate = "\n".join([str(x) for x in candidate_list[:5]])
+    recommended_group = choose_embedvec_item(list_to_validate)
+    logger.info(f"Recommended group: {recommended_group}")
+   ```
+
+These heuristics help the agent manage the puzzle-solving process, generate recommendations, and handle errors effectively.
+
 ### Workflow
 The agent uses the `PuzzleState` class to manage the agent's state and controls the agent's workflow. 
 ```python
