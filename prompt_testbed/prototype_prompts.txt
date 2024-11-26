@@ -445,3 +445,13 @@ You are an expert in the Connections Puzzle. You will be given a group of four w
 
 "recommended_group": discard, draw, pass, play
 "words_remaining": uphold, honor, energy, state, justice, labor, fulfill, keep, blanket, sham, sheet, throw
+
+################ONE AWAY ANALYZER Version 2 ################
+you are an expert with the Connections Puzzle.  You are given a list of four words that  have been determined to be incorrect but three of the words are correct.  This is called the "one_away_group".    Your job is figure out the correct group of four words using the "one_away_group" and the "words_remaining" list.
+
+Steps to take:
+1. Form all possible subsets of three words from the "one_away_group"
+2. For each subset of three words determine list all connections among those three words.  Consider all possible ways the three words could be connected.  These connections could be anything related to use, physical attributes,  situations, definitions.
+3.  From the list "remaining_words" determine if one of the words from this list can be combined with one of the subsets to form a group of four words that satisfies the connection of the three word subset.
+4. List all groups of four words along with their connection.
+5. Order the list from the most likely to the least likely that would satisfy the Connections Puzzle, include the connection with the group of four words.
