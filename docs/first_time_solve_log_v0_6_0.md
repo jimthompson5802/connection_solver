@@ -8,7 +8,8 @@
 |2024-11-22|v0.6.0|No|0|0|0|4|4|No one-away mistakes, seemed to get stuck on Photography connection.|
 |2024-11-23|v0.6.1|No|2|0|2|4|3|One away recommendation had an error, returned invalid 4 words instead of the recommended 4th word based on the analysis. Issue #26|
 |2024-11-24|v0.6.2|Yes|4|1|3|1|4||
-|2024-11-24|v0.6.3|Yes|4|2|2|1|3|rational for embedvec recommendation not correct, Issue #37|
+|2024-11-25|v0.6.3|Yes|4|2|2|1|3|rational for embedvec recommendation not correct, Issue #37|
+|2024-11-26|v0.6.3|No|2|0|2|4|3|llm_recommender stuck plaza, eloise, ritz, club connection, exceeded threshold for llm retry, ended with previous guess, need procedure to avoid ending with previous guess when exceeding retry, Issue #38|
 
 
 ## Transcipt
@@ -725,6 +726,213 @@ FINAL PUZZLE STATE:
 129      crowd  verb: To gather around someone or something in...  [0.030051685869693756, -0.0200674906373024, -0...
 130      crowd  verb: To encroach upon someone's space or pers...  [0.02405993454158306, -0.02800816483795643, 0....,
     'words_remaining': [],
+    'workflow_instructions': '**Instructions**\n'
+                             '\n'
+                             'use "setup_puzzle" tool to initialize the puzzle '
+                             'if the "puzzle_status" is not initialized.\n'
+                             '\n'
+                             'if "puzzle_step" is "puzzle_completed" then use '
+                             '"END" tool.\n'
+                             '\n'
+                             'Use the table to select the appropriate tool.\n'
+                             '\n'
+                             '|puzzle_recommender| puzzle_step | tool |\n'
+                             '| --- | --- | --- |\n'
+                             '|embedvec_recommender| next_recommendation | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| next_recommendation | '
+                             'get_recommendation |\n'
+                             '|llm_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '\n'
+                             'If no tool is selected, use "ABORT" tool.\n'}
+```
+
+### 2024-11-26
+```text
+python src/agent/app_embedvec.py 
+Running Connection Solver Agent with EmbedVec Recommender 0.6.3
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: /desktop/connection_puzzle_2024_11_26.png
+Puzzle Words: ['plaza', 'overlook', 'bonus', 'discount', 'club', 'promotion', 'ritz', 'animal', 'raise', 'turtle', 'goldfish', 'forget', 'pug', 'ignore', 'equity', 'eloise']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC_RECOMMENDER
+(93, 93)
+(93, 93)
+candidate_lists size: 57
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['animal', 'goldfish', 'pug', 'turtle'] with connection The words are connected by the theme of animals, specifically commonly kept pets.
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['animal', 'goldfish', 'pug', 'turtle'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+attempt_count: 1
+words_remaining: ['eloise', 'equity', 'ignore', 'pug', 'forget', 'goldfish', 'turtle', 'raise', 'animal', 'ritz', 'promotion', 'club', 'discount', 'bonus', 'overlook', 'plaza']
+
+repeat invalid group detected: group_id ed64a5ec22d9009a7e60aa416474fe30, recommendation: ['pug', 'goldfish', 'turtle', 'animal']
+attempt_count: 2
+words_remaining: ['turtle', 'raise', 'forget', 'overlook', 'ritz', 'discount', 'eloise', 'pug', 'animal', 'promotion', 'bonus', 'goldfish', 'plaza', 'equity', 'ignore', 'club']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['club', 'eloise', 'plaza', 'ritz'] with connection Famous Hotels
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['club', 'eloise', 'plaza', 'ritz'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+attempt_count: 1
+words_remaining: ['club', 'ignore', 'equity', 'plaza', 'goldfish', 'bonus', 'promotion', 'animal', 'pug', 'eloise', 'discount', 'ritz', 'overlook', 'forget', 'raise', 'turtle']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['club', 'ritz', 'eloise', 'plaza']
+attempt_count: 2
+words_remaining: ['animal', 'plaza', 'goldfish', 'overlook', 'pug', 'turtle', 'eloise', 'raise', 'promotion', 'forget', 'ritz', 'bonus', 'club', 'equity', 'discount', 'ignore']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['ritz', 'plaza', 'eloise', 'club']
+attempt_count: 3
+words_remaining: ['eloise', 'ignore', 'pug', 'promotion', 'discount', 'forget', 'overlook', 'goldfish', 'animal', 'plaza', 'turtle', 'bonus', 'ritz', 'club', 'equity', 'raise']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['discount', 'forget', 'ignore', 'overlook'] with connection To pay no attention to
+Is the recommendation accepted? (y/g/b/p/o/n): g
+Recommendation ['discount', 'forget', 'ignore', 'overlook'] is correct
+
+ENTERED LLM_RECOMMENDER
+attempt_count: 1
+words_remaining: ['club', 'raise', 'bonus', 'ritz', 'goldfish', 'eloise', 'plaza', 'turtle', 'pug', 'animal', 'promotion', 'equity']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['club', 'ritz', 'eloise', 'plaza']
+attempt_count: 2
+words_remaining: ['raise', 'promotion', 'club', 'turtle', 'equity', 'ritz', 'goldfish', 'bonus', 'animal', 'plaza', 'pug', 'eloise']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['bonus', 'equity', 'promotion', 'raise'] with connection Work-related financial terms
+Is the recommendation accepted? (y/g/b/p/o/n): y
+Recommendation ['bonus', 'equity', 'promotion', 'raise'] is correct
+
+ENTERED LLM_RECOMMENDER
+attempt_count: 1
+words_remaining: ['ritz', 'turtle', 'goldfish', 'animal', 'pug', 'eloise', 'club', 'plaza']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['ritz', 'eloise', 'club', 'plaza']
+attempt_count: 2
+words_remaining: ['plaza', 'club', 'eloise', 'pug', 'animal', 'goldfish', 'turtle', 'ritz']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['eloise', 'plaza', 'ritz', 'club']
+attempt_count: 3
+words_remaining: ['plaza', 'eloise', 'ritz', 'goldfish', 'pug', 'club', 'animal', 'turtle']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['plaza', 'eloise', 'ritz', 'club']
+attempt_count: 4
+words_remaining: ['turtle', 'animal', 'club', 'pug', 'goldfish', 'ritz', 'eloise', 'plaza']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['ritz', 'eloise', 'plaza', 'club']
+attempt_count: 5
+words_remaining: ['plaza', 'eloise', 'ritz', 'goldfish', 'pug', 'club', 'animal', 'turtle']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['plaza', 'eloise', 'ritz', 'club']
+attempt_count: 6
+words_remaining: ['goldfish', 'eloise', 'pug', 'ritz', 'animal', 'club', 'plaza', 'turtle']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['eloise', 'ritz', 'club', 'plaza']
+attempt_count: 7
+words_remaining: ['pug', 'animal', 'club', 'goldfish', 'turtle', 'plaza', 'eloise', 'ritz']
+
+repeat invalid group detected: group_id ed64a5ec22d9009a7e60aa416474fe30, recommendation: ['pug', 'goldfish', 'turtle', 'animal']
+attempt_count: 8
+words_remaining: ['eloise', 'ritz', 'plaza', 'turtle', 'animal', 'pug', 'club', 'goldfish']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['ritz', 'plaza', 'club', 'eloise']
+attempt_count: 9
+words_remaining: ['goldfish', 'turtle', 'pug', 'ritz', 'club', 'plaza', 'animal', 'eloise']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['ritz', 'club', 'plaza', 'eloise']
+attempt_count: 10
+words_remaining: ['plaza', 'ritz', 'turtle', 'club', 'animal', 'eloise', 'pug', 'goldfish']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['ritz', 'plaza', 'club', 'eloise']
+attempt_count: 11
+words_remaining: ['goldfish', 'pug', 'eloise', 'animal', 'club', 'turtle', 'ritz', 'plaza']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['club', 'eloise', 'plaza', 'ritz'] with connection Famous hotels
+Is the recommendation accepted? (y/g/b/p/o/n): n
+Recommendation ['club', 'eloise', 'plaza', 'ritz'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+attempt_count: 1
+words_remaining: ['plaza', 'ritz', 'turtle', 'club', 'animal', 'eloise', 'pug', 'goldfish']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['ritz', 'plaza', 'eloise', 'club']
+attempt_count: 2
+words_remaining: ['goldfish', 'pug', 'eloise', 'animal', 'club', 'turtle', 'ritz', 'plaza']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['eloise', 'ritz', 'plaza', 'club']
+attempt_count: 3
+words_remaining: ['plaza', 'ritz', 'turtle', 'club', 'animal', 'eloise', 'pug', 'goldfish']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['ritz', 'plaza', 'eloise', 'club']
+attempt_count: 4
+words_remaining: ['goldfish', 'pug', 'eloise', 'animal', 'club', 'turtle', 'ritz', 'plaza']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['eloise', 'ritz', 'plaza', 'club']
+attempt_count: 5
+words_remaining: ['plaza', 'ritz', 'turtle', 'club', 'animal', 'eloise', 'pug', 'goldfish']
+
+repeat invalid group detected: group_id c38919b6435e9d7ddce33affbbbf175c, recommendation: ['ritz', 'club', 'plaza', 'eloise']
+attempt_count: 6
+words_remaining: ['goldfish', 'pug', 'eloise', 'animal', 'club', 'turtle', 'ritz', 'plaza']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['animal', 'eloise', 'plaza', 'ritz'] with connection Famous hotels or hotel-related names
+Is the recommendation accepted? (y/g/b/p/o/n): n
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{   'found_count': 2,
+    'found_yellow': True,
+    'invalid_connections': [   (   'ed64a5ec22d9009a7e60aa416474fe30',
+                                   ['animal', 'goldfish', 'pug', 'turtle']),
+                               (   'c38919b6435e9d7ddce33affbbbf175c',
+                                   ['ritz', 'eloise', 'plaza', 'club']),
+                               (   'c38919b6435e9d7ddce33affbbbf175c',
+                                   ['eloise', 'ritz', 'plaza', 'club']),
+                               (   'b6dc7303c2b5e2430421bab1dda2e1ab',
+                                   ['eloise', 'ritz', 'plaza', 'animal'])],
+    'llm_retry_count': 0,
+    'llm_temperature': 0.7,
+    'mistake_count': 4,
+    'puzzle_recommender': 'llm_recommender',
+    'puzzle_status': 'initialized',
+    'puzzle_step': 'puzzle_completed',
+    'recommendation_count': 6,
+    'recommended_connection': '',
+    'recommended_correct': False,
+    'recommended_words': [],
+    'tool_to_use': 'END',
+    'vocabulary_df':         word                                         definition                                          embedding
+0      plaza  noun: A public square or open space in a city ...  [0.024007972329854965, -0.04468439519405365, 0...
+1      plaza  noun: A shopping center or complex with variou...  [-0.0347241573035717, -0.015057753771543503, -...
+2      plaza  noun: An open area in front of a building, oft...  [0.035972271114587784, -0.028883012011647224, ...
+3      plaza  noun: A rest area or service area on a highway...  [-0.010654379613697529, -0.04701735079288483, ...
+4   overlook  verb: to fail to notice or consider something,...  [0.03198767080903053, -0.0002878371742554009, ...
+..       ...                                                ...                                                ...
+88    eloise  noun: A female given name, derived from the Ol...  [0.03638988733291626, -0.09199555963277817, -0...
+89    eloise  noun: The title character of the children's bo...  [0.02879514917731285, -0.04768085479736328, -0...
+90    eloise  noun: A character in various works of fiction,...  [0.057135652750730515, -0.016260147094726562, ...
+91    eloise  noun: A type of fabric pattern or style, altho...  [0.04371815174818039, -0.038999367505311966, -...
+92    eloise  noun: A symbol of youthful mischief and curios...  [0.07682903856039047, -0.03214162960648537, -0...
+
+[93 rows x 3 columns],
+    'words_remaining': [   'goldfish',
+                           'pug',
+                           'eloise',
+                           'animal',
+                           'club',
+                           'turtle',
+                           'ritz',
+                           'plaza'],
     'workflow_instructions': '**Instructions**\n'
                              '\n'
                              'use "setup_puzzle" tool to initialize the puzzle '
