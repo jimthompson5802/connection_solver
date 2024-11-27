@@ -514,6 +514,8 @@ The `langsmith` tracing tool was used to trace the agent's workflow.  Here is an
 ## Future Work
 See https://github.com/jimthompson5802/connection_solver/issues
 
-## Academic References
+## Additional Resources
 
 * Merino, et al, _Making New Connections: LLMs as Puzzle Generators for The New York Times' Connections Word Game_, 2024, https://arxiv.org/abs/2407.11240
+
+* Weights and Biases, _GPT - Connections_, demonstration of automating the testing of Connect Puzzle Solver and using WandB to track the results, https://github.com/wandb/connections
