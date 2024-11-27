@@ -30,7 +30,7 @@ from embedvec_tools import (
 )
 
 # specify the version of the agent
-__version__ = "0.6.3"
+__version__ = "0.7.0"
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -87,7 +87,7 @@ HUMAN_MESSAGE_BASE = """
     """
 
 
-def get_recommendation(state: PuzzleState) -> PuzzleState:
+def get_llm_recommendation(state: PuzzleState) -> PuzzleState:
     logger.info("Entering get_recommendation")
     logger.debug(f"Entering get_recommendation State: {pp.pformat(state)}")
 
@@ -181,6 +181,48 @@ def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
     return state
 
 
+def get_manual_recommendation(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering get_manual_recommendation")
+    logger.debug(f"Entering get_manual_recommendation State: {pp.pformat(state)}")
+
+    state["puzzle_recommender"] = "manual_recommender"
+    print(f"\nENTERED {state['puzzle_recommender'].upper()}")
+
+    # display current recommendation and words remaining
+    print(f"Current recommendation: {state['recommended_words']}")
+    print(f"Words remaining: {state['words_remaining']}")
+
+    # get user input for manual recommendation
+    response = "n"
+    while response != "y":
+        manual_recommendation = [
+            x.strip() for x in input("Enter manual recommendation as comma separated words: ").split(",")
+        ]
+        print(f"Manual recommendation: {manual_recommendation}")
+
+        if not set(manual_recommendation).issubset(set(state["words_remaining"])) or len(manual_recommendation) != 4:
+            print("Manual recommendation is not a subset of words remaining or not 4 words")
+            print("try again")
+        else:
+            response = input("Is the manual recommendation correct? (y/n): ")
+
+    # get user defined connection
+    response = "n"
+    while response != "y":
+        manual_connection = input("Enter manual connection: ")
+        print(f"Manual connection: {manual_connection}")
+        response = input("Is the manual connection correct? (y/n): ")
+
+    state["recommended_words"] = manual_recommendation
+    state["recommended_connection"] = manual_connection
+    state["puzzle_step"] = "have_recommendation"
+
+    logger.info("Exiting get_manual_recommendation")
+    logger.debug(f"Exiting get_manual_recommendation State: {pp.pformat(state)}")
+
+    return state
+
+
 def apply_recommendation(state: PuzzleState) -> PuzzleState:
     logger.info("Entering apply_recommendation:")
     logger.debug(f"\nEntering apply_recommendation State: {pp.pformat(state)}")
@@ -269,6 +311,10 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
             state["recommended_words"] = []
             state["recommended_connection"] = ""
             state["puzzle_step"] = "next_recommendation"
+    elif found_correct_group == "m":
+        print("Changing to manual_recommender")
+        state["puzzle_step"] = "manual_recommendation"
+
     else:
         logger.info("Going to next get_recommendation")
         state["puzzle_step"] = "next_recommendation"
@@ -335,7 +381,8 @@ if __name__ == "__main__":
     workflow.add_node("run_planner", run_planner)
     workflow.add_node("setup_puzzle", setup_puzzle)
     workflow.add_node("get_embedvec_recommendation", get_embedvec_recommendation)
-    workflow.add_node("get_recommendation", get_recommendation)
+    workflow.add_node("get_llm_recommendation", get_llm_recommendation)
+    workflow.add_node("get_manual_recommendation", get_manual_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
 
     workflow.add_conditional_edges(
@@ -344,15 +391,17 @@ if __name__ == "__main__":
         {
             "setup_puzzle": "setup_puzzle",
             "get_embedvec_recommendation": "get_embedvec_recommendation",
-            "get_recommendation": "get_recommendation",
+            "get_llm_recommendation": "get_llm_recommendation",
+            "get_manual_recommendation": "get_manual_recommendation",
             "apply_recommendation": "apply_recommendation",
             END: END,
         },
     )
 
     workflow.add_edge("setup_puzzle", "run_planner")
-    workflow.add_edge("get_recommendation", "run_planner")
+    workflow.add_edge("get_llm_recommendation", "run_planner")
     workflow.add_edge("get_embedvec_recommendation", "run_planner")
+    workflow.add_edge("get_manual_recommendation", "run_planner")
     workflow.add_edge("apply_recommendation", "run_planner")
 
     workflow.set_entry_point("run_planner")
