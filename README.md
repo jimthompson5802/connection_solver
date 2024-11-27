@@ -32,6 +32,7 @@ Connections is a word game that challenges players to find themes between words.
     * `gpt-4o` for generating puzzle recommendations and extract words from image
 * LLM tracing with `langsmith`
 * Code-based invalid group detection
+* Manual override on agent recommendation
 
 ## Release History
 | Tag | Description |
@@ -45,6 +46,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.6.1 | fix empty one-away list error |
 | v0.6.2 | fix incorrect one-away recommendation |
 | v0.6.3 | includes fix #30 repeated one-away invalid group |
+| v0.7.0 | Manual override on agent recommendation |
 
 ## Sample Runs
 
