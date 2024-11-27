@@ -35,22 +35,32 @@ __version__ = "0.7.0"
 pp = pprint.PrettyPrinter(indent=4)
 
 MAX_ERRORS = 4
+RETRY_LIMIT = 8
 
 
-KEY_PUZZLE_STATE_FIELDS = ["puzzle_status", "puzzle_step", "puzzle_recommender"]
+KEY_PUZZLE_STATE_FIELDS = ["puzzle_status", "tool_status", "current_tool"]
 
 
 def run_planner(state: PuzzleState) -> PuzzleState:
     logger.info("Entering run_planner:")
     logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
 
+    if state["workflow_instructions"] is None:
+        # read in the workflow specification
+        # TODO: support specifying the workflow specification file path in config
+        workflow_spec_fp = "src/agent/embedvec_workflow_specification.md"
+        with open(workflow_spec_fp, "r") as f:
+            state["workflow_instructions"] = f.read()
+
+        logger.debug(f"Workflow Specification: {state['workflow_instructions']}")
+
     # workflow instructions
     instructions = HumanMessage(state["workflow_instructions"])
     logger.debug(f"\nWorkflow instructions:\n{instructions.content}")
 
     # convert state to json string
-    relevanat_state = {k: state[k] for k in KEY_PUZZLE_STATE_FIELDS}
-    puzzle_state = "\npuzzle state:\n" + json.dumps(relevanat_state)
+    relevant_state = {k: state[k] for k in KEY_PUZZLE_STATE_FIELDS}
+    puzzle_state = "\npuzzle state:\n" + json.dumps(relevant_state)
 
     # wrap the state in a human message
     puzzle_state = HumanMessage(puzzle_state)
@@ -91,7 +101,9 @@ def get_llm_recommendation(state: PuzzleState) -> PuzzleState:
     logger.info("Entering get_recommendation")
     logger.debug(f"Entering get_recommendation State: {pp.pformat(state)}")
 
-    print(f"\nENTERED {state['puzzle_recommender'].upper()}")
+    state["current_tool"] = "llm_recommender"
+    print(f"\nENTERED {state['current_tool'].upper()}")
+    print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
 
     # build prompt for llm
     prompt = HUMAN_MESSAGE_BASE
@@ -107,6 +119,8 @@ def get_llm_recommendation(state: PuzzleState) -> PuzzleState:
     attempt_count = 0
     while True:
         attempt_count += 1
+        if attempt_count > RETRY_LIMIT:
+            break
         print(f"attempt_count: {attempt_count}")
         prompt = HUMAN_MESSAGE_BASE
         # scramble the remaining words for more robust group selection
@@ -134,19 +148,23 @@ def get_llm_recommendation(state: PuzzleState) -> PuzzleState:
             recommended_words = llm_response_json["words"]
             recommended_connection = llm_response_json["connection"]
 
-        if (
-            compute_group_id(recommended_words) not in set(x[0] for x in state["invalid_connections"])
-        ) or attempt_count > 10:
+        if compute_group_id(recommended_words) not in set(x[0] for x in state["invalid_connections"]):
             break
         else:
             print(
-                f"\nrepeat invalid group detected: group_id {compute_group_id(recommended_words)}, recommendation: {recommended_words}"
+                f"\nrepeat invalid group detected: group_id {compute_group_id(recommended_words)}, recommendation: {sorted(recommended_words)}"
             )
 
-    state["recommended_words"] = recommended_words
+    state["recommended_words"] = sorted(recommended_words)
     state["recommended_connection"] = recommended_connection
 
-    state["puzzle_step"] = "have_recommendation"
+    if attempt_count <= RETRY_LIMIT:
+        state["tool_status"] = "have_recommendation"
+    else:
+        print(f"Failed to get a valid recommendation after {RETRY_LIMIT} attempts")
+        print("Changing to manual_recommender, last attempt to solve the puzzle")
+        print(f"last recommendation: {state['recommended_words']} with {state['recommended_connection']}")
+        state["tool_status"] = "manual_recommendation"
 
     logger.info("Exiting get_recommendation")
     logger.debug(f"Exiting get_recommendation State: {pp.pformat(state)}")
@@ -158,7 +176,9 @@ def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
     logger.info("Entering get_embedvec_recommendation")
     logger.debug(f"Entering get_embedvec_recommendation State: {pp.pformat(state)}")
 
-    print(f"\nENTERED {state['puzzle_recommender'].upper()}")
+    state["current_tool"] = "embedvec_recommender"
+    print(f"\nENTERED {state['current_tool'].upper()}")
+    print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
 
     # get candidate list of words
     candidate_list = get_candidate_words(state["vocabulary_df"])
@@ -171,7 +191,7 @@ def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
 
     state["recommended_words"] = recommended_group["candidate_group"]
     state["recommended_connection"] = recommended_group["explanation"]
-    state["puzzle_step"] = "have_recommendation"
+    state["tool_status"] = "have_recommendation"
 
     # build prompt for llm
 
@@ -185,11 +205,12 @@ def get_manual_recommendation(state: PuzzleState) -> PuzzleState:
     logger.info("Entering get_manual_recommendation")
     logger.debug(f"Entering get_manual_recommendation State: {pp.pformat(state)}")
 
-    state["puzzle_recommender"] = "manual_recommender"
-    print(f"\nENTERED {state['puzzle_recommender'].upper()}")
+    state["current_tool"] = "manual_recommender"
+    print(f"\nENTERED {state['current_tool'].upper()}")
+    print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
 
     # display current recommendation and words remaining
-    print(f"Current recommendation: {state['recommended_words']}")
+    print(f"\nCurrent recommendation: {sorted(state['recommended_words'])}")
     print(f"Words remaining: {state['words_remaining']}")
 
     # get user input for manual recommendation
@@ -215,7 +236,7 @@ def get_manual_recommendation(state: PuzzleState) -> PuzzleState:
 
     state["recommended_words"] = manual_recommendation
     state["recommended_connection"] = manual_connection
-    state["puzzle_step"] = "have_recommendation"
+    state["tool_status"] = "have_recommendation"
 
     logger.info("Exiting get_manual_recommendation")
     logger.debug(f"Exiting get_manual_recommendation State: {pp.pformat(state)}")
@@ -231,7 +252,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
     # display recommended words to user and get user response
     found_correct_group = interact_with_user(
-        sorted(state["recommended_words"]), state["recommended_connection"], state["puzzle_recommender"]
+        sorted(state["recommended_words"]), state["recommended_connection"], state["current_tool"]
     )
 
     # process result of user response
@@ -248,7 +269,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
                 state["found_purple"] = True
 
         # for embedvec_recommender, remove the words from the vocabulary_df
-        if state["puzzle_recommender"] == "embedvec_recommender":
+        if state["current_tool"] == "embedvec_recommender":
             # remove from remaining_words the words from recommended_words
             state["vocabulary_df"] = state["vocabulary_df"][
                 ~state["vocabulary_df"]["word"].isin(state["recommended_words"])
@@ -283,9 +304,9 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
                 case "n":
                     print(f"Recommendation {sorted(state['recommended_words'])} is incorrect")
-                    if state["puzzle_recommender"] == "embedvec_recommender":
+                    if state["current_tool"] == "embedvec_recommender":
                         print("Changing the recommender from 'embedvec_recommender' to 'llm_recommender'")
-                        state["puzzle_recommender"] = "llm_recommender"
+                        state["current_tool"] = "llm_recommender"
         else:
             state["recommended_words"] = []
             state["recommended_connection"] = ""
@@ -299,25 +320,25 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
             logger.info("SOLVED THE CONNECTION PUZZLE!!!")
             print("SOLVED THE CONNECTION PUZZLE!!!")
 
-        state["puzzle_step"] = "puzzle_completed"
+        state["tool_status"] = "puzzle_completed"
     elif found_correct_group == "o":
         if one_away_group_recommendation:
             print(f"using one_away_group_recommendation")
             state["recommended_words"] = one_away_group_recommendation.words
             state["recommended_connection"] = one_away_group_recommendation.connection_description
-            state["puzzle_step"] = "have_recommendation"
+            state["tool_status"] = "have_recommendation"
         else:
             print(f"no one_away_group_recommendation, let llm_recommender try again")
             state["recommended_words"] = []
             state["recommended_connection"] = ""
-            state["puzzle_step"] = "next_recommendation"
+            state["tool_status"] = "next_recommendation"
     elif found_correct_group == "m":
         print("Changing to manual_recommender")
-        state["puzzle_step"] = "manual_recommendation"
+        state["tool_status"] = "manual_recommendation"
 
     else:
         logger.info("Going to next get_recommendation")
-        state["puzzle_step"] = "next_recommendation"
+        state["tool_status"] = "next_recommendation"
 
     logger.info("Exiting apply_recommendation:")
     logger.debug(f"\nExiting apply_recommendation State: {pp.pformat(state)}")
@@ -411,9 +432,9 @@ if __name__ == "__main__":
 
     initial_state = PuzzleState(
         puzzle_status="",
-        puzzle_step="",
-        puzzle_recommender="",
-        workflow_instructions="",
+        current_tool="",
+        tool_status="",
+        workflow_instructions=None,
         llm_temperature=0.7,
     )
 
