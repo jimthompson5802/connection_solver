@@ -56,6 +56,7 @@ Starting 2024-11-12 the v0.5.0 agent is used to solve that day's puzzle.  A log 
 
 Starting 2024-11-20 the v0.6.0 agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_6_0.md).
 
+Starting 2024-11-27 the v0.7.0 agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_7_0.md).
 
 ## Solution Strategy
 
@@ -296,13 +297,13 @@ The agent uses the `PuzzleState` class to manage the agent's state and controls 
 # define the state of the puzzle
 class PuzzleState(TypedDict):
     puzzle_status: str = ""
-    puzzle_step: str = ""
-    puzzle_recommender: str = ""
-    workflow_instructions: str = ""
+    tool_status: str = ""
+    current_tool: str = ""
+    workflow_instructions: Optional[str] = None
     vocabulary_df: pd.DataFrame = None
     tool_to_use: str = ""
     words_remaining: List[str] = []
-    invalid_connections: List[List[str]] = []
+    invalid_connections: List[Tuple[str, List[str]]] = []
     recommended_words: List[str] = []
     recommended_connection: str = ""
     recommended_correct: bool = False
@@ -311,6 +312,7 @@ class PuzzleState(TypedDict):
     found_blue: bool = False
     found_purple: bool = False
     mistake_count: int = 0
+    llm_retry_count: int = 0
     found_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
@@ -318,8 +320,8 @@ class PuzzleState(TypedDict):
 
 Key workflow attributes:
 * `puzzle_status`: indicates if puzzle is initialized
-* `puzzle_step`: indicates the results of the current step and is used to determine next tool to use
-* `puzzle_recommender`: indicates current active recommender tool:  `embedvec_recommender` or `llm_recommender`.
+* `tool_status`: indicates the results of the current step and is used to determine next tool to use.
+* `current_tool`: indicates current active tool.
 * `workflow_instructions`: contains the workflow instructions
 * `vocabulary_df`: contains the vocabulary and embedding vectors for the puzzle words
 
@@ -330,13 +332,12 @@ Agent's workflow defintion:
 ```python
     workflow = StateGraph(PuzzleState)
 
-
     workflow.add_node("run_planner", run_planner)
     workflow.add_node("setup_puzzle", setup_puzzle)
     workflow.add_node("get_embedvec_recommendation", get_embedvec_recommendation)
-    workflow.add_node("get_recommendation", get_recommendation)
+    workflow.add_node("get_llm_recommendation", get_llm_recommendation)
+    workflow.add_node("get_manual_recommendation", get_manual_recommendation)
     workflow.add_node("apply_recommendation", apply_recommendation)
-
 
     workflow.add_conditional_edges(
         "run_planner",
@@ -344,21 +345,20 @@ Agent's workflow defintion:
         {
             "setup_puzzle": "setup_puzzle",
             "get_embedvec_recommendation": "get_embedvec_recommendation",
-            "get_recommendation": "get_recommendation",
+            "get_llm_recommendation": "get_llm_recommendation",
+            "get_manual_recommendation": "get_manual_recommendation",
             "apply_recommendation": "apply_recommendation",
             END: END,
         },
     )
 
-
     workflow.add_edge("setup_puzzle", "run_planner")
-    workflow.add_edge("get_recommendation", "run_planner")
+    workflow.add_edge("get_llm_recommendation", "run_planner")
     workflow.add_edge("get_embedvec_recommendation", "run_planner")
+    workflow.add_edge("get_manual_recommendation", "run_planner")
     workflow.add_edge("apply_recommendation", "run_planner")
 
-
     workflow.set_entry_point("run_planner")
-
 
     app = workflow.compile()
     app.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
@@ -373,15 +373,11 @@ PLANNER_SYSTEM_MESSAGE = """
     You are an expert in managing the sequence of a workflow. Your task is to
     determine the next tool to use given the current state of the workflow.
 
+    the eligible tools to use are: ["setup_puzzle", "get_llm_recommendation", "apply_recommendation", "get_embedvec_recommendation", "get_manual_recommendation", "END"]
 
-    the eligible tools to use are: ["setup_puzzle", "get_recommendation", "apply_recommendation", "get_embedvec_recommendation", "END"]
-
-
-    The important information for the workflow state is to consider are: "puzzle_status", "puzzle_step", and "puzzle_recommender".
-
+    The important information for the workflow state is to consider are: "puzzle_status", "tool_status", and "current_tool".
 
     Using the provided instructions, you will need to determine the next tool to use.
-
 
     output response in json format with key word "tool" and the value as the output string.
     
@@ -396,28 +392,32 @@ Markdown description of the workflow instructions:
 
 use "setup_puzzle" tool to initialize the puzzle if the "puzzle_status" is not initialized.
 
-if "puzzle_step" is "puzzle_completed" then use "END" tool.
+if "tool_status" is "puzzle_completed" then use "END" tool.
 
 Use the table to select the appropriate tool.
 
-|puzzle_recommender| puzzle_step | tool |
+|current_tool| tool_status | tool |
 | --- | --- | --- |
+|setup_puzzle| initialized | get_embedvec_recommendation |
 |embedvec_recommender| next_recommendation | get_embedvec_recommendation |
 |embedvec_recommender| have_recommendation | apply_recommendation |
-|llm_recommender| next_recommendation | get_recommendation |
+|llm_recommender| next_recommendation | get_llm_recommendation |
 |llm_recommender| have_recommendation | apply_recommendation |
+|llm_recommender| manual_recommendation | get_manual_recommendation |
+|manual_recommender| have_recommendation | apply_recommendation |
+|manual_recommender| next_recommendation | get_llm_recommendation |
 
 If no tool is selected, use "ABORT" tool.
 
 ---
 
 
-The final part is the current state of the game.  The following subset of `PuzzleState` is extracted as a string and passed to the LLM in the prompt to determine the next step in the agent's workflow.  The LLM's response determines the next tool to use.
+The final part is the current state of the game.  The following subset of `PuzzleState` is extracted as a string and passed to the LLM in the prompt to determine the next step in the agent's workflow.  The LLM's response determines the next tool to use.  Here is an example:
 ```python
 '{
     "puzzle_status": "initialized", 
-    "puzzle_step": "next_recommendation",
-    "puzzle_recommender": "embedvec_recommender",
+    "tool_status": "next_recommendation",
+    "current_tool": "embedvec_recommender",
 }'
 ```
 

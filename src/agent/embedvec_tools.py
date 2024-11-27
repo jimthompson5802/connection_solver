@@ -83,9 +83,9 @@ class RecommendedGroup:
 # define the state of the puzzle
 class PuzzleState(TypedDict):
     puzzle_status: str = ""
-    puzzle_step: str = ""
-    puzzle_recommender: str = ""
-    workflow_instructions: str = ""
+    tool_status: str = ""
+    current_tool: str = ""
+    workflow_instructions: Optional[str] = None
     vocabulary_df: pd.DataFrame = None
     tool_to_use: str = ""
     words_remaining: List[str] = []
@@ -108,6 +108,9 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     logger.info("Entering setup_puzzle:")
     logger.debug(f"\nEntering setup_puzzle State: {pp.pformat(state)}")
 
+    state["current_tool"] = "setup_puzzle"
+    print(f"\nENTERED {state['current_tool'].upper()}")
+
     # prompt user for input source
     input_source = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
 
@@ -125,8 +128,7 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     # initialize the state
     state["words_remaining"] = words
     state["puzzle_status"] = "initialized"
-    state["puzzle_step"] = "next_recommendation"
-    state["puzzle_recommender"] = "embedvec_recommender"
+    state["tool_status"] = "initialized"
     state["invalid_connections"] = []
     state["mistake_count"] = 0
     state["found_count"] = 0
@@ -155,14 +157,6 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
 
     # store the vocabulary in the state
     state["vocabulary_df"] = df
-
-    # read in the workflow specification
-    # TODO: support specifying the workflow specification file path in config
-    workflow_spec_fp = "src/agent/embedvec_workflow_specification.md"
-    with open(workflow_spec_fp, "r") as f:
-        state["workflow_instructions"] = f.read()
-
-    logger.debug(f"Workflow Specification: {state['workflow_instructions']}")
 
     logger.info("Exiting setup_puzzle:")
     logger.debug(f"\nExiting setup_puzzle State: {pp.pformat(state)}")
@@ -230,9 +224,9 @@ PLANNER_SYSTEM_MESSAGE = """
     You are an expert in managing the sequence of a workflow. Your task is to
     determine the next tool to use given the current state of the workflow.
 
-    the eligible tools to use are: ["setup_puzzle", "get_recommendation", "apply_recommendation", "get_embedvec_recommendation", "END"]
+    the eligible tools to use are: ["setup_puzzle", "get_llm_recommendation", "apply_recommendation", "get_embedvec_recommendation", "get_manual_recommendation", "END"]
 
-    The important information for the workflow state is to consider are: "puzzle_status", "puzzle_step", and "puzzle_recommender".
+    The important information for the workflow state is to consider are: "puzzle_status", "tool_status", and "current_tool".
 
     Using the provided instructions, you will need to determine the next tool to use.
 
