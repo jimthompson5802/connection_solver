@@ -8,8 +8,8 @@
 |2024-11-14|v0.5.0|No|0|4|3|3 of the 4 errors were "one away"|
 |2024-11-15|v0.5.0|No|2|4|3|two "one away" errors, NCPA stuck in repeating previous invalid group|
 |2024-11-16|v0.5.0|No|2|4|5|2 one away mistakes|
-|2024-11-17|v0.5.0|Yes with manual assist|2|2|4|2 one aways mistakes, repeated previous incorrect guess, manual override to solve puzzle|
-|2024-11-18|v0.5.0|Yes with manual assist|2|3|1|2 one away mistake, repeated previous incorrect guess, manual override to solve puzzle|
+|2024-11-17|v0.5.0|Yes with manual answers to complete|2|2|4|2 one aways mistakes, repeated previous incorrect guess, terminated agent to finish puzzle|
+|2024-11-18|v0.5.0|Yes with manual answers to complete|2|3|1|2 one away mistake, repeated previous incorrect guess, terminated agent to finish puzzle|
 
 ## Transcript
 ### 2024-11-12
