@@ -3,7 +3,7 @@
 
 |Date|Agent Tag|Solved|Total Correct Groups|Embed Correct|LLM Correct|Manual Correct|Mistakes|NYT Difficulty Rating (out of 5)|Comments|
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
-|2024-11-27|v0.7.0|Yes|4|1|3|M/A|2|3||
+|2024-11-27|v0.7.0|Yes|4|1|3|N/A|2|3||
 |2024-11-28|v0.7.0|Yes|4|1|3|N/A|2|1|1 one-away analysis correct|
 |2024-11-29|v0.7.0|Yes|4|1|1|2|3|5|one-away analyis multipe groups led to wrong answer|
 
