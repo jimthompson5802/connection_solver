@@ -6,6 +6,7 @@
 |2024-11-27|v0.7.0|Yes|4|1|3|N/A|2|3||
 |2024-11-28|v0.7.0|Yes|4|1|3|N/A|2|1|1 one-away analysis correct|
 |2024-11-29|v0.7.0|Yes|4|1|1|2|3|5|one-away analyis multipe groups led to wrong answer|
+|2024-11-30|v0.7.0|No|0|0|0|N/A|4|3|Considered manual override for "____ dance" connection based on "modern, swing, tap" but did not do think "jazz" was dance.|
 
 
 ## Transcipt
@@ -459,6 +460,141 @@ FINAL PUZZLE STATE:
 
 [74 rows x 3 columns],
     'words_remaining': [],
+    'workflow_instructions': '**Instructions**\n'
+                             '\n'
+                             'use "setup_puzzle" tool to initialize the puzzle '
+                             'if the "puzzle_status" is not initialized.\n'
+                             '\n'
+                             'if "tool_status" is "puzzle_completed" then use '
+                             '"END" tool.\n'
+                             '\n'
+                             'Use the table to select the appropriate tool.\n'
+                             '\n'
+                             '|current_tool| tool_status | tool |\n'
+                             '| --- | --- | --- |\n'
+                             '|setup_puzzle| initialized | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| next_recommendation | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| next_recommendation | '
+                             'get_llm_recommendation |\n'
+                             '|llm_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| manual_recommendation | '
+                             'get_manual_recommendation |\n'
+                             '|manual_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|manual_recommender| next_recommendation | '
+                             'get_llm_recommendation |\n'
+                             '\n'
+                             'If no tool is selected, use "ABORT" tool.\n'}
+```
+
+### 2024-11-30
+```text
+Running Connection Solver Agent with EmbedVec Recommender 0.7.0
+
+ENTERED SETUP_PUZZLE
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the image file location: /desktop/connection_puzzle_2024_11_30.png
+Puzzle Words: ['rock', 'palm', 'fast', 'modern', 'nail', 'swing', 'screw', 'knuckle', 'pocket', 'ace', 'tap', 'swipe', 'curve', 'jazz', 'lift', 'crush']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+(135, 135)
+(135, 135)
+candidate_lists size: 97
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['jazz', 'rock', 'swing', 'tap'] with connection All words relate to music or dance genres and movements, with connections to rhythm and performance.
+Is the recommendation accepted? (y/g/b/p/m/o/n): n
+Recommendation ['jazz', 'rock', 'swing', 'tap'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 1
+attempt_count: 1
+words_remaining: ['crush', 'lift', 'jazz', 'curve', 'swipe', 'tap', 'ace', 'pocket', 'knuckle', 'screw', 'swing', 'nail', 'modern', 'fast', 'palm', 'rock']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['crush', 'pocket', 'swipe', 'tap'] with connection Smartphone interactions or actions
+Is the recommendation accepted? (y/g/b/p/m/o/n): n
+Recommendation ['crush', 'pocket', 'swipe', 'tap'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 2
+attempt_count: 1
+words_remaining: ['rock', 'palm', 'fast', 'modern', 'nail', 'swing', 'screw', 'knuckle', 'pocket', 'ace', 'tap', 'swipe', 'curve', 'jazz', 'lift', 'crush']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['curve', 'jazz', 'rock', 'swing'] with connection Types of music or musical genres
+Is the recommendation accepted? (y/g/b/p/m/o/n): n
+Recommendation ['curve', 'jazz', 'rock', 'swing'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 3
+attempt_count: 1
+words_remaining: ['crush', 'lift', 'jazz', 'curve', 'swipe', 'tap', 'ace', 'pocket', 'knuckle', 'screw', 'swing', 'nail', 'modern', 'fast', 'palm', 'rock']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['crush', 'lift', 'swipe', 'tap'] with connection Actions involving physical movement
+Is the recommendation accepted? (y/g/b/p/m/o/n): n
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{   'current_tool': 'llm_recommender',
+    'found_count': 0,
+    'invalid_connections': [   (   '92bff2bd361d887cf1730b1608e79f79',
+                                   ['jazz', 'rock', 'swing', 'tap']),
+                               (   '36f608fcad8e4a2acf5ac526d7a544e3',
+                                   ['crush', 'pocket', 'swipe', 'tap']),
+                               (   '50a372133f57fd3fdba07899ba07d427',
+                                   ['curve', 'jazz', 'rock', 'swing']),
+                               (   '6ca90b5905ddc93720878e47f7acc003',
+                                   ['crush', 'lift', 'swipe', 'tap'])],
+    'llm_retry_count': 0,
+    'llm_temperature': 0.7,
+    'mistake_count': 4,
+    'puzzle_status': 'initialized',
+    'recommendation_count': 4,
+    'recommended_connection': '',
+    'recommended_correct': False,
+    'recommended_words': [],
+    'tool_status': 'puzzle_completed',
+    'tool_to_use': 'END',
+    'vocabulary_df':       word  ...                                          embedding
+0     rock  ...  [-0.03385302424430847, 0.01978747732937336, 0....
+1     rock  ...  [-0.0030667625833302736, -0.037152934819459915...
+2     rock  ...  [-0.03304039686918259, -0.005039730574935675, ...
+3     rock  ...  [0.0009993929415941238, 0.0132753886282444, -0...
+4     rock  ...  [-0.012014180421829224, -0.031371016055345535,...
+..     ...  ...                                                ...
+130  crush  ...  [0.014357254840433598, 0.023483851924538612, -...
+131  crush  ...  [0.025249477475881577, -0.012217842973768711, ...
+132  crush  ...  [0.002970759989693761, -0.019149478524923325, ...
+133  crush  ...  [-0.02796003594994545, -0.030240138992667198, ...
+134  crush  ...  [-0.014921548776328564, 0.0031180153600871563,...
+
+[135 rows x 3 columns],
+    'words_remaining': [   'crush',
+                           'lift',
+                           'jazz',
+                           'curve',
+                           'swipe',
+                           'tap',
+                           'ace',
+                           'pocket',
+                           'knuckle',
+                           'screw',
+                           'swing',
+                           'nail',
+                           'modern',
+                           'fast',
+                           'palm',
+                           'rock'],
     'workflow_instructions': '**Instructions**\n'
                              '\n'
                              'use "setup_puzzle" tool to initialize the puzzle '
