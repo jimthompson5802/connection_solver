@@ -49,7 +49,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.6.2 | fix incorrect one-away recommendation |
 | v0.6.3 | includes fix #30 repeated one-away invalid group |
 | v0.7.0 | Manual override on agent recommendation |
-| v0.7.1 | langgraph compliant human-in-the-loop interactions |
+| v0.7.1 | langgraph compliant human-in-the-loop interactions, sqlite3 for vocabulary storage |
 
 ## Sample Runs
 
