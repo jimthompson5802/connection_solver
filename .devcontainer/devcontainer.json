@@ -33,7 +33,9 @@
 				"donjayamanne.githistory",
 				"ms-python.flake8",
 				"ms-python.black-formatter",
-				"ms-toolsai.tensorboard"
+				"ms-toolsai.tensorboard",
+				"ms-python.python",
+				"ms-python.debugpy"
 			]
 		}
 	}
