@@ -6,6 +6,8 @@ import random
 from typing import List, TypedDict, Optional, Tuple
 import hashlib
 import itertools
+import sqlite3
+import os
 
 import pandas as pd
 import numpy as np
@@ -86,13 +88,14 @@ class PuzzleState(TypedDict):
     tool_status: str = ""
     current_tool: str = ""
     workflow_instructions: Optional[str] = None
-    vocabulary_df: pd.DataFrame = None
+    vocabulary_db_fp: Optional[str] = None
     tool_to_use: str = ""
     words_remaining: List[str] = []
     invalid_connections: List[Tuple[str, List[str]]] = []
     recommended_words: List[str] = []
     recommended_connection: str = ""
     recommended_correct: bool = False
+    recommendation_answer_status: Optional[str] = None
     found_yellow: bool = False
     found_greeen: bool = False
     found_blue: bool = False
@@ -102,6 +105,8 @@ class PuzzleState(TypedDict):
     found_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
+    puzzle_source_type: Optional[str] = None
+    puzzle_source_fp: Optional[str] = None
 
 
 def setup_puzzle(state: PuzzleState) -> PuzzleState:
@@ -112,13 +117,11 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     print(f"\nENTERED {state['current_tool'].upper()}")
 
     # prompt user for input source
-    input_source = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
-
+    input_source = state.get("puzzle_source_type", None)
+    puzzle_word_fp = state.get("puzzle_source_fp", None)
     if input_source == "file":
-        puzzle_word_fp = input("Please enter the word file location: ")
         words = read_file_to_word_list(puzzle_word_fp)
     elif input_source == "image":
-        puzzle_word_fp = input("Please enter the image file location: ")
         words = extract_words_from_image(puzzle_word_fp)
     else:
         raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
@@ -153,10 +156,32 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     # Generate embeddings
     print("\nGenerating embeddings for the definitions")
     embeddings = generate_embeddings(df["definition"].tolist())
-    df["embedding"] = [np.array(v) for v in np.array(embeddings).tolist()]
+    # convert embeddings to json strings for storage
+    df["embedding"] = [json.dumps(v) for v in embeddings]  
 
-    # store the vocabulary in the state
-    state["vocabulary_df"] = df
+    # store the vocabulary in external database
+    print("\nStoring vocabulary in external database")
+    # remove prior database file, ignore if it does not exist
+    try:
+        os.remove(state["vocabulary_db_fp"])
+    except FileNotFoundError:
+        pass
+
+    conn = sqlite3.connect(state["vocabulary_db_fp"])
+    cursor = conn.cursor()
+    # create the table
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS vocabulary (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            word TEXT,
+            definition TEXT,
+            embedding TEXT
+        )
+        """
+    )
+    df.to_sql("vocabulary", conn, if_exists="replace", index=False)
+    conn.close()
 
     logger.info("Exiting setup_puzzle:")
     logger.debug(f"\nExiting setup_puzzle State: {pp.pformat(state)}")
@@ -430,7 +455,10 @@ Steps:
 """
 
 
-def one_away_analyzer(one_away_group: List[str], words_remaining: List[str]) -> List[Tuple[str, List[str]]]:
+def one_away_analyzer(state: PuzzleState, one_away_group: List[str], words_remaining: List[str]) -> List[Tuple[str, List[str]]]:
+    print("\nENTERED ONE-AWAY ANALYZER")
+    print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
+
     single_topic_groups = []
     possible_anchor_words_list = list(itertools.combinations(one_away_group, 3))
 

@@ -5,11 +5,15 @@ import pprint
 import json
 import os
 import random
+import uuid
+import sqlite3
 
 
 import numpy as np
+import pandas as pd
 
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage
 
 from langchain_core.tracers.context import tracing_v2_enabled
@@ -30,7 +34,7 @@ from embedvec_tools import (
 )
 
 # specify the version of the agent
-__version__ = "0.7.0"
+__version__ = "0.7.1"
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -108,14 +112,6 @@ def get_llm_recommendation(state: PuzzleState) -> PuzzleState:
     # build prompt for llm
     prompt = HUMAN_MESSAGE_BASE
 
-    # TODO: Clean up the code below
-    # if len(state["invalid_connections"]) > 0:
-    #     prompt += " Do not include word groups that are known to be invalid."
-    #     prompt += "\n\n"
-    #     prompt += "Invalid word groups:\n"
-    #     for invalid_connection in state["invalid_connections"]:
-    #         prompt += f"{', '.join(invalid_connection)}\n"
-    # prompt += "\n\n"
     attempt_count = 0
     while True:
         attempt_count += 1
@@ -180,8 +176,17 @@ def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
     print(f"\nENTERED {state['current_tool'].upper()}")
     print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
 
-    # get candidate list of words
-    candidate_list = get_candidate_words(state["vocabulary_df"])
+    # get candidate list of words from database
+    conn = sqlite3.connect(state["vocabulary_db_fp"])
+    sql_query = "SELECT * FROM vocabulary"
+    df = pd.read_sql_query(sql_query, conn)
+    conn.close()
+
+    # convert embedding string representation to numpy array
+    df["embedding"] = df["embedding"].apply(lambda x: np.array(json.loads(x)))
+
+    # get candidate list of words based on embedding vectors
+    candidate_list = get_candidate_words(df)
     print(f"candidate_lists size: {len(candidate_list)}")
 
     # validate the top 5 candidate list with LLM
@@ -250,10 +255,8 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
     state["recommendation_count"] += 1
 
-    # display recommended words to user and get user response
-    found_correct_group = interact_with_user(
-        sorted(state["recommended_words"]), state["recommended_connection"], state["current_tool"]
-    )
+    # get user response from human input
+    found_correct_group = state["recommendation_answer_status"]
 
     # process result of user response
     if found_correct_group in ["y", "g", "b", "p"]:
@@ -268,13 +271,18 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
             case "p":
                 state["found_purple"] = True
 
-        # for embedvec_recommender, remove the words from the vocabulary_df
+        # for embedvec_recommender, remove the words from the vocabulary database
         if state["current_tool"] == "embedvec_recommender":
-            # remove from remaining_words the words from recommended_words
-            state["vocabulary_df"] = state["vocabulary_df"][
-                ~state["vocabulary_df"]["word"].isin(state["recommended_words"])
-            ]
+            # remove accepted words from vocabulary.db
+            conn = sqlite3.connect(state["vocabulary_db_fp"])
+            # for each word in recommended_words, remove the word from the vocabulary table
+            for word in state["recommended_words"]:
+                sql_query = f"DELETE FROM vocabulary WHERE word = '{word}'"
+                conn.execute(sql_query)
+            conn.commit()
+            conn.close()
 
+        # remove the words from words_remaining
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
         state["recommended_correct"] = True
         state["found_count"] += 1
@@ -291,7 +299,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
                     print(f"Recommendation {sorted(state['recommended_words'])} is incorrect, one away from correct")
 
                     # perform one-away analysis
-                    one_away_group_recommendation = one_away_analyzer(invalid_group, state["words_remaining"])
+                    one_away_group_recommendation = one_away_analyzer(state, invalid_group, state["words_remaining"])
 
                     # check if one_away_group_recommendation is a prior mistake
                     if one_away_group_recommendation:
@@ -363,6 +371,58 @@ def configure_logging(log_level):
     )
 
 
+def run_workflow(workflow_graph, initial_state: PuzzleState, runtime_config: dict) -> None:
+    # result = workflow_graph.invoke(initial_state, runtime_config)
+
+    # run workflow until first human-in-the-loop input required for setup
+    for chunk in workflow_graph.stream(initial_state, runtime_config, stream_mode="values"):
+        pass
+
+    # continue workflow until the next human-in-the-loop input required for puzzle answer
+    while chunk["tool_status"] != "puzzle_completed":
+        current_state = workflow_graph.get_state(runtime_config)
+        logger.debug(f"\nCurrent state: {current_state}")
+        logger.info(f"\nNext action: {current_state.next}")
+        if current_state.next[0] == "setup_puzzle":
+            puzzle_source_type = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
+            puzzle_source_fp = input("Please enter the file/image location: ")
+
+            # specify location of puzzle data for setup
+            workflow_graph.update_state(
+                runtime_config,
+                {
+                    "puzzle_source_type": puzzle_source_type,
+                    "puzzle_source_fp": puzzle_source_fp,
+                },
+            )
+        elif current_state.next[0] == "apply_recommendation":
+            found_correct_group = interact_with_user(
+                sorted(current_state.values["recommended_words"]), 
+                current_state.values["recommended_connection"],    
+                current_state.values["current_tool"]
+            )
+
+            workflow_graph.update_state(
+                runtime_config,
+                {
+                    "recommendation_answer_status": found_correct_group,
+                },
+            )
+        else:
+            raise RuntimeError(f"Unexpected next action: {current_state.next[0]}")
+
+        # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
+        for chunk in workflow_graph.stream(None, runtime_config, stream_mode="values"):
+            logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
+            pass
+
+
+    print("\n\nFINAL PUZZLE STATE:")
+    pp.pprint(chunk)
+
+    return None
+
+
 if __name__ == "__main__":
 
     print(f"Running Connection Solver Agent with EmbedVec Recommender {__version__}")
@@ -427,8 +487,13 @@ if __name__ == "__main__":
 
     workflow.set_entry_point("run_planner")
 
-    app = workflow.compile()
-    app.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
+    memory_checkpoint = MemorySaver()
+
+    workflow_graph = workflow.compile(
+        checkpointer=memory_checkpoint,
+        interrupt_before=["setup_puzzle", "apply_recommendation"],
+    )
+    workflow_graph.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
 
     initial_state = PuzzleState(
         puzzle_status="",
@@ -436,13 +501,16 @@ if __name__ == "__main__":
         tool_status="",
         workflow_instructions=None,
         llm_temperature=0.7,
+        vocabulary_db_fp="/tmp/vocabulary.db",
     )
+
+    runtime_config = {
+        "configurable": {"thread_id": str(uuid.uuid4())},
+        "recursion_limit": 50,
+    }
 
     if args.trace:
         with tracing_v2_enabled("Connection_Solver_Agent"):
-            result = app.invoke(initial_state, {"recursion_limit": 50})
+            result = run_workflow(workflow_graph, initial_state, runtime_config)
     else:
-        result = app.invoke(initial_state, {"recursion_limit": 50})
-
-    print("\n\nFINAL PUZZLE STATE:")
-    pp.pprint(result)
+        result = run_workflow(workflow_graph, initial_state, runtime_config)
