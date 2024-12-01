@@ -99,12 +99,23 @@ print(f"state at first human_input:\n{workflow.get_state(config=config)}")
 
 # breakpoint at human_input
 while True:
-    # run workflow until end condtion
+    # human_input
+    human_input_response = input("Enter number or 'c' to continue without updating counter or 'q' to quit: ")
     num_updates += 1
     # emulating getting external input from the user
+    if human_input_response == "q":
+        new_message = "quitting"
+        new_counter_value = chunk["counter"]
+    elif human_input_response == "c":
+        new_message = "continuing without updating counter"
+        new_counter_value = chunk["counter"]
+    else:
+        new_message = "resetting counter"
+        new_counter_value = int(human_input_response)
+
     workflow.update_state(
         config,
-        {"counter": 2 * num_updates, "message": f"num_updates: {num_updates}"},
+        {"counter": new_counter_value, "message": new_message},
         # as_node="human_input",  #if specified, the code in the node is not executed
     )
 
@@ -112,8 +123,14 @@ while True:
     for chunk in workflow.stream(None, config=config, stream_mode="values"):
         print(f"\nchunk1: {chunk}")
 
-    print(f"state at human_input:\n{workflow.get_state(config=config)}")
+    print(f"\nstate at human_input:\n{workflow.get_state(config=config)}")  # print number of checkpoints
+    print(f"\n>>>number of checkpoints: {len(list(memory_checkpoint.list(config)))}")
 
     # check to see if workflow is done or should be terminated
     if num_updates > 15 or chunk["next_updater"] == "END":
         break
+
+# print number of checkpoints
+print(f"\nfinal number of checkpoints: {len(list(memory_checkpoint.list(config)))}")
+print("all checkpoints:\n")
+pp.pprint(list(memory_checkpoint.list(config)))
