@@ -112,14 +112,6 @@ def get_llm_recommendation(state: PuzzleState) -> PuzzleState:
     # build prompt for llm
     prompt = HUMAN_MESSAGE_BASE
 
-    # TODO: Clean up the code below
-    # if len(state["invalid_connections"]) > 0:
-    #     prompt += " Do not include word groups that are known to be invalid."
-    #     prompt += "\n\n"
-    #     prompt += "Invalid word groups:\n"
-    #     for invalid_connection in state["invalid_connections"]:
-    #         prompt += f"{', '.join(invalid_connection)}\n"
-    # prompt += "\n\n"
     attempt_count = 0
     while True:
         attempt_count += 1
@@ -263,11 +255,7 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
     state["recommendation_count"] += 1
 
-    # display recommended words to user and get user response
-    # TODO: remove this for cleanup
-    # found_correct_group = interact_with_user(
-    #     sorted(state["recommended_words"]), state["recommended_connection"], state["current_tool"]
-    # )
+    # get user response from human input
     found_correct_group = state["recommendation_answer_status"]
 
     # process result of user response
@@ -425,6 +413,7 @@ def run_workflow(workflow_graph, initial_state: PuzzleState, runtime_config: dic
 
         # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
         for chunk in workflow_graph.stream(None, runtime_config, stream_mode="values"):
+            logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
             pass
 
 
