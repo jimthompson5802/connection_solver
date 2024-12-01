@@ -95,6 +95,7 @@ class PuzzleState(TypedDict):
     recommended_words: List[str] = []
     recommended_connection: str = ""
     recommended_correct: bool = False
+    recommendation_answer_status: Optional[str] = None
     found_yellow: bool = False
     found_greeen: bool = False
     found_blue: bool = False
@@ -116,13 +117,11 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     print(f"\nENTERED {state['current_tool'].upper()}")
 
     # prompt user for input source
-    input_source = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
-
+    input_source = state.get("puzzle_source_type", None)
+    puzzle_word_fp = state.get("puzzle_source_fp", None)
     if input_source == "file":
-        puzzle_word_fp = input("Please enter the word file location: ")
         words = read_file_to_word_list(puzzle_word_fp)
     elif input_source == "image":
-        puzzle_word_fp = input("Please enter the image file location: ")
         words = extract_words_from_image(puzzle_word_fp)
     else:
         raise ValueError("Invalid input source. Please enter 'file' or 'image'.")

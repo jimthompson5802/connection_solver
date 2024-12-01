@@ -264,9 +264,11 @@ def apply_recommendation(state: PuzzleState) -> PuzzleState:
     state["recommendation_count"] += 1
 
     # display recommended words to user and get user response
-    found_correct_group = interact_with_user(
-        sorted(state["recommended_words"]), state["recommended_connection"], state["current_tool"]
-    )
+    # TODO: remove this for cleanup
+    # found_correct_group = interact_with_user(
+    #     sorted(state["recommended_words"]), state["recommended_connection"], state["current_tool"]
+    # )
+    found_correct_group = state["recommendation_answer_status"]
 
     # process result of user response
     if found_correct_group in ["y", "g", "b", "p"]:
@@ -382,10 +384,52 @@ def configure_logging(log_level):
 
 
 def run_workflow(workflow_graph, initial_state: PuzzleState, runtime_config: dict) -> None:
-    result = workflow_graph.invoke(initial_state, runtime_config)
+    # result = workflow_graph.invoke(initial_state, runtime_config)
+
+    # run workflow until first human-in-the-loop input required for setup
+    for chunk in workflow_graph.stream(initial_state, runtime_config, stream_mode="values"):
+        pass
+
+    # continue workflow until the next human-in-the-loop input required for puzzle answer
+    while chunk["tool_status"] != "puzzle_completed":
+        current_state = workflow_graph.get_state(runtime_config)
+        logger.debug(f"\nCurrent state: {current_state}")
+        logger.info(f"\nNext action: {current_state.next}")
+        if current_state.next[0] == "setup_puzzle":
+            puzzle_source_type = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
+            puzzle_source_fp = input("Please enter the file/image location: ")
+
+            # specify location of puzzle data for setup
+            workflow_graph.update_state(
+                runtime_config,
+                {
+                    "puzzle_source_type": puzzle_source_type,
+                    "puzzle_source_fp": puzzle_source_fp,
+                },
+            )
+        elif current_state.next[0] == "apply_recommendation":
+            found_correct_group = interact_with_user(
+                sorted(current_state.values["recommended_words"]), 
+                current_state.values["recommended_connection"],    
+                current_state.values["current_tool"]
+            )
+
+            workflow_graph.update_state(
+                runtime_config,
+                {
+                    "recommendation_answer_status": found_correct_group,
+                },
+            )
+        else:
+            raise RuntimeError(f"Unexpected next action: {current_state.next[0]}")
+
+        # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
+        for chunk in workflow_graph.stream(None, runtime_config, stream_mode="values"):
+            pass
+
 
     print("\n\nFINAL PUZZLE STATE:")
-    pp.pprint(result)
+    pp.pprint(chunk)
 
     return None
 
@@ -458,7 +502,7 @@ if __name__ == "__main__":
 
     workflow_graph = workflow.compile(
         checkpointer=memory_checkpoint,
-        # interrupt_before=["setup_puzzle"],
+        interrupt_before=["setup_puzzle", "apply_recommendation"],
     )
     workflow_graph.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
 
