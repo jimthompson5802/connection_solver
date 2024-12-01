@@ -472,7 +472,7 @@ if __name__ == "__main__":
     )
 
     runtime_config = {
-        "thread_id": str(uuid.uuid4()),
+        "configurable": {"thread_id": str(uuid.uuid4())},
         "recursion_limit": 50,
     }
 
