@@ -38,7 +38,7 @@ def update_counter3(state: WorkflowState) -> WorkflowState:
 
 
 def human_input(state: WorkflowState) -> WorkflowState:
-    print("----human input-----")
+    print(f"----human input-----: counter: {state['counter']}")
     return state
 
 
@@ -103,7 +103,9 @@ while True:
     num_updates += 1
     # emulating getting external input from the user
     workflow.update_state(
-        config, {"counter": 2 * num_updates, "message": f"num_updates: {num_updates}"}, as_node="human_input"
+        config,
+        {"counter": 2 * num_updates, "message": f"num_updates: {num_updates}"},
+        # as_node="human_input",  #if specified, the code in the node is not executed
     )
 
     # continue workflow until the next human_input breakpoint
