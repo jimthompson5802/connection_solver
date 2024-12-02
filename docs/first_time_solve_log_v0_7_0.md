@@ -8,6 +8,7 @@
 |2024-11-29|v0.7.0|Yes|4|1|1|2|3|5|one-away analyis multipe groups led to wrong answer|
 |2024-11-30|v0.7.0|No|0|0|0|N/A|4|3|Considered manual override for "____ dance" connection based on "modern, swing, tap" but did not do think "jazz" was dance.|
 |2024-12-01|v0.7.0|Yes|4|2|1|1|2|3|one-away recommendation would have been wrong but anlaysis allowed for correct manual override|
+|2024-12-02|v0.7.1|Yes|4|0|2|2|3|5|reason for a one-away error and error of embedvec group were useful for the two manual overrrides|
 
 
 ## Transcipt
@@ -785,6 +786,196 @@ FINAL PUZZLE STATE:
 76  fallin’  verb: fallin’ - experiencing a decrease in sta...  [-0.036003656685352325, 0.003632561769336462, ...
 77  fallin’  verb: fallin’ - becoming emotionally involved,...  [-0.04393153637647629, -0.012858899310231209, ...
 78  fallin’  verb: fallin’ - the act of being caught or tra...  [-0.048077136278152466, -0.0032174410298466682...,
+    'words_remaining': [],
+    'workflow_instructions': '**Instructions**\n'
+                             '\n'
+                             'use "setup_puzzle" tool to initialize the puzzle '
+                             'if the "puzzle_status" is not initialized.\n'
+                             '\n'
+                             'if "tool_status" is "puzzle_completed" then use '
+                             '"END" tool.\n'
+                             '\n'
+                             'Use the table to select the appropriate tool.\n'
+                             '\n'
+                             '|current_tool| tool_status | tool |\n'
+                             '| --- | --- | --- |\n'
+                             '|setup_puzzle| initialized | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| next_recommendation | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| next_recommendation | '
+                             'get_llm_recommendation |\n'
+                             '|llm_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| manual_recommendation | '
+                             'get_manual_recommendation |\n'
+                             '|manual_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|manual_recommender| next_recommendation | '
+                             'get_llm_recommendation |\n'
+                             '\n'
+                             'If no tool is selected, use "ABORT" tool.\n'}
+```
+
+### 2024-12-02
+```text
+Running Connection Solver Agent with EmbedVec Recommender 0.7.1
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the file/image location: /desktop/connection_puzzle_2024_12_02.png
+
+ENTERED SETUP_PUZZLE
+Puzzle Words: ['trumpet', 'croquet', 'crocodile', 'paper', 'alligator', 'hair', 'whac-a-mole', 'herald', 'polo player', 'broadcast', 'laurel', 'xylophone', 'carpentry', 'video', 'swoosh', 'declare']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+Storing vocabulary in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+(81, 81)
+(81, 81)
+candidate_lists size: 58
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['declare', 'herald', 'laurel', 'trumpet'] with connection The words are all related to announcing or celebrating achievements.
+Is the recommendation accepted? (y/g/b/p/m/o/n): n
+Recommendation ['declare', 'herald', 'laurel', 'trumpet'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 1
+attempt_count: 1
+words_remaining: ['declare', 'swoosh', 'video', 'carpentry', 'xylophone', 'laurel', 'broadcast', 'polo player', 'herald', 'whac-a-mole', 'hair', 'alligator', 'paper', 'crocodile', 'croquet', 'trumpet']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['broadcast', 'herald', 'swoosh', 'trumpet'] with connection related to sound or announcement
+Is the recommendation accepted? (y/g/b/p/m/o/n): m
+Changing to manual_recommender
+
+ENTERED MANUAL_RECOMMENDER
+found count: 0, mistake_count: 1
+
+Current recommendation: ['broadcast', 'herald', 'swoosh', 'trumpet']
+Words remaining: ['declare', 'swoosh', 'video', 'carpentry', 'xylophone', 'laurel', 'broadcast', 'polo player', 'herald', 'whac-a-mole', 'hair', 'alligator', 'paper', 'crocodile', 'croquet', 'trumpet']
+Enter manual recommendation as comma separated words: declare,hearald,broadcast,trumpet
+Manual recommendation: ['declare', 'hearald', 'broadcast', 'trumpet']
+Manual recommendation is not a subset of words remaining or not 4 words
+try again
+Enter manual recommendation as comma separated words: declare,herald,broadcast,trumpet
+Manual recommendation: ['declare', 'herald', 'broadcast', 'trumpet']
+Is the manual recommendation correct? (y/n): y
+Enter manual connection: announcements
+Manual connection: announcements
+Is the manual connection correct? (y/n): y
+
+MANUAL_RECOMMENDER: RECOMMENDED WORDS ['broadcast', 'declare', 'herald', 'trumpet'] with connection announcements
+Is the recommendation accepted? (y/g/b/p/m/o/n): y
+Recommendation ['broadcast', 'declare', 'herald', 'trumpet'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 1
+attempt_count: 1
+words_remaining: ['croquet', 'crocodile', 'paper', 'alligator', 'hair', 'whac-a-mole', 'polo player', 'laurel', 'xylophone', 'carpentry', 'video', 'swoosh']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['croquet', 'polo player', 'video', 'whac-a-mole'] with connection Games
+Is the recommendation accepted? (y/g/b/p/m/o/n): n
+Recommendation ['croquet', 'polo player', 'video', 'whac-a-mole'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 2
+attempt_count: 1
+words_remaining: ['xylophone', 'carpentry', 'whac-a-mole', 'video', 'croquet', 'laurel', 'alligator', 'swoosh', 'polo player', 'hair', 'paper', 'crocodile']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['croquet', 'polo player', 'whac-a-mole', 'xylophone'] with connection Games or Activities involving hitting or striking
+Is the recommendation accepted? (y/g/b/p/m/o/n): o
+Recommendation ['croquet', 'polo player', 'whac-a-mole', 'xylophone'] is incorrect, one away from correct
+
+ENTERED ONE-AWAY ANALYZER
+found count: 1, mistake_count: 3
+
+>>>Number of single topic groups: 0
+No single-topic group recommendations found.
+no one_away_group_recommendation, let llm_recommender try again
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 3
+attempt_count: 1
+words_remaining: ['laurel', 'alligator', 'crocodile', 'xylophone', 'swoosh', 'hair', 'whac-a-mole', 'paper', 'video', 'carpentry', 'polo player', 'croquet']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['alligator', 'crocodile', 'polo player', 'swoosh'] with connection words that start with 'C' (Crocodile, Chomp, Chukker, Check)
+Is the recommendation accepted? (y/g/b/p/m/o/n): m
+Changing to manual_recommender
+
+ENTERED MANUAL_RECOMMENDER
+found count: 1, mistake_count: 3
+
+Current recommendation: ['alligator', 'crocodile', 'polo player', 'swoosh']
+Words remaining: ['laurel', 'alligator', 'crocodile', 'xylophone', 'swoosh', 'hair', 'whac-a-mole', 'paper', 'video', 'carpentry', 'polo player', 'croquet']
+Enter manual recommendation as comma separated words: carpentry,xylophone,croquet,whac-a-mole
+Manual recommendation: ['carpentry', 'xylophone', 'croquet', 'whac-a-mole']
+Is the manual recommendation correct? (y/n): y
+Enter manual connection: involves striking things
+Manual connection: involves striking things
+Is the manual connection correct? (y/n): y
+
+MANUAL_RECOMMENDER: RECOMMENDED WORDS ['carpentry', 'croquet', 'whac-a-mole', 'xylophone'] with connection involves striking things
+Is the recommendation accepted? (y/g/b/p/m/o/n): g
+Recommendation ['carpentry', 'croquet', 'whac-a-mole', 'xylophone'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 2, mistake_count: 3
+attempt_count: 1
+words_remaining: ['swoosh', 'polo player', 'paper', 'laurel', 'hair', 'video', 'crocodile', 'alligator']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['crocodile', 'laurel', 'polo player', 'swoosh'] with connection Logos for brands
+Is the recommendation accepted? (y/g/b/p/m/o/n): b
+Recommendation ['crocodile', 'laurel', 'polo player', 'swoosh'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 3, mistake_count: 3
+attempt_count: 1
+words_remaining: ['alligator', 'video', 'hair', 'paper']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['alligator', 'hair', 'paper', 'video'] with connection clip
+Is the recommendation accepted? (y/g/b/p/m/o/n): p
+Recommendation ['alligator', 'hair', 'paper', 'video'] is correct
+SOLVED THE CONNECTION PUZZLE!!!
+
+
+FINAL PUZZLE STATE:
+{   'current_tool': 'llm_recommender',
+    'found_blue': True,
+    'found_count': 4,
+    'found_purple': True,
+    'found_yellow': True,
+    'invalid_connections': [   [   '3af459ab9799bda5e9fb22138cc6c11a',
+                                   ['declare', 'herald', 'laurel', 'trumpet']],
+                               [   '4177fe09e811fff5a3cf6c17cad12219',
+                                   [   'croquet',
+                                       'polo player',
+                                       'video',
+                                       'whac-a-mole']],
+                               [   '8476c7da748ce51de8262a583473c5bf',
+                                   [   'croquet',
+                                       'polo player',
+                                       'whac-a-mole',
+                                       'xylophone']]],
+    'llm_retry_count': 0,
+    'llm_temperature': 0.7,
+    'mistake_count': 3,
+    'puzzle_source_fp': '/desktop/connection_puzzle_2024_12_02.png',
+    'puzzle_source_type': 'image',
+    'puzzle_status': 'initialized',
+    'recommendation_answer_status': 'p',
+    'recommendation_count': 9,
+    'recommended_connection': 'clip',
+    'recommended_correct': True,
+    'recommended_words': ['alligator', 'hair', 'paper', 'video'],
+    'tool_status': 'puzzle_completed',
+    'tool_to_use': 'END',
+    'vocabulary_db_fp': '/tmp/vocabulary.db',
     'words_remaining': [],
     'workflow_instructions': '**Instructions**\n'
                              '\n'
