@@ -5,7 +5,7 @@
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
 |2024-11-27|v0.7.0|Yes|4|1|3|N/A|2|3||
 |2024-11-28|v0.7.0|Yes|4|1|3|N/A|2|1|1 one-away analysis correct|
-|2024-11-29|v0.7.0|Yes|4|1|1|2|3|5|one-away analyis multipe groups led to wrong answer|
+|2024-11-29|v0.7.0|Yes|4|1|1|2|3|5|one-away analyis multiple groups led to wrong answer|
 |2024-11-30|v0.7.0|No|0|0|0|N/A|4|3|Considered manual override for "____ dance" connection based on "modern, swing, tap" but did not do think "jazz" was dance.|
 |2024-12-01|v0.7.0|Yes|4|2|1|1|2|3|one-away recommendation would have been wrong but anlaysis allowed for correct manual override|
 |2024-12-02|v0.7.1|Yes|4|0|2|2|3|5|reason for a one-away error and error of embedvec group were useful for the two manual overrrides|
