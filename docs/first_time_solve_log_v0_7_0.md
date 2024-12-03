@@ -9,6 +9,7 @@
 |2024-11-30|v0.7.0|No|0|0|0|N/A|4|3|Considered manual override for "____ dance" connection based on "modern, swing, tap" but did not do think "jazz" was dance.|
 |2024-12-01|v0.7.0|Yes|4|2|1|1|2|3|one-away recommendation would have been wrong but anlaysis allowed for correct manual override|
 |2024-12-02|v0.7.1|Yes|4|0|2|2|3|5|reason for a one-away error and error of embedvec group were useful for the two manual overrrides|
+|2024-12-03|v0.7.1|Yes|4|0|3|1|2|5|manual override when agent seemed stuck on award names|
 
 
 ## Transcipt
@@ -973,6 +974,152 @@ FINAL PUZZLE STATE:
     'recommended_connection': 'clip',
     'recommended_correct': True,
     'recommended_words': ['alligator', 'hair', 'paper', 'video'],
+    'tool_status': 'puzzle_completed',
+    'tool_to_use': 'END',
+    'vocabulary_db_fp': '/tmp/vocabulary.db',
+    'words_remaining': [],
+    'workflow_instructions': '**Instructions**\n'
+                             '\n'
+                             'use "setup_puzzle" tool to initialize the puzzle '
+                             'if the "puzzle_status" is not initialized.\n'
+                             '\n'
+                             'if "tool_status" is "puzzle_completed" then use '
+                             '"END" tool.\n'
+                             '\n'
+                             'Use the table to select the appropriate tool.\n'
+                             '\n'
+                             '|current_tool| tool_status | tool |\n'
+                             '| --- | --- | --- |\n'
+                             '|setup_puzzle| initialized | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| next_recommendation | '
+                             'get_embedvec_recommendation |\n'
+                             '|embedvec_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| next_recommendation | '
+                             'get_llm_recommendation |\n'
+                             '|llm_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|llm_recommender| manual_recommendation | '
+                             'get_manual_recommendation |\n'
+                             '|manual_recommender| have_recommendation | '
+                             'apply_recommendation |\n'
+                             '|manual_recommender| next_recommendation | '
+                             'get_llm_recommendation |\n'
+                             '\n'
+                             'If no tool is selected, use "ABORT" tool.\n'}
+```
+
+### 2024-12-03
+```text
+Running Connection Solver Agent with EmbedVec Recommender 0.7.1
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the file/image location: /desktop/connection_puzzle_2024_12_03.png
+
+ENTERED SETUP_PUZZLE
+Puzzle Words: ['cookie', 'emmy', 'grammy', 'katie', 'junior', 'oscar', 'tony', 'pop', 'cece', 'mummy', 'count', 'meadow', 'snuffy', 'cuz', 'carmela', 'edie']
+
+Generating vocabulary for the words...this may take about a minute
+
+Generating embeddings for the definitions
+
+Storing vocabulary in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+(76, 76)
+(76, 76)
+candidate_lists size: 61
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['cece', 'cookie', 'cuz', 'grammy'] with connection All words are informal terms or nicknames used affectionately among family or friends.
+Is the recommendation accepted? (y/g/b/p/m/o/n): n
+Recommendation ['cece', 'cookie', 'cuz', 'grammy'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 1
+attempt_count: 1
+words_remaining: ['tony', 'cuz', 'carmela', 'count', 'edie', 'emmy', 'snuffy', 'mummy', 'katie', 'pop', 'cece', 'oscar', 'meadow', 'grammy', 'cookie', 'junior']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['carmela', 'junior', 'meadow', 'tony'] with connection Characters from 'The Sopranos'
+Is the recommendation accepted? (y/g/b/p/m/o/n): y
+Recommendation ['carmela', 'junior', 'meadow', 'tony'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 1
+attempt_count: 1
+words_remaining: ['katie', 'cece', 'emmy', 'snuffy', 'grammy', 'cuz', 'pop', 'cookie', 'edie', 'count', 'mummy', 'oscar']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['count', 'emmy', 'grammy', 'oscar'] with connection Awards
+Is the recommendation accepted? (y/g/b/p/m/o/n): n
+Recommendation ['count', 'emmy', 'grammy', 'oscar'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 2
+attempt_count: 1
+words_remaining: ['oscar', 'mummy', 'count', 'edie', 'cookie', 'pop', 'cuz', 'grammy', 'snuffy', 'emmy', 'cece', 'katie']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['edie', 'emmy', 'grammy', 'oscar'] with connection Award names
+Is the recommendation accepted? (y/g/b/p/m/o/n): m
+Changing to manual_recommender
+
+ENTERED MANUAL_RECOMMENDER
+found count: 1, mistake_count: 2
+
+Current recommendation: ['edie', 'emmy', 'grammy', 'oscar']
+Words remaining: ['oscar', 'mummy', 'count', 'edie', 'cookie', 'pop', 'cuz', 'grammy', 'snuffy', 'emmy', 'cece', 'katie']
+Enter manual recommendation as comma separated words: pop,grammy,mummy,cuz
+Manual recommendation: ['pop', 'grammy', 'mummy', 'cuz']
+Is the manual recommendation correct? (y/n): y
+Enter manual connection: informal family names
+Manual connection: informal family names
+Is the manual connection correct? (y/n): y
+
+MANUAL_RECOMMENDER: RECOMMENDED WORDS ['cuz', 'grammy', 'mummy', 'pop'] with connection informal family names
+Is the recommendation accepted? (y/g/b/p/m/o/n): g
+Recommendation ['cuz', 'grammy', 'mummy', 'pop'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 2, mistake_count: 2
+attempt_count: 1
+words_remaining: ['oscar', 'katie', 'count', 'snuffy', 'emmy', 'cece', 'edie', 'cookie']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['cookie', 'count', 'oscar', 'snuffy'] with connection Sesame Street characters
+Is the recommendation accepted? (y/g/b/p/m/o/n): b
+Recommendation ['cookie', 'count', 'oscar', 'snuffy'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 3, mistake_count: 2
+attempt_count: 1
+words_remaining: ['edie', 'cece', 'emmy', 'katie']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['cece', 'edie', 'emmy', 'katie'] with connection Female given names
+Is the recommendation accepted? (y/g/b/p/m/o/n): p
+Recommendation ['cece', 'edie', 'emmy', 'katie'] is correct
+SOLVED THE CONNECTION PUZZLE!!!
+
+
+FINAL PUZZLE STATE:
+{   'current_tool': 'llm_recommender',
+    'found_blue': True,
+    'found_count': 4,
+    'found_purple': True,
+    'found_yellow': True,
+    'invalid_connections': [   [   '83a50b0c3e3ceb915398cdc20afa754a',
+                                   ['cece', 'cookie', 'grammy', 'cuz']],
+                               [   '4b7a55db03b57737b52bd7c0cb4a6731',
+                                   ['count', 'emmy', 'grammy', 'oscar']]],
+    'llm_retry_count': 0,
+    'llm_temperature': 0.7,
+    'mistake_count': 2,
+    'puzzle_source_fp': '/desktop/connection_puzzle_2024_12_03.png',
+    'puzzle_source_type': 'image',
+    'puzzle_status': 'initialized',
+    'recommendation_answer_status': 'p',
+    'recommendation_count': 7,
+    'recommended_connection': 'Female given names',
+    'recommended_correct': True,
+    'recommended_words': ['cece', 'edie', 'emmy', 'katie'],
     'tool_status': 'puzzle_completed',
     'tool_to_use': 'END',
     'vocabulary_db_fp': '/tmp/vocabulary.db',
