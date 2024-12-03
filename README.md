@@ -73,7 +73,7 @@ Starting 2024-11-27 the v0.7.x agent is used to solve that day's puzzle.  A log 
 | --- | --- |:---:|:---:|
 | v0.5.x | LLM and Embedding Vector-based recommendation generators | 2/7 | 29% |
 | v0.6.x | LLM and Embedding Vector-based recommendation generators with one-away analyzer and revised invalid group detection| 4/7 | 57% |
-| v0.7.x | LLM and Embedding Vector-based recommendation generator with one-away analyzer, revised invalid group detection, and manual override | 6/7 | 85% |
+| v0.7.x | LLM and Embedding Vector-based recommendation generators with one-away analyzer, revised invalid group detection, and manual override | 6/7 | 85% |
 
 ## Solution Strategy
 
