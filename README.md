@@ -57,11 +57,23 @@ Historical NYT Connection Puzzles were used in testing the agent.  Past puzzles 
 
 Results for the 10 puzzles used for testing can be found [here](./docs/Example_Runs.md).
 
-Starting 2024-11-12 the v0.5.0 agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_5_0.md).
+**First Time Solves**
 
-Starting 2024-11-20 the v0.6.0 agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_6_0.md).
+"First Time Solves" is using the agent to solve the Connection Puzzle for the first time a Connections Puzzle appears in the NYT over a one-week period. This avoids any bias in the agent's performance that may be the result of LLM training on historical puzzle data found in the Internet.
 
-Starting 2024-11-27 the v0.7.0 agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_7_0.md).
+Starting 2024-11-12 the v0.5.x agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_5_0.md).
+
+Starting 2024-11-20 the v0.6.x agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_6_0.md).
+
+Starting 2024-11-27 the v0.7.x agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_7_0.md).
+
+**Summary of First Time Solves**
+
+| Version | Agent Solving Capabilities | Correct Solutions | Percentage Correct |
+| --- | --- |:---:|:---:|
+| v0.5.x | LLM and Embedding Vector-based recommendation generators | 2/7 | 29% |
+| v0.6.x | LLM and Embedding Vector-based recommendation generators with one-away analyzer and revised invalid group detection| 4/7 | 57% |
+| v0.7.x | LLM and Embedding Vector-based recommendation generator with one-away analyzer, revised invalid group detection, and manual override | 6/7 | 85% |
 
 ## Solution Strategy
 
