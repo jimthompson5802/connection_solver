@@ -530,6 +530,7 @@ The `langsmith` tracing tool was used to trace the agent's workflow.  Here is an
 See https://github.com/jimthompson5802/connection_solver/issues
 
 ## Additional Resources
+* Todd, et al, _Missed Connections: Lateral Thinking for Language Models_, 2024, https://arxiv.org/abs/2404.11730 
 
 * Merino, et al, _Making New Connections: LLMs as Puzzle Generators for The New York Times' Connections Word Game_, 2024, https://arxiv.org/abs/2407.11240
 
