@@ -532,6 +532,8 @@ See https://github.com/jimthompson5802/connection_solver/issues
 ## Additional Resources
 * Todd, et al, _Missed Connections: Lateral Thinking for Language Models_, 2024, https://arxiv.org/abs/2404.11730 
 
+* Doyle, C., _LLMs as Method Actors: A Model for Prompt Engineering and Architecture_, 2024, https://arxiv.org/abs/2411.05778 
+
 * Merino, et al, _Making New Connections: LLMs as Puzzle Generators for The New York Times' Connections Word Game_, 2024, https://arxiv.org/abs/2407.11240
 
 * Weights and Biases, _GPT - Connections_, demonstration of automating the testing of Connect Puzzle Solver and using WandB to track the results, https://github.com/wandb/connections
