@@ -113,8 +113,6 @@ class PuzzleState(TypedDict):
     found_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
-    puzzle_source_type: Optional[str] = None
-    puzzle_source_fp: Optional[str] = None
     puzzle_checker_response: Optional[str] = None
 
 
@@ -125,20 +123,7 @@ async def setup_puzzle(state: PuzzleState) -> PuzzleState:
     state["current_tool"] = "setup_puzzle"
     print(f"\nENTERED {state['current_tool'].upper()}")
 
-    # prompt user for input source
-    input_source = state.get("puzzle_source_type", None)
-    puzzle_word_fp = state.get("puzzle_source_fp", None)
-    if input_source == "file":
-        words = read_file_to_word_list(puzzle_word_fp)
-    elif input_source == "image":
-        words = extract_words_from_image(puzzle_word_fp)
-    else:
-        raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
-
-    print(f"Puzzle Words: {words}")
-
     # initialize the state
-    state["words_remaining"] = words
     state["puzzle_status"] = "initialized"
     state["tool_status"] = "initialized"
     state["invalid_connections"] = []
@@ -843,3 +828,22 @@ def determine_next_action(state: PuzzleState) -> str:
         return END
     else:
         return tool_to_use
+
+
+def manual_puzzle_setup_prompt() -> List[str]:
+
+    # pompt user for puzzle source
+    puzzle_source_type = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
+    puzzle_source_fp = input("Please enter the file/image location: ")
+
+    # get puzzle words from indicated source
+    if puzzle_source_type == "file":
+        words = read_file_to_word_list(puzzle_source_fp)
+    elif puzzle_source_type == "image":
+        words = extract_words_from_image(puzzle_source_fp)
+    else:
+        raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
+
+    print(f"Puzzle Words: {words}")
+
+    return words

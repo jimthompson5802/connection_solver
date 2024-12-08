@@ -32,6 +32,7 @@ from embedvec_tools import (
     apply_recommendation,
     run_planner,
     determine_next_action,
+    manual_puzzle_setup_prompt,
 )
 
 # specify the version of the agent
@@ -74,18 +75,11 @@ async def run_workflow(workflow_graph, initial_state: PuzzleState, runtime_confi
         logger.debug(f"\nCurrent state: {current_state}")
         logger.info(f"\nNext action: {current_state.next}")
         if current_state.next[0] == "setup_puzzle":
-            puzzle_source_type = input(
-                "Enter 'file' to read words from a file or 'image' to read words from an image: "
-            )
-            puzzle_source_fp = input("Please enter the file/image location: ")
+            words = manual_puzzle_setup_prompt()
 
-            # specify location of puzzle data for setup
             workflow_graph.update_state(
                 runtime_config,
-                {
-                    "puzzle_source_type": puzzle_source_type,
-                    "puzzle_source_fp": puzzle_source_fp,
-                },
+                {"words_remaining": words},
             )
         elif current_state.next[0] == "apply_recommendation":
             found_correct_group = interact_with_user(
