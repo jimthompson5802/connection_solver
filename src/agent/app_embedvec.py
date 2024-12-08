@@ -8,6 +8,7 @@ import random
 import uuid
 import sqlite3
 import tempfile
+import pprint
 
 
 import numpy as np
@@ -33,6 +34,7 @@ from embedvec_tools import (
     run_planner,
     determine_next_action,
     manual_puzzle_setup_prompt,
+    run_workflow,
 )
 
 # specify the version of the agent
@@ -40,6 +42,8 @@ __version__ = "0.8.0"
 
 # create logger
 logger = logging.getLogger(__name__)
+
+pp = pprint.PrettyPrinter(indent=4)
 
 
 def configure_logging(log_level):
@@ -60,52 +64,6 @@ def configure_logging(log_level):
 
 
 pp = pprint.PrettyPrinter(indent=4)
-
-
-async def run_workflow(workflow_graph, initial_state: PuzzleState, runtime_config: dict) -> None:
-    # result = workflow_graph.invoke(initial_state, runtime_config)
-
-    # run workflow until first human-in-the-loop input required for setup
-    async for chunk in workflow_graph.astream(initial_state, runtime_config, stream_mode="values"):
-        pass
-
-    # continue workflow until the next human-in-the-loop input required for puzzle answer
-    while chunk["tool_status"] != "puzzle_completed":
-        current_state = workflow_graph.get_state(runtime_config)
-        logger.debug(f"\nCurrent state: {current_state}")
-        logger.info(f"\nNext action: {current_state.next}")
-        if current_state.next[0] == "setup_puzzle":
-            words = manual_puzzle_setup_prompt()
-
-            workflow_graph.update_state(
-                runtime_config,
-                {"words_remaining": words},
-            )
-        elif current_state.next[0] == "apply_recommendation":
-            puzzle_response = interact_with_user(
-                sorted(current_state.values["recommended_words"]),
-                current_state.values["recommended_connection"],
-                current_state.values["current_tool"],
-            )
-
-            workflow_graph.update_state(
-                runtime_config,
-                {
-                    "recommendation_answer_status": puzzle_response,
-                },
-            )
-        else:
-            raise RuntimeError(f"Unexpected next action: {current_state.next[0]}")
-
-        # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
-        async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
-            logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
-            pass
-
-    print("\n\nFINAL PUZZLE STATE:")
-    pp.pprint(chunk)
-
-    return None
 
 
 async def main():
@@ -189,13 +147,23 @@ async def main():
             workflow_instructions=None,
             llm_temperature=0.7,
             vocabulary_db_fp=tmp_db.name,
+            recommendation_correct_groups=[],
         )
 
         if args.trace:
             with tracing_v2_enabled("Connection_Solver_Agent"):
                 result = run_workflow(workflow_graph, initial_state, runtime_config)
         else:
-            result = await run_workflow(workflow_graph, initial_state, runtime_config)
+            result = await run_workflow(
+                workflow_graph,
+                initial_state,
+                runtime_config,
+                puzzle_setup_function=manual_puzzle_setup_prompt,
+                puzzle_response_function=interact_with_user,
+            )
+
+    print("\nFOUND SOLUTIONS")
+    pp.pprint(result)
 
 
 if __name__ == "__main__":

@@ -106,6 +106,7 @@ class PuzzleState(TypedDict):
     recommended_connection: str = ""
     recommended_correct: bool = False
     recommendation_answer_status: Optional[str] = None
+    recommendation_correct_groups: Optional[List[List[str]]] = []
     found_yellow: bool = False
     found_greeen: bool = False
     found_blue: bool = False
@@ -696,6 +697,8 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
             case "correct":
                 pass
 
+        state["recommendation_correct_groups"].append(state["recommended_words"])
+
         # for embedvec_recommender, remove the words from the vocabulary database
         if state["current_tool"] == "embedvec_recommender":
             # remove accepted words from vocabulary.db
@@ -853,7 +856,11 @@ def manual_puzzle_setup_prompt() -> List[str]:
     return words
 
 
-def check_one_solution(solution, gen_words, gen_reason):
+def check_one_solution(solution, *, gen_words: List[str], gen_reason: str, recommender: str) -> str:
+    recommendation_message = f"\n{recommender.upper()}: RECOMMENDED WORDS {gen_words} with connection {gen_reason}"
+    logger.info(recommendation_message)
+    print(recommendation_message)
+
     for sol_dict in solution["groups"]:
         sol_words = sol_dict["words"]
         sol_reason = sol_dict["reason"]
@@ -864,3 +871,55 @@ def check_one_solution(solution, gen_words, gen_reason):
             return "o"
     else:
         return "n"
+
+
+async def run_workflow(
+    workflow_graph,
+    initial_state: PuzzleState,
+    runtime_config: dict,
+    *,
+    puzzle_setup_function: callable = None,
+    puzzle_response_function: callable = None,
+) -> None:
+
+    # run workflow until first human-in-the-loop input required for setup
+    async for chunk in workflow_graph.astream(initial_state, runtime_config, stream_mode="values"):
+        pass
+
+    # continue workflow until the next human-in-the-loop input required for puzzle answer
+    while chunk["tool_status"] != "puzzle_completed":
+        current_state = workflow_graph.get_state(runtime_config)
+        logger.debug(f"\nCurrent state: {current_state}")
+        logger.info(f"\nNext action: {current_state.next}")
+        if current_state.next[0] == "setup_puzzle":
+            words = puzzle_setup_function()
+
+            workflow_graph.update_state(
+                runtime_config,
+                {"words_remaining": words},
+            )
+        elif current_state.next[0] == "apply_recommendation":
+            puzzle_response = puzzle_response_function(
+                sorted(current_state.values["recommended_words"]),
+                current_state.values["recommended_connection"],
+                current_state.values["current_tool"],
+            )
+
+            workflow_graph.update_state(
+                runtime_config,
+                {
+                    "recommendation_answer_status": puzzle_response,
+                },
+            )
+        else:
+            raise RuntimeError(f"Unexpected next action: {current_state.next[0]}")
+
+        # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
+        async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
+            logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
+            pass
+
+    print("\n\nFINAL PUZZLE STATE:")
+    pp.pprint(chunk)
+
+    return chunk["recommendation_correct_groups"]
