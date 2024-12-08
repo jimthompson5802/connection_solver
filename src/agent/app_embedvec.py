@@ -38,7 +38,7 @@ from embedvec_tools import (
 )
 
 # specify the version of the agent
-__version__ = "0.8.0"
+__version__ = "0.9.0-dev"
 
 # create logger
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ def configure_logging(log_level):
 pp = pprint.PrettyPrinter(indent=4)
 
 
-async def main():
+async def main(puzzle_setup_function: callable = None, puzzle_response_function: callable = None):
     print(f"Running Connection Solver Agent with EmbedVec Recommender {__version__}")
 
     parser = argparse.ArgumentParser(description="Set logging level for the application.")
@@ -152,7 +152,13 @@ async def main():
 
         if args.trace:
             with tracing_v2_enabled("Connection_Solver_Agent"):
-                result = run_workflow(workflow_graph, initial_state, runtime_config)
+                result = await run_workflow(
+                    workflow_graph,
+                    initial_state,
+                    runtime_config,
+                    puzzle_setup_function=puzzle_setup_function,
+                    puzzle_response_function=puzzle_response_function,
+                )
         else:
             result = await run_workflow(
                 workflow_graph,
@@ -167,4 +173,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main(manual_puzzle_setup_prompt, interact_with_user))
