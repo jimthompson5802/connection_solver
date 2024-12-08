@@ -35,6 +35,7 @@ Connections is a word game that challenges players to find themes between words.
 * Manual override on agent recommendation
 * sqlite3 database to store vocabulary and embedding vectors
 * langgraph compliant method for human-in-the-loop interactions for setup and puzzle results
+* Refactor code to use `asyncio` to reduce run-time latency
 
 ## Release History
 | Tag | Description |
@@ -50,6 +51,8 @@ Connections is a word game that challenges players to find themes between words.
 | v0.6.3 | includes fix #30 repeated one-away invalid group |
 | v0.7.0 | Manual override on agent recommendation |
 | v0.7.1 | langgraph compliant human-in-the-loop interactions, sqlite3 for vocabulary storage |
+| v0.8.0 | asyncio integration to reduce run-time latency |
+
 
 ## Sample Runs
 
@@ -317,13 +320,14 @@ class PuzzleState(TypedDict):
     tool_status: str = ""
     current_tool: str = ""
     workflow_instructions: Optional[str] = None
-    vocabulary_df: pd.DataFrame = None
+    vocabulary_db_fp: Optional[str] = None
     tool_to_use: str = ""
     words_remaining: List[str] = []
     invalid_connections: List[Tuple[str, List[str]]] = []
     recommended_words: List[str] = []
     recommended_connection: str = ""
     recommended_correct: bool = False
+    recommendation_answer_status: Optional[str] = None
     found_yellow: bool = False
     found_greeen: bool = False
     found_blue: bool = False
@@ -333,6 +337,8 @@ class PuzzleState(TypedDict):
     found_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
+    puzzle_source_type: Optional[str] = None
+    puzzle_source_fp: Optional[str] = None
 ```
 
 Key workflow attributes:
@@ -340,7 +346,7 @@ Key workflow attributes:
 * `tool_status`: indicates the results of the current step and is used to determine next tool to use.
 * `current_tool`: indicates current active tool.
 * `workflow_instructions`: contains the workflow instructions
-* `vocabulary_df`: contains the vocabulary and embedding vectors for the puzzle words
+* `vocabulary_db_fp`: contains file path to sqlite3 database containing vocabulary and embedding vectors
 
 
 Overall control is performed by the `run_planner()` function.  The agent's workflow is defined by the `StateGraph` class from `langgraph`.  The agent's workflow is defined by a series of nodes and edges.  The nodes are the agent's processing steps and the edges are the transitions between the processing steps.  This function determines the next step in the agent's workflow based on the attributes described above.
