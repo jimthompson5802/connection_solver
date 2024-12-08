@@ -82,7 +82,7 @@ async def run_workflow(workflow_graph, initial_state: PuzzleState, runtime_confi
                 {"words_remaining": words},
             )
         elif current_state.next[0] == "apply_recommendation":
-            found_correct_group = interact_with_user(
+            puzzle_response = interact_with_user(
                 sorted(current_state.values["recommended_words"]),
                 current_state.values["recommended_connection"],
                 current_state.values["current_tool"],
@@ -91,7 +91,7 @@ async def run_workflow(workflow_graph, initial_state: PuzzleState, runtime_confi
             workflow_graph.update_state(
                 runtime_config,
                 {
-                    "recommendation_answer_status": found_correct_group,
+                    "recommendation_answer_status": puzzle_response,
                 },
             )
         else:

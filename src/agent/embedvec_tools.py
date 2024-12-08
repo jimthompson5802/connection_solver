@@ -90,6 +90,8 @@ class RecommendedGroup:
         return f"Recommended Group: {self.words}\nConnection Description: {self.connection_description}"
 
 
+# TODO: remove the color boolean indicators, these have not been used solution logic,
+#       if needed can re-introduce
 # define the state of the puzzle
 class PuzzleState(TypedDict):
     puzzle_status: str = ""
@@ -680,7 +682,7 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
     found_correct_group = state["recommendation_answer_status"]
 
     # process result of user response
-    if found_correct_group in ["y", "g", "b", "p"]:
+    if found_correct_group in ["y", "g", "b", "p", "correct"]:
         print(f"Recommendation {sorted(state['recommended_words'])} is correct")
         match found_correct_group:
             case "y":
@@ -691,6 +693,8 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
                 state["found_blue"] = True
             case "p":
                 state["found_purple"] = True
+            case "correct":
+                pass
 
         # for embedvec_recommender, remove the words from the vocabulary database
         if state["current_tool"] == "embedvec_recommender":
@@ -847,3 +851,16 @@ def manual_puzzle_setup_prompt() -> List[str]:
     print(f"Puzzle Words: {words}")
 
     return words
+
+
+def check_one_solution(solution, gen_words, gen_reason):
+    for sol_dict in solution["groups"]:
+        sol_words = sol_dict["words"]
+        sol_reason = sol_dict["reason"]
+        if set(gen_words) == set(sol_words):
+            print(f"{gen_reason} ~ {sol_reason}: {gen_words} == {sol_words}")
+            return "correct"
+        elif len(set(gen_words).intersection(set(sol_words))) == 3:
+            return "o"
+    else:
+        return "n"
