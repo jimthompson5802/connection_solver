@@ -18,7 +18,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langgraph.graph import END
+from langgraph.graph import END, StateGraph
+from langgraph.checkpoint.memory import MemorySaver
 
 from tools import extract_words_from_image, read_file_to_word_list, ask_llm_for_solution
 
@@ -923,3 +924,44 @@ async def run_workflow(
     pp.pprint(chunk)
 
     return chunk["recommendation_correct_groups"]
+
+
+def create_workflow_graph() -> StateGraph:
+    workflow = StateGraph(PuzzleState)
+
+    workflow.add_node("run_planner", run_planner)
+    workflow.add_node("setup_puzzle", setup_puzzle)
+    workflow.add_node("get_embedvec_recommendation", get_embedvec_recommendation)
+    workflow.add_node("get_llm_recommendation", get_llm_recommendation)
+    workflow.add_node("get_manual_recommendation", get_manual_recommendation)
+    workflow.add_node("apply_recommendation", apply_recommendation)
+
+    workflow.add_conditional_edges(
+        "run_planner",
+        determine_next_action,
+        {
+            "setup_puzzle": "setup_puzzle",
+            "get_embedvec_recommendation": "get_embedvec_recommendation",
+            "get_llm_recommendation": "get_llm_recommendation",
+            "get_manual_recommendation": "get_manual_recommendation",
+            "apply_recommendation": "apply_recommendation",
+            END: END,
+        },
+    )
+
+    workflow.add_edge("setup_puzzle", "run_planner")
+    workflow.add_edge("get_llm_recommendation", "run_planner")
+    workflow.add_edge("get_embedvec_recommendation", "run_planner")
+    workflow.add_edge("get_manual_recommendation", "run_planner")
+    workflow.add_edge("apply_recommendation", "run_planner")
+
+    workflow.set_entry_point("run_planner")
+
+    memory_checkpoint = MemorySaver()
+
+    workflow_graph = workflow.compile(
+        checkpointer=memory_checkpoint,
+        interrupt_before=["setup_puzzle", "apply_recommendation"],
+    )
+
+    return workflow_graph

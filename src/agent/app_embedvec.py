@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 
 from langgraph.graph import StateGraph, END
-from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage
 
 from langchain_core.tracers.context import tracing_v2_enabled
@@ -26,13 +25,7 @@ from tools import (
 
 from embedvec_tools import (
     PuzzleState,
-    setup_puzzle,
-    get_embedvec_recommendation,
-    get_llm_recommendation,
-    get_manual_recommendation,
-    apply_recommendation,
-    run_planner,
-    determine_next_action,
+    create_workflow_graph,
     manual_puzzle_setup_prompt,
     run_workflow,
 )
@@ -96,42 +89,8 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     else:
         os.environ["LANGCHAIN_TRACING_V2"] = "false"
 
-    workflow = StateGraph(PuzzleState)
+    workflow_graph = create_workflow_graph()
 
-    workflow.add_node("run_planner", run_planner)
-    workflow.add_node("setup_puzzle", setup_puzzle)
-    workflow.add_node("get_embedvec_recommendation", get_embedvec_recommendation)
-    workflow.add_node("get_llm_recommendation", get_llm_recommendation)
-    workflow.add_node("get_manual_recommendation", get_manual_recommendation)
-    workflow.add_node("apply_recommendation", apply_recommendation)
-
-    workflow.add_conditional_edges(
-        "run_planner",
-        determine_next_action,
-        {
-            "setup_puzzle": "setup_puzzle",
-            "get_embedvec_recommendation": "get_embedvec_recommendation",
-            "get_llm_recommendation": "get_llm_recommendation",
-            "get_manual_recommendation": "get_manual_recommendation",
-            "apply_recommendation": "apply_recommendation",
-            END: END,
-        },
-    )
-
-    workflow.add_edge("setup_puzzle", "run_planner")
-    workflow.add_edge("get_llm_recommendation", "run_planner")
-    workflow.add_edge("get_embedvec_recommendation", "run_planner")
-    workflow.add_edge("get_manual_recommendation", "run_planner")
-    workflow.add_edge("apply_recommendation", "run_planner")
-
-    workflow.set_entry_point("run_planner")
-
-    memory_checkpoint = MemorySaver()
-
-    workflow_graph = workflow.compile(
-        checkpointer=memory_checkpoint,
-        interrupt_before=["setup_puzzle", "apply_recommendation"],
-    )
     workflow_graph.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
 
     runtime_config = {
