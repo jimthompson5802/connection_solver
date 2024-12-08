@@ -1,3 +1,5 @@
+import asyncio
+import aiosqlite
 from dataclasses import dataclass, field
 import json
 import logging
@@ -16,12 +18,18 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langgraph.graph import END
 
-from tools import extract_words_from_image, read_file_to_word_list
+from tools import extract_words_from_image, read_file_to_word_list, ask_llm_for_solution
 
 
 logger = logging.getLogger(__name__)
 pp = pp.PrettyPrinter(indent=4)
+
+db_lock = asyncio.Lock()
+
+MAX_ERRORS = 4
+RETRY_LIMIT = 8
 
 
 def compute_group_id(word_group: list) -> str:
@@ -109,7 +117,7 @@ class PuzzleState(TypedDict):
     puzzle_source_fp: Optional[str] = None
 
 
-def setup_puzzle(state: PuzzleState) -> PuzzleState:
+async def setup_puzzle(state: PuzzleState) -> PuzzleState:
     logger.info("Entering setup_puzzle:")
     logger.debug(f"\nEntering setup_puzzle State: {pp.pformat(state)}")
 
@@ -143,8 +151,8 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     # state["vocabulary_df"] = pd.read_pickle("src/agent_testbed/word_list1.pkl")
 
     # generate vocabulary for the words
-    print("\nGenerating vocabulary for the words...this may take about a minute")
-    vocabulary = generate_vocabulary(state["words_remaining"])
+    print("\nGenerating vocabulary and embeddings for the words...this may take several seconds ")
+    vocabulary = await generate_vocabulary(state["words_remaining"])
 
     # Convert dictionary to DataFrame
     rows = []
@@ -160,28 +168,27 @@ def setup_puzzle(state: PuzzleState) -> PuzzleState:
     df["embedding"] = [json.dumps(v) for v in embeddings]  
 
     # store the vocabulary in external database
-    print("\nStoring vocabulary in external database")
-    # remove prior database file, ignore if it does not exist
-    try:
-        os.remove(state["vocabulary_db_fp"])
-    except FileNotFoundError:
-        pass
-
-    conn = sqlite3.connect(state["vocabulary_db_fp"])
-    cursor = conn.cursor()
-    # create the table
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS vocabulary (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            word TEXT,
-            definition TEXT,
-            embedding TEXT
-        )
-        """
-    )
-    df.to_sql("vocabulary", conn, if_exists="replace", index=False)
-    conn.close()
+    print("\nStoring vocabulary and embeddings in external database")
+ 
+    async with aiosqlite.connect(state["vocabulary_db_fp"]) as conn:
+        async with db_lock:
+            cursor = await conn.cursor()
+            # create the table
+            await cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS vocabulary (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    word TEXT,
+                    definition TEXT,
+                    embedding TEXT
+                )
+                """
+            )
+            await conn.executemany(
+                "INSERT INTO vocabulary (word, definition, embedding) VALUES (?, ?, ?)",
+                df.values.tolist(),
+            )
+            await conn.commit()
 
     logger.info("Exiting setup_puzzle:")
     logger.debug(f"\nExiting setup_puzzle State: {pp.pformat(state)}")
@@ -213,7 +220,7 @@ example:
 )
 
 
-def generate_vocabulary(words, model="gpt-4o", temperature=0.7, max_tokens=4096):
+async def generate_vocabulary(words, model="gpt-4o", temperature=0.7, max_tokens=4096):
 
     # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
     llm = ChatOpenAI(
@@ -225,12 +232,14 @@ def generate_vocabulary(words, model="gpt-4o", temperature=0.7, max_tokens=4096)
 
     vocabulary = {}
 
-    for the_word in words:
+    async def process_word(the_word):
         prompt = f"\n\ngiven word: {the_word}"
         prompt = HumanMessage(prompt)
         prompt = [SYSTEM_MESSAGE, prompt]
-        result = llm.invoke(prompt)
+        result = await llm.ainvoke(prompt)
         vocabulary[the_word] = json.loads(result.content)[the_word]
+
+    await asyncio.gather(*[process_word(word) for word in words])
 
     return vocabulary
 
@@ -514,3 +523,320 @@ def one_away_analyzer(state: PuzzleState, one_away_group: List[str], words_remai
         one_away_group_recommendation = None
 
     return one_away_group_recommendation
+
+
+def get_manual_recommendation(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering get_manual_recommendation")
+    logger.debug(f"Entering get_manual_recommendation State: {pp.pformat(state)}")
+
+    state["current_tool"] = "manual_recommender"
+    print(f"\nENTERED {state['current_tool'].upper()}")
+    print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
+
+    # display current recommendation and words remaining
+    print(f"\nCurrent recommendation: {sorted(state['recommended_words'])}")
+    print(f"Words remaining: {state['words_remaining']}")
+
+    # get user input for manual recommendation
+    response = "n"
+    while response != "y":
+        manual_recommendation = [
+            x.strip() for x in input("Enter manual recommendation as comma separated words: ").split(",")
+        ]
+        print(f"Manual recommendation: {manual_recommendation}")
+
+        if not set(manual_recommendation).issubset(set(state["words_remaining"])) or len(manual_recommendation) != 4:
+            print("Manual recommendation is not a subset of words remaining or not 4 words")
+            print("try again")
+        else:
+            response = input("Is the manual recommendation correct? (y/n): ")
+
+    # get user defined connection
+    response = "n"
+    while response != "y":
+        manual_connection = input("Enter manual connection: ")
+        print(f"Manual connection: {manual_connection}")
+        response = input("Is the manual connection correct? (y/n): ")
+
+    state["recommended_words"] = manual_recommendation
+    state["recommended_connection"] = manual_connection
+    state["tool_status"] = "have_recommendation"
+
+    logger.info("Exiting get_manual_recommendation")
+    logger.debug(f"Exiting get_manual_recommendation State: {pp.pformat(state)}")
+
+    return state
+
+
+async def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering get_embedvec_recommendation")
+    logger.debug(f"Entering get_embedvec_recommendation State: {pp.pformat(state)}")
+
+    state["current_tool"] = "embedvec_recommender"
+    print(f"\nENTERED {state['current_tool'].upper()}")
+    print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
+
+    # get candidate list of words from database
+    async with aiosqlite.connect(state["vocabulary_db_fp"]) as conn:
+        async with db_lock:
+            # get candidate list of words from database
+            sql_query = "SELECT word, definition, embedding FROM vocabulary"
+            async with conn.execute(sql_query) as cursor:
+                rows = await cursor.fetchall()
+                columns = [description[0] for description in cursor.description]
+                df = pd.DataFrame(rows, columns=columns)
+                
+    # convert embedding string representation to numpy array
+    df["embedding"] = df["embedding"].apply(lambda x: np.array(json.loads(x)))
+
+    # get candidate list of words based on embedding vectors
+    candidate_list = get_candidate_words(df)
+    print(f"candidate_lists size: {len(candidate_list)}")
+
+    # validate the top 5 candidate list with LLM
+    list_to_validate = "\n".join([str(x) for x in candidate_list[:5]])
+    recommended_group = choose_embedvec_item(list_to_validate)
+    logger.info(f"Recommended group: {recommended_group}")
+
+    state["recommended_words"] = recommended_group["candidate_group"]
+    state["recommended_connection"] = recommended_group["explanation"]
+    state["tool_status"] = "have_recommendation"
+
+    # build prompt for llm
+
+    logger.info("Exiting get_embedvec_recommendation")
+    logger.debug(f"Exiting get_embedvec_recommendation State: {pp.pformat(state)}")
+
+    return state
+
+
+HUMAN_MESSAGE_BASE = """
+    From the following candidate list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.      
+    """
+
+
+def get_llm_recommendation(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering get_recommendation")
+    logger.debug(f"Entering get_recommendation State: {pp.pformat(state)}")
+
+    state["current_tool"] = "llm_recommender"
+    print(f"\nENTERED {state['current_tool'].upper()}")
+    print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
+
+    # build prompt for llm
+    prompt = HUMAN_MESSAGE_BASE
+
+    attempt_count = 0
+    while True:
+        attempt_count += 1
+        if attempt_count > RETRY_LIMIT:
+            break
+        print(f"attempt_count: {attempt_count}")
+        prompt = HUMAN_MESSAGE_BASE
+        # scramble the remaining words for more robust group selection
+        if np.random.uniform() < 0.5:
+            random.shuffle(state["words_remaining"])
+        else:
+            state["words_remaining"].reverse()
+        print(f"words_remaining: {state['words_remaining']}")
+        prompt += f"candidate list: {', '.join(state['words_remaining'])}\n"
+
+        prompt = HumanMessage(prompt)
+
+        logger.info(f"\nPrompt for llm: {prompt.content}")
+
+        # get recommendation from llm
+        llm_response = ask_llm_for_solution(prompt, temperature=state["llm_temperature"])
+
+        llm_response_json = json.loads(llm_response.content)
+        if isinstance(llm_response_json, list):
+            logger.debug(f"\nLLM response is list")
+            recommended_words = llm_response_json[0]["words"]
+            recommended_connection = llm_response_json[0]["connection"]
+        else:
+            logger.debug(f"\nLLM response is dict")
+            recommended_words = llm_response_json["words"]
+            recommended_connection = llm_response_json["connection"]
+
+        if compute_group_id(recommended_words) not in set(x[0] for x in state["invalid_connections"]):
+            break
+        else:
+            print(
+                f"\nrepeat invalid group detected: group_id {compute_group_id(recommended_words)}, recommendation: {sorted(recommended_words)}"
+            )
+
+    state["recommended_words"] = sorted(recommended_words)
+    state["recommended_connection"] = recommended_connection
+
+    if attempt_count <= RETRY_LIMIT:
+        state["tool_status"] = "have_recommendation"
+    else:
+        print(f"Failed to get a valid recommendation after {RETRY_LIMIT} attempts")
+        print("Changing to manual_recommender, last attempt to solve the puzzle")
+        print(f"last recommendation: {state['recommended_words']} with {state['recommended_connection']}")
+        state["tool_status"] = "manual_recommendation"
+
+    logger.info("Exiting get_recommendation")
+    logger.debug(f"Exiting get_recommendation State: {pp.pformat(state)}")
+
+    return state
+
+
+async def apply_recommendation(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering apply_recommendation:")
+    logger.debug(f"\nEntering apply_recommendation State: {pp.pformat(state)}")
+
+    state["recommendation_count"] += 1
+
+    # get user response from human input
+    found_correct_group = state["recommendation_answer_status"]
+
+    # process result of user response
+    if found_correct_group in ["y", "g", "b", "p"]:
+        print(f"Recommendation {sorted(state['recommended_words'])} is correct")
+        match found_correct_group:
+            case "y":
+                state["found_yellow"] = True
+            case "g":
+                state["found_green"] = True
+            case "b":
+                state["found_blue"] = True
+            case "p":
+                state["found_purple"] = True
+
+        # for embedvec_recommender, remove the words from the vocabulary database
+        if state["current_tool"] == "embedvec_recommender":
+            # remove accepted words from vocabulary.db
+            async with aiosqlite.connect(state["vocabulary_db_fp"]) as conn:
+                async with db_lock:
+                    # remove accepted words from vocabulary.db
+                    # for each word in recommended_words, remove the word from the vocabulary table
+                    for word in state["recommended_words"]:
+                        sql_query = f"DELETE FROM vocabulary WHERE word = '{word}'"
+                        await conn.execute(sql_query)
+                    await conn.commit()
+                    
+        # remove the words from words_remaining
+        state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
+        state["recommended_correct"] = True
+        state["found_count"] += 1
+    elif found_correct_group in ["n", "o"]:
+        invalid_group = state["recommended_words"]
+        invalid_group_id = compute_group_id(invalid_group)
+        state["invalid_connections"].append((invalid_group_id, invalid_group))
+        state["recommended_correct"] = False
+        state["mistake_count"] += 1
+
+        if state["mistake_count"] < MAX_ERRORS:
+            match found_correct_group:
+                case "o":
+                    print(f"Recommendation {sorted(state['recommended_words'])} is incorrect, one away from correct")
+
+                    # perform one-away analysis
+                    one_away_group_recommendation = one_away_analyzer(state, invalid_group, state["words_remaining"])
+
+                    # check if one_away_group_recommendation is a prior mistake
+                    if one_away_group_recommendation:
+                        one_away_group_id = compute_group_id(one_away_group_recommendation.words)
+                        if one_away_group_id in set(x[0] for x in state["invalid_connections"]):
+                            print(f"one_away_group_recommendation is a prior mistake")
+                            one_away_group_recommendation = None
+                        else:
+                            print(f"one_away_group_recommendation is a new recommendation")
+
+                case "n":
+                    print(f"Recommendation {sorted(state['recommended_words'])} is incorrect")
+                    if state["current_tool"] == "embedvec_recommender":
+                        print("Changing the recommender from 'embedvec_recommender' to 'llm_recommender'")
+                        state["current_tool"] = "llm_recommender"
+        else:
+            state["recommended_words"] = []
+            state["recommended_connection"] = ""
+            state["recommended_correct"] = False
+
+    if len(state["words_remaining"]) == 0 or state["mistake_count"] >= MAX_ERRORS:
+        if state["mistake_count"] >= MAX_ERRORS:
+            logger.info("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
+            print("FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!")
+        else:
+            logger.info("SOLVED THE CONNECTION PUZZLE!!!")
+            print("SOLVED THE CONNECTION PUZZLE!!!")
+
+        state["tool_status"] = "puzzle_completed"
+    elif found_correct_group == "o":
+        if one_away_group_recommendation:
+            print(f"using one_away_group_recommendation")
+            state["recommended_words"] = one_away_group_recommendation.words
+            state["recommended_connection"] = one_away_group_recommendation.connection_description
+            state["tool_status"] = "have_recommendation"
+        else:
+            print(f"no one_away_group_recommendation, let llm_recommender try again")
+            state["recommended_words"] = []
+            state["recommended_connection"] = ""
+            state["tool_status"] = "next_recommendation"
+    elif found_correct_group == "m":
+        print("Changing to manual_recommender")
+        state["tool_status"] = "manual_recommendation"
+
+    else:
+        logger.info("Going to next get_recommendation")
+        state["tool_status"] = "next_recommendation"
+
+    logger.info("Exiting apply_recommendation:")
+    logger.debug(f"\nExiting apply_recommendation State: {pp.pformat(state)}")
+
+    return state
+
+KEY_PUZZLE_STATE_FIELDS = ["puzzle_status", "tool_status", "current_tool"]
+
+
+def run_planner(state: PuzzleState) -> PuzzleState:
+    logger.info("Entering run_planner:")
+    logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
+
+    if state["workflow_instructions"] is None:
+        # read in the workflow specification
+        # TODO: support specifying the workflow specification file path in config
+        workflow_spec_fp = "src/agent/embedvec_workflow_specification.md"
+        with open(workflow_spec_fp, "r") as f:
+            state["workflow_instructions"] = f.read()
+
+        logger.debug(f"Workflow Specification: {state['workflow_instructions']}")
+
+    # workflow instructions
+    instructions = HumanMessage(state["workflow_instructions"])
+    logger.debug(f"\nWorkflow instructions:\n{instructions.content}")
+
+    # convert state to json string
+    relevant_state = {k: state[k] for k in KEY_PUZZLE_STATE_FIELDS}
+    puzzle_state = "\npuzzle state:\n" + json.dumps(relevant_state)
+
+    # wrap the state in a human message
+    puzzle_state = HumanMessage(puzzle_state)
+    logger.info(f"\nState for lmm: {puzzle_state.content}")
+
+    # get next action from llm
+    next_action = ask_llm_for_next_step(instructions, puzzle_state, model="gpt-3.5-turbo", temperature=0)
+
+    logger.info(f"\nNext action from llm: {next_action.content}")
+
+    state["tool_to_use"] = json.loads(next_action.content)["tool"]
+
+    logger.info("Exiting run_planner:")
+    logger.debug(f"\nExiting run_planner State: {pp.pformat(state)}")
+    return state
+
+
+def determine_next_action(state: PuzzleState) -> str:
+    logger.info("Entering determine_next_action:")
+    logger.debug(f"\nEntering determine_next_action State: {pp.pformat(state)}")
+
+    tool_to_use = state["tool_to_use"]
+
+    if tool_to_use == "ABORT":
+        raise ValueError("LLM returned abort")
+    elif tool_to_use == "END":
+        return END
+    else:
+        return tool_to_use
+
