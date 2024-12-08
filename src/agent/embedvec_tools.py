@@ -115,6 +115,7 @@ class PuzzleState(TypedDict):
     llm_temperature: float = 1.0
     puzzle_source_type: Optional[str] = None
     puzzle_source_fp: Optional[str] = None
+    puzzle_checker_response: Optional[str] = None
 
 
 async def setup_puzzle(state: PuzzleState) -> PuzzleState:
@@ -165,11 +166,11 @@ async def setup_puzzle(state: PuzzleState) -> PuzzleState:
     print("\nGenerating embeddings for the definitions")
     embeddings = generate_embeddings(df["definition"].tolist())
     # convert embeddings to json strings for storage
-    df["embedding"] = [json.dumps(v) for v in embeddings]  
+    df["embedding"] = [json.dumps(v) for v in embeddings]
 
     # store the vocabulary in external database
     print("\nStoring vocabulary and embeddings in external database")
- 
+
     async with aiosqlite.connect(state["vocabulary_db_fp"]) as conn:
         async with db_lock:
             cursor = await conn.cursor()
@@ -464,7 +465,9 @@ Steps:
 """
 
 
-def one_away_analyzer(state: PuzzleState, one_away_group: List[str], words_remaining: List[str]) -> List[Tuple[str, List[str]]]:
+def one_away_analyzer(
+    state: PuzzleState, one_away_group: List[str], words_remaining: List[str]
+) -> List[Tuple[str, List[str]]]:
     print("\nENTERED ONE-AWAY ANALYZER")
     print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
 
@@ -585,7 +588,7 @@ async def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
                 rows = await cursor.fetchall()
                 columns = [description[0] for description in cursor.description]
                 df = pd.DataFrame(rows, columns=columns)
-                
+
     # convert embedding string representation to numpy array
     df["embedding"] = df["embedding"].apply(lambda x: np.array(json.loads(x)))
 
@@ -715,7 +718,7 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
                         sql_query = f"DELETE FROM vocabulary WHERE word = '{word}'"
                         await conn.execute(sql_query)
                     await conn.commit()
-                    
+
         # remove the words from words_remaining
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
         state["recommended_correct"] = True
@@ -787,6 +790,7 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
     return state
 
+
 KEY_PUZZLE_STATE_FIELDS = ["puzzle_status", "tool_status", "current_tool"]
 
 
@@ -839,4 +843,3 @@ def determine_next_action(state: PuzzleState) -> str:
         return END
     else:
         return tool_to_use
-
