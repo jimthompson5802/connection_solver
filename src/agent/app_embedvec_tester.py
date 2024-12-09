@@ -109,7 +109,9 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
 
     found_solutions = []
 
-    for solution in puzzle_data:
+    for i, solution in enumerate(puzzle_data):
+
+        print(f"\n>>>>SOLVING PUZZLE {i+1}")
 
         runtime_config = {
             "configurable": {"thread_id": str(uuid.uuid4())},
@@ -176,3 +178,6 @@ if __name__ == "__main__":
     )
 
     print(df)
+
+    # save dataframe to pickle file
+    df.to_pickle("results/automated_test_results.pkl")
