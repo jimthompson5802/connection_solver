@@ -30,7 +30,7 @@ from src.agent.embedvec_tools import (
 )
 
 # specify the version of the agent
-__version__ = "0.9.0-dev"
+__version__ = "0.1.0"
 
 # create logger
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 
 async def main(puzzle_setup_function: callable = None, puzzle_response_function: callable = None):
-    print(f"Running Connection Solver Agent with EmbedVec Recommender {__version__}")
+    print(f"Running Connection Solver Agent Tester {__version__}")
 
     parser = argparse.ArgumentParser(description="Set logging level for the application.")
     parser.add_argument(
@@ -109,7 +109,7 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
 
     found_solutions = []
 
-    for solution in puzzle_data[:2]:
+    for solution in puzzle_data:
 
         runtime_config = {
             "configurable": {"thread_id": str(uuid.uuid4())},
@@ -162,3 +162,17 @@ if __name__ == "__main__":
 
     print("ALL GROUPS FOUND")
     pp.pprint(results)
+
+    solved_puzzle = [len(x) == 4 for x in results]
+    number_found = [len(x) for x in results]
+    groups_found = [x for x in results]
+
+    df = pd.DataFrame(
+        {
+            "solved_puzzle": solved_puzzle,
+            "number_found": number_found,
+            "groups_found": groups_found,
+        }
+    )
+
+    print(df)
