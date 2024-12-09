@@ -38,7 +38,8 @@ Connections is a word game that challenges players to find themes between words.
 * Refactor code to use `asyncio` to reduce run-time latency
 
 ## Release History
-| Tag | Description |
+**Agentic Solver**
+| Git Tag | Description |
 | --- | --- |
 | v0.1.0 | agent with programmatic planner |
 | v0.2.0 | Puzzle Planner converted to use LLM |
@@ -52,6 +53,11 @@ Connections is a word game that challenges players to find themes between words.
 | v0.7.0 | Manual override on agent recommendation |
 | v0.7.1 | langgraph compliant human-in-the-loop interactions, sqlite3 for vocabulary storage |
 | v0.8.0 | asyncio integration to reduce run-time latency |
+
+**Automated Tester**
+| Version | Description |
+| --- | --- |
+| v0.1.0 | Automated tester for Connection Puzzle Solver |
 
 
 ## Sample Runs
@@ -77,6 +83,10 @@ Starting 2024-11-27 the v0.7.x agent is used to solve that day's puzzle.  A log 
 | v0.5.x | LLM and Embedding Vector-based recommendation generators | 2/7 | 29% |
 | v0.6.x | LLM and Embedding Vector-based recommendation generators with one-away analyzer and revised invalid group detection| 4/7 | 57% |
 | v0.7.x | LLM and Embedding Vector-based recommendation generators with one-away analyzer, revised invalid group detection, and manual override | 6/7 | 85% |
+
+**Automated Tester Runs**
+
+This is an automated tester for the Connection Puzzle Solver.  The tester runs the agent on a set of puzzles and records the results.  The results can be found [here](./docs/example_automated_test_run.md).
 
 ## Solution Strategy
 
