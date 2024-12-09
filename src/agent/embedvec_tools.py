@@ -901,9 +901,9 @@ async def run_workflow(
             )
         elif current_state.next[0] == "apply_recommendation":
             puzzle_response = puzzle_response_function(
-                sorted(current_state.values["recommended_words"]),
-                current_state.values["recommended_connection"],
-                current_state.values["current_tool"],
+                gen_words=sorted(current_state.values["recommended_words"]),
+                gen_reason=current_state.values["recommended_connection"],
+                recommender=current_state.values["current_tool"],
             )
 
             workflow_graph.update_state(
