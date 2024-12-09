@@ -4,11 +4,10 @@ import logging
 import pprint
 import json
 import os
-import random
 import uuid
-import sqlite3
 import tempfile
 import pprint
+from functools import partial
 
 
 import numpy as np
@@ -19,19 +18,19 @@ from langchain_core.messages import HumanMessage
 
 from langchain_core.tracers.context import tracing_v2_enabled
 
-from tools import (
+from src.agent.tools import (
     interact_with_user,
 )
 
-from embedvec_tools import (
+from src.agent.embedvec_tools import (
     PuzzleState,
     create_workflow_graph,
-    manual_puzzle_setup_prompt,
+    check_one_solution,
     run_workflow,
 )
 
 # specify the version of the agent
-__version__ = "0.9.0-dev"
+__version__ = "0.1.0"
 
 # create logger
 logger = logging.getLogger(__name__)
@@ -60,7 +59,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 
 async def main(puzzle_setup_function: callable = None, puzzle_response_function: callable = None):
-    print(f"Running Connection Solver Agent with EmbedVec Recommender {__version__}")
+    print(f"Running Connection Solver Agent Tester {__version__}")
 
     parser = argparse.ArgumentParser(description="Set logging level for the application.")
     parser.add_argument(
@@ -68,6 +67,14 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     )
     parser.add_argument(
         "--trace", action="store_true", default=False, help="Enable langsmith tracing for the application."
+    )
+
+    # parameter for jsonl file path for data to set up the puzzle
+    parser.add_argument(
+        "--puzzle_setup_fp",
+        type=str,
+        default=None,
+        help="File path to setup Connections Puzzle data",
     )
 
     # Parse arguments
@@ -93,43 +100,79 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
 
     workflow_graph.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
 
-    runtime_config = {
-        "configurable": {"thread_id": str(uuid.uuid4())},
-        "recursion_limit": 50,
-    }
+    # read in puzzle data
+    puzzle_data = []
+    if args.puzzle_setup_fp:
+        with open(args.puzzle_setup_fp, "r") as f:
+            for line in f:
+                puzzle_data.append(json.loads(line))
 
-    with tempfile.NamedTemporaryFile(suffix=".db") as tmp_db:
-        initial_state = PuzzleState(
-            puzzle_status="",
-            current_tool="",
-            tool_status="",
-            workflow_instructions=None,
-            llm_temperature=0.7,
-            vocabulary_db_fp=tmp_db.name,
-            recommendation_correct_groups=[],
-        )
+    found_solutions = []
 
-        if args.trace:
-            with tracing_v2_enabled("Connection_Solver_Agent"):
+    for solution in puzzle_data:
+
+        runtime_config = {
+            "configurable": {"thread_id": str(uuid.uuid4())},
+            "recursion_limit": 50,
+        }
+
+        setup_this_puzzle = partial(lambda x: x, solution["words"])
+
+        check_this_puzzle = partial(puzzle_response_function, solution["solution"])
+
+        with tempfile.NamedTemporaryFile(suffix=".db") as tmp_db:
+            initial_state = PuzzleState(
+                puzzle_status="",
+                current_tool="",
+                tool_status="",
+                workflow_instructions=None,
+                llm_temperature=0.7,
+                vocabulary_db_fp=tmp_db.name,
+                recommendation_correct_groups=[],
+            )
+
+            if args.trace:
+                with tracing_v2_enabled("Connection_Solver_Agent"):
+                    result = await run_workflow(
+                        workflow_graph,
+                        initial_state,
+                        runtime_config,
+                        puzzle_setup_function=setup_this_puzzle,
+                        puzzle_response_function=check_this_puzzle,
+                    )
+            else:
                 result = await run_workflow(
                     workflow_graph,
                     initial_state,
                     runtime_config,
-                    puzzle_setup_function=puzzle_setup_function,
-                    puzzle_response_function=puzzle_response_function,
+                    puzzle_setup_function=setup_this_puzzle,
+                    puzzle_response_function=check_this_puzzle,
                 )
-        else:
-            result = await run_workflow(
-                workflow_graph,
-                initial_state,
-                runtime_config,
-                puzzle_setup_function=manual_puzzle_setup_prompt,
-                puzzle_response_function=interact_with_user,
-            )
 
-    print("\nFOUND SOLUTIONS")
-    pp.pprint(result)
+        print("\nFOUND SOLUTIONS")
+        pp.pprint(result)
+
+        found_solutions.append(result)
+
+    return found_solutions
 
 
 if __name__ == "__main__":
-    asyncio.run(main(manual_puzzle_setup_prompt, interact_with_user))
+    results = asyncio.run(main(None, check_one_solution))
+
+    print("ALL GROUPS FOUND")
+    pp.pprint(results)
+
+    solved_puzzle = [len(x) == 4 for x in results]
+    number_found = [len(x) for x in results]
+    groups_found = [x for x in results]
+
+    df = pd.DataFrame(
+        {
+            "solved_puzzle": solved_puzzle,
+            "number_found": number_found,
+            "groups_found": groups_found,
+        }
+    )
+
+    print(df)

@@ -18,7 +18,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langgraph.graph import END
+from langgraph.graph import END, StateGraph
+from langgraph.checkpoint.memory import MemorySaver
 
 from tools import extract_words_from_image, read_file_to_word_list, ask_llm_for_solution
 
@@ -90,6 +91,8 @@ class RecommendedGroup:
         return f"Recommended Group: {self.words}\nConnection Description: {self.connection_description}"
 
 
+# TODO: remove the color boolean indicators, these have not been used solution logic,
+#       if needed can re-introduce
 # define the state of the puzzle
 class PuzzleState(TypedDict):
     puzzle_status: str = ""
@@ -104,6 +107,7 @@ class PuzzleState(TypedDict):
     recommended_connection: str = ""
     recommended_correct: bool = False
     recommendation_answer_status: Optional[str] = None
+    recommendation_correct_groups: Optional[List[List[str]]] = []
     found_yellow: bool = False
     found_greeen: bool = False
     found_blue: bool = False
@@ -113,8 +117,7 @@ class PuzzleState(TypedDict):
     found_count: int = 0
     recommendation_count: int = 0
     llm_temperature: float = 1.0
-    puzzle_source_type: Optional[str] = None
-    puzzle_source_fp: Optional[str] = None
+    puzzle_checker_response: Optional[str] = None
 
 
 async def setup_puzzle(state: PuzzleState) -> PuzzleState:
@@ -124,20 +127,7 @@ async def setup_puzzle(state: PuzzleState) -> PuzzleState:
     state["current_tool"] = "setup_puzzle"
     print(f"\nENTERED {state['current_tool'].upper()}")
 
-    # prompt user for input source
-    input_source = state.get("puzzle_source_type", None)
-    puzzle_word_fp = state.get("puzzle_source_fp", None)
-    if input_source == "file":
-        words = read_file_to_word_list(puzzle_word_fp)
-    elif input_source == "image":
-        words = extract_words_from_image(puzzle_word_fp)
-    else:
-        raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
-
-    print(f"Puzzle Words: {words}")
-
     # initialize the state
-    state["words_remaining"] = words
     state["puzzle_status"] = "initialized"
     state["tool_status"] = "initialized"
     state["invalid_connections"] = []
@@ -165,11 +155,11 @@ async def setup_puzzle(state: PuzzleState) -> PuzzleState:
     print("\nGenerating embeddings for the definitions")
     embeddings = generate_embeddings(df["definition"].tolist())
     # convert embeddings to json strings for storage
-    df["embedding"] = [json.dumps(v) for v in embeddings]  
+    df["embedding"] = [json.dumps(v) for v in embeddings]
 
     # store the vocabulary in external database
     print("\nStoring vocabulary and embeddings in external database")
- 
+
     async with aiosqlite.connect(state["vocabulary_db_fp"]) as conn:
         async with db_lock:
             cursor = await conn.cursor()
@@ -464,7 +454,9 @@ Steps:
 """
 
 
-def one_away_analyzer(state: PuzzleState, one_away_group: List[str], words_remaining: List[str]) -> List[Tuple[str, List[str]]]:
+def one_away_analyzer(
+    state: PuzzleState, one_away_group: List[str], words_remaining: List[str]
+) -> List[Tuple[str, List[str]]]:
     print("\nENTERED ONE-AWAY ANALYZER")
     print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
 
@@ -585,7 +577,7 @@ async def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
                 rows = await cursor.fetchall()
                 columns = [description[0] for description in cursor.description]
                 df = pd.DataFrame(rows, columns=columns)
-                
+
     # convert embedding string representation to numpy array
     df["embedding"] = df["embedding"].apply(lambda x: np.array(json.loads(x)))
 
@@ -692,7 +684,7 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
     found_correct_group = state["recommendation_answer_status"]
 
     # process result of user response
-    if found_correct_group in ["y", "g", "b", "p"]:
+    if found_correct_group in ["y", "g", "b", "p", "correct"]:
         print(f"Recommendation {sorted(state['recommended_words'])} is correct")
         match found_correct_group:
             case "y":
@@ -703,6 +695,10 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
                 state["found_blue"] = True
             case "p":
                 state["found_purple"] = True
+            case "correct":
+                pass
+
+        state["recommendation_correct_groups"].append(state["recommended_words"])
 
         # for embedvec_recommender, remove the words from the vocabulary database
         if state["current_tool"] == "embedvec_recommender":
@@ -715,7 +711,7 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
                         sql_query = f"DELETE FROM vocabulary WHERE word = '{word}'"
                         await conn.execute(sql_query)
                     await conn.commit()
-                    
+
         # remove the words from words_remaining
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
         state["recommended_correct"] = True
@@ -787,6 +783,7 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
     return state
 
+
 KEY_PUZZLE_STATE_FIELDS = ["puzzle_status", "tool_status", "current_tool"]
 
 
@@ -840,3 +837,131 @@ def determine_next_action(state: PuzzleState) -> str:
     else:
         return tool_to_use
 
+
+def manual_puzzle_setup_prompt() -> List[str]:
+
+    # pompt user for puzzle source
+    puzzle_source_type = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
+    puzzle_source_fp = input("Please enter the file/image location: ")
+
+    # get puzzle words from indicated source
+    if puzzle_source_type == "file":
+        words = read_file_to_word_list(puzzle_source_fp)
+    elif puzzle_source_type == "image":
+        words = extract_words_from_image(puzzle_source_fp)
+    else:
+        raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
+
+    return words
+
+
+def check_one_solution(solution, *, gen_words: List[str], gen_reason: str, recommender: str) -> str:
+    recommendation_message = f"\n{recommender.upper()}: RECOMMENDED WORDS {gen_words} with connection {gen_reason}"
+    logger.info(recommendation_message)
+    print(recommendation_message)
+
+    for sol_dict in solution["groups"]:
+        sol_words = sol_dict["words"]
+        sol_reason = sol_dict["reason"]
+        if set(gen_words) == set(sol_words):
+            print(f"{gen_reason} ~ {sol_reason}: {gen_words} == {sol_words}")
+            return "correct"
+        elif len(set(gen_words).intersection(set(sol_words))) == 3:
+            return "o"
+    else:
+        return "n"
+
+
+async def run_workflow(
+    workflow_graph,
+    initial_state: PuzzleState,
+    runtime_config: dict,
+    *,
+    puzzle_setup_function: callable = None,
+    puzzle_response_function: callable = None,
+) -> None:
+
+    # run workflow until first human-in-the-loop input required for setup
+    async for chunk in workflow_graph.astream(initial_state, runtime_config, stream_mode="values"):
+        pass
+
+    # continue workflow until the next human-in-the-loop input required for puzzle answer
+    while chunk["tool_status"] != "puzzle_completed":
+        current_state = workflow_graph.get_state(runtime_config)
+        logger.debug(f"\nCurrent state: {current_state}")
+        logger.info(f"\nNext action: {current_state.next}")
+        if current_state.next[0] == "setup_puzzle":
+            words = puzzle_setup_function()
+
+            print(f"Setting up Puzzle Words: {words}")
+
+            workflow_graph.update_state(
+                runtime_config,
+                {"words_remaining": words},
+            )
+        elif current_state.next[0] == "apply_recommendation":
+            puzzle_response = puzzle_response_function(
+                gen_words=sorted(current_state.values["recommended_words"]),
+                gen_reason=current_state.values["recommended_connection"],
+                recommender=current_state.values["current_tool"],
+            )
+
+            workflow_graph.update_state(
+                runtime_config,
+                {
+                    "recommendation_answer_status": puzzle_response,
+                },
+            )
+        else:
+            raise RuntimeError(f"Unexpected next action: {current_state.next[0]}")
+
+        # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
+        async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
+            logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
+            pass
+
+    print("\n\nFINAL PUZZLE STATE:")
+    pp.pprint(chunk)
+
+    return chunk["recommendation_correct_groups"]
+
+
+def create_workflow_graph() -> StateGraph:
+    workflow = StateGraph(PuzzleState)
+
+    workflow.add_node("run_planner", run_planner)
+    workflow.add_node("setup_puzzle", setup_puzzle)
+    workflow.add_node("get_embedvec_recommendation", get_embedvec_recommendation)
+    workflow.add_node("get_llm_recommendation", get_llm_recommendation)
+    workflow.add_node("get_manual_recommendation", get_manual_recommendation)
+    workflow.add_node("apply_recommendation", apply_recommendation)
+
+    workflow.add_conditional_edges(
+        "run_planner",
+        determine_next_action,
+        {
+            "setup_puzzle": "setup_puzzle",
+            "get_embedvec_recommendation": "get_embedvec_recommendation",
+            "get_llm_recommendation": "get_llm_recommendation",
+            "get_manual_recommendation": "get_manual_recommendation",
+            "apply_recommendation": "apply_recommendation",
+            END: END,
+        },
+    )
+
+    workflow.add_edge("setup_puzzle", "run_planner")
+    workflow.add_edge("get_llm_recommendation", "run_planner")
+    workflow.add_edge("get_embedvec_recommendation", "run_planner")
+    workflow.add_edge("get_manual_recommendation", "run_planner")
+    workflow.add_edge("apply_recommendation", "run_planner")
+
+    workflow.set_entry_point("run_planner")
+
+    memory_checkpoint = MemorySaver()
+
+    workflow_graph = workflow.compile(
+        checkpointer=memory_checkpoint,
+        interrupt_before=["setup_puzzle", "apply_recommendation"],
+    )
+
+    return workflow_graph
