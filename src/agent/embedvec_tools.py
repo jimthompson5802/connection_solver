@@ -852,8 +852,6 @@ def manual_puzzle_setup_prompt() -> List[str]:
     else:
         raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
 
-    print(f"Puzzle Words: {words}")
-
     return words
 
 
@@ -894,6 +892,8 @@ async def run_workflow(
         logger.info(f"\nNext action: {current_state.next}")
         if current_state.next[0] == "setup_puzzle":
             words = puzzle_setup_function()
+
+            print(f"Setting up Puzzle Words: {words}")
 
             workflow_graph.update_state(
                 runtime_config,
