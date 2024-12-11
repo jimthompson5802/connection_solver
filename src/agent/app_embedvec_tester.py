@@ -30,7 +30,7 @@ from src.agent.embedvec_tools import (
 )
 
 # specify the version of the agent
-__version__ = "0.1.0"
+__version__ = "0.2.0-dev"
 
 # create logger
 logger = logging.getLogger(__name__)
@@ -107,10 +107,7 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
             for line in f:
                 puzzle_data.append(json.loads(line))
 
-    found_solutions = []
-
-    for i, solution in enumerate(puzzle_data):
-
+    async def solve_a_puzzle(i, solution):
         print(f"\n>>>>SOLVING PUZZLE {i+1}")
 
         runtime_config = {
@@ -154,7 +151,9 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
         print("\nFOUND SOLUTIONS")
         pp.pprint(result)
 
-        found_solutions.append(result)
+        return result
+
+    found_solutions = await asyncio.gather(*[solve_a_puzzle(i, solution) for i, solution in enumerate(puzzle_data)])
 
     return found_solutions
 
