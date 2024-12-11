@@ -158,7 +158,8 @@ For each embedding, the "word" and "definition" used to create the embedding are
 ![](./images/tb_tsne3.png)
 
 ### Bootstrap Analysis of an Automated Test Run
-For a 50 puzzle run of the agent, a bootstrap analysis was performed to determine the confidence interval of the agent's performance.  The results of the analysis are shown in this plot ![](./images/bootstrap_distribution.png).
+For a 50 puzzle run of the agent, a bootstrap analysis was performed to determine the confidence interval of the agent's performance.  The results of the analysis are shown in this plot.
+![](./images/bootstrap_distribution.png).
 
 
 ### One-Away Error Analyzer
