@@ -53,6 +53,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.7.0 | Manual override on agent recommendation |
 | v0.7.1 | langgraph compliant human-in-the-loop interactions, sqlite3 for vocabulary storage |
 | v0.8.0 | asyncio integration to reduce run-time latency |
+| v0.9.0 | expand use of asnycio to further reduce run-time |
 
 **Automated Tester**
 | Version | Description |
