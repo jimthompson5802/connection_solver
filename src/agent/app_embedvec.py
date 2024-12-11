@@ -31,7 +31,7 @@ from embedvec_tools import (
 )
 
 # specify the version of the agent
-__version__ = "0.9.0-dev"
+__version__ = "0.9.0"
 
 # create logger
 logger = logging.getLogger(__name__)
