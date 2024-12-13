@@ -17,6 +17,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langgraph.graph import END, StateGraph
 from langgraph.checkpoint.memory import MemorySaver
@@ -98,7 +99,6 @@ class PuzzleState(TypedDict):
     puzzle_status: str = ""
     tool_status: str = ""
     current_tool: str = ""
-    workflow_instructions: Optional[str] = None
     vocabulary_db_fp: Optional[str] = None
     tool_to_use: str = ""
     words_remaining: List[str] = []
@@ -789,21 +789,12 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
 KEY_PUZZLE_STATE_FIELDS = ["puzzle_status", "tool_status", "current_tool"]
 
 
-async def run_planner(state: PuzzleState) -> PuzzleState:
+async def run_planner(state: PuzzleState, config: RunnableConfig) -> PuzzleState:
     logger.info("Entering run_planner:")
     logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
 
-    if state["workflow_instructions"] is None:
-        # read in the workflow specification
-        # TODO: support specifying the workflow specification file path in config
-        workflow_spec_fp = "src/agent/embedvec_workflow_specification.md"
-        with open(workflow_spec_fp, "r") as f:
-            state["workflow_instructions"] = f.read()
-
-        logger.debug(f"Workflow Specification: {state['workflow_instructions']}")
-
     # workflow instructions
-    instructions = HumanMessage(state["workflow_instructions"])
+    instructions = HumanMessage(config["configurable"]["workflow_instructions"])
     logger.debug(f"\nWorkflow instructions:\n{instructions.content}")
 
     # convert state to json string

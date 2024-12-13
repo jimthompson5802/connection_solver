@@ -16,6 +16,7 @@ import pandas as pd
 
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
+from langchain_core.runnables import ConfigurableField
 
 from langchain_core.tracers.context import tracing_v2_enabled
 
@@ -31,7 +32,7 @@ from embedvec_tools import (
 )
 
 # specify the version of the agent
-__version__ = "0.9.0"
+__version__ = "0.9.1"
 
 # create logger
 logger = logging.getLogger(__name__)
@@ -89,12 +90,26 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     else:
         os.environ["LANGCHAIN_TRACING_V2"] = "false"
 
+    # read in workflow instructions
+    with open("src/agent/embedvec_workflow_specification.md", "r") as f:
+        workflow_instructions = f.read()
+
+    # TODO: determine how this is used
+    # workflow_instructions_config = ConfigurableField(
+    #     id="workflow_instructions",
+    #     name="Workflow Instructions",
+    #     description="Workflow Instructions for the Connection Solver",
+    # )
+
     workflow_graph = create_workflow_graph()
 
     workflow_graph.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
 
     runtime_config = {
-        "configurable": {"thread_id": str(uuid.uuid4())},
+        "configurable": {
+            "thread_id": str(uuid.uuid4()),
+            "workflow_instructions": workflow_instructions,
+        },
         "recursion_limit": 50,
     }
 
