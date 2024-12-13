@@ -196,16 +196,18 @@ Your task is to generate as many diverse definitions as possible for the given w
 2. for each part of speech, generate one or more examples of the given word for that parts of speech.  preappend the part of speech to the examples, e.g., "noun: example1", "verb: example2", etc.
 3. combine all examples into a single list.
 
-Return your response as a JSON object with the word as the key and the connotations as a list of strings.
+Return your response as a JSON object with the key "result" and the examples as a list of strings.
 
 example:
-
 {
-  "word": [
+    "result": [
     "noun: example1", 
     "noun: example2", 
-    "adjective: example3",]
+    "adjective: example3",
+    "verb: example4"
+    ]
 }
+
 """
 )
 
@@ -227,7 +229,7 @@ async def generate_vocabulary(words, model="gpt-4o", temperature=0.7, max_tokens
         prompt = HumanMessage(prompt)
         prompt = [SYSTEM_MESSAGE, prompt]
         result = await llm.ainvoke(prompt)
-        vocabulary[the_word] = json.loads(result.content)[the_word]
+        vocabulary[the_word] = json.loads(result.content)["result"]
 
     await asyncio.gather(*[process_word(word) for word in words])
 
