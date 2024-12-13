@@ -55,11 +55,13 @@ Connections is a word game that challenges players to find themes between words.
 | v0.8.0 | asyncio integration to reduce run-time latency |
 | v0.9.0 | expand use of asnycio to reduce automated test run-time |
 | v0.9.1 | migrated workflow instructions out of PuzzleState |
+| v0.9.2 | resolved error when hints are provided in puzzle words |
 
 **Automated Tester**
 | Version | Description |
 | --- | --- |
 | v0.1.0 | Automated tester for Connection Puzzle Solver |
+| v0.2.0 | Automated tester expand asycnio to reduce run-time |
 
 
 ## Sample Runs
