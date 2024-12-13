@@ -15,6 +15,7 @@ import pandas as pd
 
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
+from langchain_core.runnables import ConfigurableField
 
 from langchain_core.tracers.context import tracing_v2_enabled
 
@@ -107,11 +108,25 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
             for line in f:
                 puzzle_data.append(json.loads(line))
 
-    async def solve_a_puzzle(i, solution):
+    # read in workflow instructions
+    with open("src/agent/embedvec_workflow_specification.md", "r") as f:
+        workflow_instructions = f.read()
+
+    async def solve_a_puzzle(i, solution, workflow_instructions):
         print(f"\n>>>>SOLVING PUZZLE {i+1}")
 
+        # TODO: determine how this is used
+        # workflow_instructions_config = ConfigurableField(
+        #     id="workflow_instructions",
+        #     name="Workflow Instructions",
+        #     description="Workflow Instructions for the Connection Solver",
+        # )
+
         runtime_config = {
-            "configurable": {"thread_id": str(uuid.uuid4())},
+            "configurable": {
+                "thread_id": str(uuid.uuid4()),
+                "workflow_instructions": workflow_instructions,
+            },
             "recursion_limit": 50,
         }
 
@@ -153,7 +168,9 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
 
         return result
 
-    found_solutions = await asyncio.gather(*[solve_a_puzzle(i, solution) for i, solution in enumerate(puzzle_data)])
+    found_solutions = await asyncio.gather(
+        *[solve_a_puzzle(i, solution, workflow_instructions) for i, solution in enumerate(puzzle_data)]
+    )
 
     return found_solutions
 
