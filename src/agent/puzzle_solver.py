@@ -482,33 +482,20 @@ async def one_away_analyzer(
         anchor_words = "\n\n" + ", ".join(anchor_list)
         prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), HumanMessage(anchor_words)]
         response = await chat_with_llm(prompt)
-        return anchor_words, response
+        return anchor_list, response
 
     single_topic_groups = await asyncio.gather(
         *[process_anchor_words(anchor_list) for anchor_list in possible_anchor_words_list]
     )
 
     single_topic_groups = [
-        RecommendedGroup(words=x[0], connection_description=x[1]["explanation"])
+        RecommendedGroup(
+            words=x[0],
+            connection_description=x[1]["explanation"],
+        )
         for x in single_topic_groups
         if x[1]["response"] == "single"
     ]
-
-    # TODO: clean up code
-    # for anchor_list in possible_anchor_words_list:
-    #     # determine if the anchor words can be related to a single topic
-    #     anchor_words = "\n\n" + ", ".join(anchor_list)
-    #     prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), HumanMessage(anchor_words)]
-    #     response = await chat_with_llm(prompt)
-
-    #     logger.info(f"\n>>>Anchor Words: {anchor_list}")
-    #     logger.info(response)
-
-    #     if response["response"] == "single":
-
-    #         single_topic_groups.append(
-    #             RecommendedGroup(words=anchor_list, connection_description=response["explanation"])
-    #         )
 
     print(f"\n>>>Number of single topic groups: {len(single_topic_groups)}")
     if len(single_topic_groups) > 1:
@@ -528,7 +515,7 @@ async def one_away_analyzer(
         print(f"\n>>>Selected single-topic group:\n{selected_word_group}")
         # remove original one-away invalid group from the remaining word list
         words_to_test = [x for x in words_remaining if x not in one_away_group]
-        user_prompt = "\n\nanchor_words: " + ", ".join(selected_word_group.words)
+        user_prompt = "\n\nanchor_words: " + ",".join(selected_word_group.words)
         user_prompt += "\n\n" + "candidate_words: " + ", ".join(words_to_test)
         logger.info(f"single-topic user prompt:\n {user_prompt}")
 
