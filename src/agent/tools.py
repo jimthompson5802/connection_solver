@@ -50,7 +50,7 @@ def read_file_to_word_list(file_location: str) -> List[str]:
         return []
 
 
-def extract_words_from_image(image_fp: str) -> List[str]:
+async def extract_words_from_image(image_fp: str) -> List[str]:
     """
     Encodes an image to base64 and sends it to the OpenAI LLM to extract words from the image.
 
@@ -63,15 +63,6 @@ def extract_words_from_image(image_fp: str) -> List[str]:
 
     logger.info("Entering extract_words_from_image")
     logger.debug(f"Entering extract_words_from_image image_path: {image_fp}")
-
-    # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
-    llm = ChatOpenAI(
-        api_key=api_key,
-        model="gpt-4o",
-        temperature=1.0,
-        max_tokens=4096,
-        model_kwargs={"response_format": {"type": "json_object"}},
-    )
 
     # Encode the image
     with open(image_fp, "rb") as image_file:
@@ -86,7 +77,7 @@ def extract_words_from_image(image_fp: str) -> List[str]:
     )
 
     # Get the response from the model
-    response = llm.invoke([message])
+    response = await chat_with_llm([message])
 
     words = [w.lower() for w in json.loads(response.content)["words"]]
 
@@ -156,4 +147,4 @@ async def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096
 
     result = await llm.ainvoke(prompt)
 
-    return json.loads(result.content)
+    return result
