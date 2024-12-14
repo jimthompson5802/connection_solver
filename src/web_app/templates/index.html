@@ -52,7 +52,8 @@
     <div class="container">
         <div class="flex-row">
             <label class="label" for="puzzle-setup">Puzzle setup file:</label>
-            <input type="text" id="puzzle-setup" class="textbox", size="50">
+            <input type="text" id="puzzle-setup" class="textbox" size="50">
+            <button id="setup-puzzle-btn">Setup Puzzle</button>
         </div>
         <div class="flex-row">
             <label class="label" for="remaining-words">Remaining words:</label>
@@ -78,5 +79,22 @@
             <input type="text" id="found-groups" class="textbox" readonly>
         </div>
     </div>
+    <script>
+        document.getElementById('setup-puzzle-btn').addEventListener('click', function() {
+            const setupText = document.getElementById('puzzle-setup').value;
+            fetch('/setup-puzzle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({setup: setupText})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('remaining-words').value = data.upperText;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
 </body>
 </html>
