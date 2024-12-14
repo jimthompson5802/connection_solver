@@ -103,7 +103,7 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
                 puzzle_data.append(json.loads(line))
 
     # read in workflow instructions
-    with open("src/agent/embedvec_workflow_specification.md", "r") as f:
+    with open("src/agent/embedvec_tester_workflow_specification.md", "r") as f:
         workflow_instructions = f.read()
 
     async def solve_a_puzzle(i, solution, workflow_instructions):
