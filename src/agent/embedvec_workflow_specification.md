@@ -16,5 +16,6 @@ Use the table to select the appropriate tool.
 |llm_recommender| manual_recommendation | get_manual_recommendation |
 |manual_recommender| have_recommendation | apply_recommendation |
 |manual_recommender| next_recommendation | get_llm_recommendation |
+|manual_recommender| manual_recommendation | get_manual_recommendation |
 
 If no tool is selected, use "ABORT" tool.
