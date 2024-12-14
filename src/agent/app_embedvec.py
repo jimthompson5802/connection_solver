@@ -28,7 +28,7 @@ from tools import interact_with_user, manual_puzzle_setup_prompt
 
 
 # specify the version of the agent
-__version__ = "0.9.2"
+__version__ = "0.9.3"
 
 # create logger
 logger = logging.getLogger(__name__)
