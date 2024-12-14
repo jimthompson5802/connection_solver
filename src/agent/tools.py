@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import json
 import logging
 import pprint as pp
@@ -18,23 +19,8 @@ logger = logging.getLogger(__name__)
 pp = pp.PrettyPrinter(indent=4)
 
 
-# define the state of the puzzle
-class PuzzleState(TypedDict):
-    puzzle_status: str = "not initialized"
-    tool_to_use: str = ""
-    words_remaining: List[str] = []
-    invalid_connections: List[List[str]] = []
-    recommended_words: List[str] = []
-    recommended_connection: str = ""
-    recommended_correct: bool = False
-    found_yellow: bool = False
-    found_greeen: bool = False
-    found_blue: bool = False
-    found_purple: bool = False
-    mistake_count: int = 0
-    found_count: int = 0
-    recommendation_count: int = 0
-    llm_temperature: float = 1.0
+def compute_group_id(word_group: list) -> str:
+    return hashlib.md5("".join(sorted(word_group)).encode()).hexdigest()
 
 
 def read_file_to_word_list(file_location: str) -> List[str]:
@@ -110,35 +96,21 @@ def extract_words_from_image(image_fp: str) -> List[str]:
     return words
 
 
-def setup_puzzle(state: PuzzleState) -> PuzzleState:
-    logger.info("Entering setup_puzzle:")
-    logger.debug(f"\nEntering setup_puzzle State: {pp.pformat(state)}")
+def manual_puzzle_setup_prompt() -> List[str]:
 
-    # prompt user for input source
-    input_source = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
+    # pompt user for puzzle source
+    puzzle_source_type = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
+    puzzle_source_fp = input("Please enter the file/image location: ")
 
-    if input_source == "file":
-        puzzle_word_fp = input("Please enter the word file location: ")
-        words = read_file_to_word_list(puzzle_word_fp)
-    elif input_source == "image":
-        puzzle_word_fp = input("Please enter the image file location: ")
-        words = extract_words_from_image(puzzle_word_fp)
+    # get puzzle words from indicated source
+    if puzzle_source_type == "file":
+        words = read_file_to_word_list(puzzle_source_fp)
+    elif puzzle_source_type == "image":
+        words = extract_words_from_image(puzzle_source_fp)
     else:
         raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
 
-    print(f"Puzzle Words: {words}")
-    state["words_remaining"] = words
-    state["puzzle_status"] = "initialized"
-    state["invalid_connections"] = []
-    state["mistake_count"] = 0
-    state["found_count"] = 0
-    state["recommendation_count"] = 0
-    state["recommended_words"] = []
-
-    logger.info("Exiting setup_puzzle:")
-    logger.debug(f"\nExiting setup_puzzle State: {pp.pformat(state)}")
-
-    return state
+    return words
 
 
 def interact_with_user(gen_words, gen_reason, recommender) -> str:
@@ -155,156 +127,33 @@ def interact_with_user(gen_words, gen_reason, recommender) -> str:
     return user_response
 
 
-# Used ChatGPT to get an initial system message with this prompt:
-# "What is a good system prompt to solve the NYT Connection Puzzle that returns a JSON output?"
-# Revised the system message to be based on development experience.
-SYSTEM_MESSAGE = SystemMessage(
-    """
-    You are a helpful assistant in solving the New York Times Connection Puzzle.
+def check_one_solution(solution, *, gen_words: List[str], gen_reason: str, recommender: str) -> str:
+    recommendation_message = f"\n{recommender.upper()}: RECOMMENDED WORDS {gen_words} with connection {gen_reason}"
+    logger.info(recommendation_message)
+    print(recommendation_message)
 
-    The New York Times Connection Puzzle involves identifying groups of four related items from a grid of 16 words. Each word can belong to only one group, and there are generally 4 groups to identify. Your task is to examine the provided words, identify the possible groups based on thematic connections, and then suggest the groups one by one.
-
-    # Steps
-
-    1. **Review the candidate words**: Look at thewords provided in the candidate list carefully.
-    2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
-    3. **Group Words**: Attempt to form groups of four words that share a common theme.
-    4. **Avoid invalid groups**: Do not include word groups that are known to be invalid.
-    5. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
-    6. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
-    7. **Solution output**: Generate only a json response as shown in the **Output Format** section.
-
-    # Output Format
-
-    Provide the solution with the identified groups and their themes in a structured format. Each group should be output as a JSON list object.  Each list item is dictionary with keys "words" list of the connected words and "connection" describing the connection among the words.
-
-    ```json
-    [
-    {"words": ["Word1", "Word2", "Word3", "Word4"], "connection": "..."},
-    {"words": ["Word5", "Word6", "Word7", "Word8"], "connection": "..."},
-    {"words": ["Word9", "Word10", "Word11", "Word12"], "connection": "..."},
-    {"words": ["Word13", "Word14", "Word15", "Word16"], "connection": "..."}
-    ]
-    ```
-
-    # Examples
-
-    **Example:**
-
-    - **Input:** ["prime", "dud", "shot", "card", "flop", "turn", "charge", "rainforest", "time", "miss", "plastic", "kindle", "chance", "river", "bust", "credit"]
-    
-    - **Output:**
-    [
-    {"words": [ "bust", "dud", "flop", "mist"], "connection": "clunker"},
-    {"words": ["chance", "shot", "time", "turn"], "connection": "opportunity"},
-    {"words": ["card", "charge", "credit", "plastic"], "connection": "Non-Cash Way to Pay"},
-    {"words": ["kindle", "prime", "rainforest", "river"], "connection": "Amazon ___"}
-    ]
-
-    No other text.
-
-    # Notes
-
-    - Ensure all thematic connections make logical sense.
-    - Consider edge cases where a word could potentially fit into more than one category.
-    - Focus on clear and accurate thematic grouping to aid in solving the puzzle efficiently.
-    """
-)
+    for sol_dict in solution["groups"]:
+        sol_words = sol_dict["words"]
+        sol_reason = sol_dict["reason"]
+        if set(gen_words) == set(sol_words):
+            print(f"{gen_reason} ~ {sol_reason}: {gen_words} == {sol_words}")
+            return "correct"
+        elif len(set(gen_words).intersection(set(sol_words))) == 3:
+            return "o"
+    else:
+        return "n"
 
 
-def ask_llm_for_solution(prompt, model="gpt-4o", temperature=1.0, max_tokens=4096):
-    """
-    Asks the OpenAI LLM for a solution based on the provided prompt.
+async def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096):
 
-    Parameters:
-    prompt (str): The input prompt to be sent to the LLM.
-    temperature (float, optional): The sampling temperature to use. Defaults to 1.0.
-    max_tokens (int, optional): The maximum number of tokens to generate. Defaults to 4096.
-
-    Returns:
-    dict: The response from the LLM in JSON format.
-    """
-    logger.info("Entering ask_llm_for_solution")
-    logger.debug(f"Entering ask_llm_for_solution Prompt: {prompt.content}")
     # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
     llm = ChatOpenAI(
-        api_key=api_key,
         model=model,
         temperature=temperature,
         max_tokens=max_tokens,
         model_kwargs={"response_format": {"type": "json_object"}},
     )
 
-    # Create a prompt by concatenating the system and human messages
-    conversation = [SYSTEM_MESSAGE, prompt]
+    result = await llm.ainvoke(prompt)
 
-    # Invoke the LLM
-    response = llm.invoke(conversation)
-
-    logger.info("Exiting ask_llm_for_solution")
-    logger.debug(f"exiting ask_llm_for_solution response {response.content}")
-
-    return response
-
-
-PLANNER_SYSTEM_MESSAGE = """
-    You are an expert in managing the sequence of a workflow. Your task is to
-    determine the next tool to use given the current state of the workflow.
-
-    the eligible tools to use are: ["setup_puzzle", "get_recommendation", "END"]
-
-    The important information for the workflow state is to consider are: "status", "words_remaining", "mistake_count".
-
-    Using the provided instructions, you will need to determine the next tool to use.
-
-    output response in json format with key word "tool" and the value as the output string.
-    
-"""
-
-INSTRUCTIONS_MESSAGE = """
-    Instrucitons:
-    use "setup_puzzle" tool to initialize the puzzle if the puzzle is not initialized.
-
-    After the puzzle is initialized, use "get_recommendation" tool if "words_remaining" is not an empty list and "mistake_count" is less than 4, else use "END" tool.
-"""
-
-
-def ask_llm_for_next_step(prompt, model="gpt-3.5-turbo", temperature=0, max_tokens=4096):
-    """
-    Asks the language model (LLM) for the next step based on the provided prompt.
-
-    Args:
-        prompt (AIMessage): The prompt containing the content to be sent to the LLM.
-        model (str, optional): The model to be used by the LLM. Defaults to "gpt-3.5-turbo".
-        temperature (float, optional): The temperature setting for the LLM, controlling the randomness of the output. Defaults to 0.
-        max_tokens (int, optional): The maximum number of tokens for the LLM response. Defaults to 4096.
-
-    Returns:
-        AIMessage: The response from the LLM containing the next step.
-    """
-    logger.info("Entering ask_llm_for_next_step")
-    logger.debug(f"Entering ask_llm_for_next_step Prompt: {prompt.content}")
-
-    # Initialize the OpenAI LLM for next steps
-    llm = ChatOpenAI(
-        api_key=api_key,
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        model_kwargs={"response_format": {"type": "json_object"}},
-    )
-
-    # Create a prompt by concatenating the system and human messages
-    conversation = [PLANNER_SYSTEM_MESSAGE, INSTRUCTIONS_MESSAGE, prompt]
-
-    logger.debug(f"conversation: {pp.pformat(conversation)}")
-
-    # Invoke the LLM
-    response = llm.invoke(conversation)
-
-    logger.debug(f"response: {pp.pformat(response)}")
-
-    logger.info("Exiting ask_llm_for_next_step")
-    logger.debug(f"exiting ask_llm_for_next_step response {response.content}")
-
-    return response
+    return json.loads(result.content)

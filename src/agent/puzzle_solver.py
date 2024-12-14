@@ -6,10 +6,8 @@ import logging
 import pprint as pp
 import random
 from typing import List, TypedDict, Optional, Tuple
-import hashlib
 import itertools
-import sqlite3
-import os
+
 
 import pandas as pd
 import numpy as np
@@ -22,20 +20,15 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langgraph.graph import END, StateGraph
 from langgraph.checkpoint.memory import MemorySaver
 
-from tools import extract_words_from_image, read_file_to_word_list, ask_llm_for_solution
-
+from tools import compute_group_id, chat_with_llm
 
 logger = logging.getLogger(__name__)
-pp = pp.PrettyPrinter(indent=4)
 
-db_lock = asyncio.Lock()
 
 MAX_ERRORS = 4
 RETRY_LIMIT = 8
 
-
-def compute_group_id(word_group: list) -> str:
-    return hashlib.md5("".join(sorted(word_group)).encode()).hexdigest()
+db_lock = asyncio.Lock()
 
 
 # used by the embedvec tool to store the candidate groups
@@ -186,7 +179,7 @@ async def setup_puzzle(state: PuzzleState) -> PuzzleState:
     return state
 
 
-SYSTEM_MESSAGE = SystemMessage(
+VOCABULARY_SYSTEM_MESSAGE = SystemMessage(
     """
 You are an expert in language and knowledgeable on how words are used.
 
@@ -227,7 +220,7 @@ async def generate_vocabulary(words, model="gpt-4o", temperature=0.7, max_tokens
     async def process_word(the_word):
         prompt = f"\n\ngiven word: {the_word}"
         prompt = HumanMessage(prompt)
-        prompt = [SYSTEM_MESSAGE, prompt]
+        prompt = [VOCABULARY_SYSTEM_MESSAGE, prompt]
         result = await llm.ainvoke(prompt)
         vocabulary[the_word] = json.loads(result.content)["result"]
 
@@ -244,62 +237,6 @@ def generate_embeddings(definitions, model="text-embedding-3-small"):
     embeddings = embed_model.embed_documents(definitions)
 
     return embeddings
-
-
-PLANNER_SYSTEM_MESSAGE = """
-    You are an expert in managing the sequence of a workflow. Your task is to
-    determine the next tool to use given the current state of the workflow.
-
-    the eligible tools to use are: ["setup_puzzle", "get_llm_recommendation", "apply_recommendation", "get_embedvec_recommendation", "get_manual_recommendation", "END"]
-
-    The important information for the workflow state is to consider are: "puzzle_status", "tool_status", and "current_tool".
-
-    Using the provided instructions, you will need to determine the next tool to use.
-
-    output response in json format with key word "tool" and the value as the output string.
-    
-"""
-
-
-async def ask_llm_for_next_step(instructions, puzzle_state, model="gpt-3.5-turbo", temperature=0, max_tokens=4096):
-    """
-    Asks the language model (LLM) for the next step based on the provided prompt.
-
-    Args:
-        prompt (AIMessage): The prompt containing the content to be sent to the LLM.
-        model (str, optional): The model to be used by the LLM. Defaults to "gpt-3.5-turbo".
-        temperature (float, optional): The temperature setting for the LLM, controlling the randomness of the output. Defaults to 0.
-        max_tokens (int, optional): The maximum number of tokens for the LLM response. Defaults to 4096.
-
-    Returns:
-        AIMessage: The response from the LLM containing the next step.
-    """
-    logger.info("Entering ask_llm_for_next_step")
-    logger.debug(f"Entering ask_llm_for_next_step Instructions: {instructions.content}")
-    logger.debug(f"Entering ask_llm_for_next_step Prompt: {puzzle_state.content}")
-
-    # Initialize the OpenAI LLM for next steps
-    llm = ChatOpenAI(
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        model_kwargs={"response_format": {"type": "json_object"}},
-    )
-
-    # Create a prompt by concatenating the system and human messages
-    conversation = [PLANNER_SYSTEM_MESSAGE, instructions, puzzle_state]
-
-    logger.debug(f"conversation: {pp.pformat(conversation)}")
-
-    # Invoke the LLM
-    response = await llm.ainvoke(conversation)
-
-    logger.debug(f"response: {pp.pformat(response)}")
-
-    logger.info("Exiting ask_llm_for_next_step")
-    logger.info(f"exiting ask_llm_for_next_step response {response.content}")
-
-    return response
 
 
 VALIDATOR_SYSTEM_MESSAGE = SystemMessage(
@@ -416,8 +353,77 @@ def get_candidate_words(df: pd.DataFrame) -> list:
     return unique_candidate_list
 
 
-async def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096):
+# Used ChatGPT to get an initial system message with this prompt:
+# "What is a good system prompt to solve the NYT Connection Puzzle that returns a JSON output?"
+# Revised the system message to be based on development experience.
+LLM_RECOMMENDER_SYSTEM_MESSAGE = SystemMessage(
+    """
+    You are a helpful assistant in solving the New York Times Connection Puzzle.
 
+    The New York Times Connection Puzzle involves identifying groups of four related items from a grid of 16 words. Each word can belong to only one group, and there are generally 4 groups to identify. Your task is to examine the provided words, identify the possible groups based on thematic connections, and then suggest the groups one by one.
+
+    # Steps
+
+    1. **Review the candidate words**: Look at thewords provided in the candidate list carefully.
+    2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
+    3. **Group Words**: Attempt to form groups of four words that share a common theme.
+    4. **Avoid invalid groups**: Do not include word groups that are known to be invalid.
+    5. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
+    6. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
+    7. **Solution output**: Generate only a json response as shown in the **Output Format** section.
+
+    # Output Format
+
+    Provide the solution with the identified groups and their themes in a structured format. Each group should be output as a JSON list object.  Each list item is dictionary with keys "words" list of the connected words and "connection" describing the connection among the words.
+
+    ```json
+    [
+    {"words": ["Word1", "Word2", "Word3", "Word4"], "connection": "..."},
+    {"words": ["Word5", "Word6", "Word7", "Word8"], "connection": "..."},
+    {"words": ["Word9", "Word10", "Word11", "Word12"], "connection": "..."},
+    {"words": ["Word13", "Word14", "Word15", "Word16"], "connection": "..."}
+    ]
+    ```
+
+    # Examples
+
+    **Example:**
+
+    - **Input:** ["prime", "dud", "shot", "card", "flop", "turn", "charge", "rainforest", "time", "miss", "plastic", "kindle", "chance", "river", "bust", "credit"]
+    
+    - **Output:**
+    [
+    {"words": [ "bust", "dud", "flop", "mist"], "connection": "clunker"},
+    {"words": ["chance", "shot", "time", "turn"], "connection": "opportunity"},
+    {"words": ["card", "charge", "credit", "plastic"], "connection": "Non-Cash Way to Pay"},
+    {"words": ["kindle", "prime", "rainforest", "river"], "connection": "Amazon ___"}
+    ]
+
+    No other text.
+
+    # Notes
+
+    - Ensure all thematic connections make logical sense.
+    - Consider edge cases where a word could potentially fit into more than one category.
+    - Focus on clear and accurate thematic grouping to aid in solving the puzzle efficiently.
+    """
+)
+
+
+def ask_llm_for_solution(prompt, model="gpt-4o", temperature=1.0, max_tokens=4096):
+    """
+    Asks the OpenAI LLM for a solution based on the provided prompt.
+
+    Parameters:
+    prompt (str): The input prompt to be sent to the LLM.
+    temperature (float, optional): The sampling temperature to use. Defaults to 1.0.
+    max_tokens (int, optional): The maximum number of tokens to generate. Defaults to 4096.
+
+    Returns:
+    dict: The response from the LLM in JSON format.
+    """
+    logger.info("Entering ask_llm_for_solution")
+    logger.debug(f"Entering ask_llm_for_solution Prompt: {prompt.content}")
     # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
     llm = ChatOpenAI(
         model=model,
@@ -426,9 +432,16 @@ async def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096
         model_kwargs={"response_format": {"type": "json_object"}},
     )
 
-    result = await llm.ainvoke(prompt)
+    # Create a prompt by concatenating the system and human messages
+    conversation = [LLM_RECOMMENDER_SYSTEM_MESSAGE, prompt]
 
-    return json.loads(result.content)
+    # Invoke the LLM
+    response = llm.invoke(conversation)
+
+    logger.info("Exiting ask_llm_for_solution")
+    logger.debug(f"exiting ask_llm_for_solution response {response.content}")
+
+    return response
 
 
 ANCHOR_WORDS_SYSTEM_PROMPT = (
@@ -786,177 +799,3 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
     logger.debug(f"\nExiting apply_recommendation State: {pp.pformat(state)}")
 
     return state
-
-
-KEY_PUZZLE_STATE_FIELDS = ["puzzle_status", "tool_status", "current_tool"]
-
-
-async def run_planner(state: PuzzleState, config: RunnableConfig) -> PuzzleState:
-    logger.info("Entering run_planner:")
-    logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
-
-    # workflow instructions
-    instructions = HumanMessage(config["configurable"]["workflow_instructions"])
-    logger.debug(f"\nWorkflow instructions:\n{instructions.content}")
-
-    # convert state to json string
-    relevant_state = {k: state[k] for k in KEY_PUZZLE_STATE_FIELDS}
-    puzzle_state = "\npuzzle state:\n" + json.dumps(relevant_state)
-
-    # wrap the state in a human message
-    puzzle_state = HumanMessage(puzzle_state)
-    logger.info(f"\nState for lmm: {puzzle_state.content}")
-
-    # get next action from llm
-    next_action = await ask_llm_for_next_step(instructions, puzzle_state, model="gpt-3.5-turbo", temperature=0)
-
-    logger.info(f"\nNext action from llm: {next_action.content}")
-
-    state["tool_to_use"] = json.loads(next_action.content)["tool"]
-
-    logger.info("Exiting run_planner:")
-    logger.debug(f"\nExiting run_planner State: {pp.pformat(state)}")
-    return state
-
-
-def determine_next_action(state: PuzzleState) -> str:
-    logger.info("Entering determine_next_action:")
-    logger.debug(f"\nEntering determine_next_action State: {pp.pformat(state)}")
-
-    tool_to_use = state["tool_to_use"]
-
-    if tool_to_use == "ABORT":
-        raise ValueError("LLM returned abort")
-    elif tool_to_use == "END":
-        return END
-    else:
-        return tool_to_use
-
-
-def manual_puzzle_setup_prompt() -> List[str]:
-
-    # pompt user for puzzle source
-    puzzle_source_type = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
-    puzzle_source_fp = input("Please enter the file/image location: ")
-
-    # get puzzle words from indicated source
-    if puzzle_source_type == "file":
-        words = read_file_to_word_list(puzzle_source_fp)
-    elif puzzle_source_type == "image":
-        words = extract_words_from_image(puzzle_source_fp)
-    else:
-        raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
-
-    return words
-
-
-def check_one_solution(solution, *, gen_words: List[str], gen_reason: str, recommender: str) -> str:
-    recommendation_message = f"\n{recommender.upper()}: RECOMMENDED WORDS {gen_words} with connection {gen_reason}"
-    logger.info(recommendation_message)
-    print(recommendation_message)
-
-    for sol_dict in solution["groups"]:
-        sol_words = sol_dict["words"]
-        sol_reason = sol_dict["reason"]
-        if set(gen_words) == set(sol_words):
-            print(f"{gen_reason} ~ {sol_reason}: {gen_words} == {sol_words}")
-            return "correct"
-        elif len(set(gen_words).intersection(set(sol_words))) == 3:
-            return "o"
-    else:
-        return "n"
-
-
-async def run_workflow(
-    workflow_graph,
-    initial_state: PuzzleState,
-    runtime_config: dict,
-    *,
-    puzzle_setup_function: callable = None,
-    puzzle_response_function: callable = None,
-) -> None:
-
-    # run workflow until first human-in-the-loop input required for setup
-    async for chunk in workflow_graph.astream(initial_state, runtime_config, stream_mode="values"):
-        pass
-
-    # continue workflow until the next human-in-the-loop input required for puzzle answer
-    while chunk["tool_status"] != "puzzle_completed":
-        current_state = workflow_graph.get_state(runtime_config)
-        logger.debug(f"\nCurrent state: {current_state}")
-        logger.info(f"\nNext action: {current_state.next}")
-        if current_state.next[0] == "setup_puzzle":
-            words = puzzle_setup_function()
-
-            print(f"Setting up Puzzle Words: {words}")
-
-            workflow_graph.update_state(
-                runtime_config,
-                {"words_remaining": words},
-            )
-        elif current_state.next[0] == "apply_recommendation":
-            puzzle_response = puzzle_response_function(
-                gen_words=sorted(current_state.values["recommended_words"]),
-                gen_reason=current_state.values["recommended_connection"],
-                recommender=current_state.values["current_tool"],
-            )
-
-            workflow_graph.update_state(
-                runtime_config,
-                {
-                    "recommendation_answer_status": puzzle_response,
-                },
-            )
-        else:
-            raise RuntimeError(f"Unexpected next action: {current_state.next[0]}")
-
-        # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
-        async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
-            logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
-            pass
-
-    print("\n\nFINAL PUZZLE STATE:")
-    pp.pprint(chunk)
-
-    return chunk["recommendation_correct_groups"]
-
-
-def create_workflow_graph() -> StateGraph:
-    workflow = StateGraph(PuzzleState)
-
-    workflow.add_node("run_planner", run_planner)
-    workflow.add_node("setup_puzzle", setup_puzzle)
-    workflow.add_node("get_embedvec_recommendation", get_embedvec_recommendation)
-    workflow.add_node("get_llm_recommendation", get_llm_recommendation)
-    workflow.add_node("get_manual_recommendation", get_manual_recommendation)
-    workflow.add_node("apply_recommendation", apply_recommendation)
-
-    workflow.add_conditional_edges(
-        "run_planner",
-        determine_next_action,
-        {
-            "setup_puzzle": "setup_puzzle",
-            "get_embedvec_recommendation": "get_embedvec_recommendation",
-            "get_llm_recommendation": "get_llm_recommendation",
-            "get_manual_recommendation": "get_manual_recommendation",
-            "apply_recommendation": "apply_recommendation",
-            END: END,
-        },
-    )
-
-    workflow.add_edge("setup_puzzle", "run_planner")
-    workflow.add_edge("get_llm_recommendation", "run_planner")
-    workflow.add_edge("get_embedvec_recommendation", "run_planner")
-    workflow.add_edge("get_manual_recommendation", "run_planner")
-    workflow.add_edge("apply_recommendation", "run_planner")
-
-    workflow.set_entry_point("run_planner")
-
-    memory_checkpoint = MemorySaver()
-
-    workflow_graph = workflow.compile(
-        checkpointer=memory_checkpoint,
-        interrupt_before=["setup_puzzle", "apply_recommendation"],
-    )
-
-    return workflow_graph
