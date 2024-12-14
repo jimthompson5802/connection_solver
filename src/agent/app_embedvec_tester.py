@@ -19,16 +19,10 @@ from langchain_core.runnables import ConfigurableField
 
 from langchain_core.tracers.context import tracing_v2_enabled
 
-from src.agent.tools import (
-    interact_with_user,
-)
+from workflow_manager import run_workflow, create_workflow_graph
+from puzzle_solver import PuzzleState
+from tools import check_one_solution
 
-from src.agent.embedvec_tools import (
-    PuzzleState,
-    create_workflow_graph,
-    check_one_solution,
-    run_workflow,
-)
 
 # specify the version of the agent
 __version__ = "0.2.0-dev"
