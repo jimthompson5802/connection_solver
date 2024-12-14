@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Solver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .label {
+            font-weight: bold;
+        }
+        .textbox {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .log {
+            height: 200px;
+            overflow-y: scroll;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .button-grid button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <label class="label" for="puzzle-setup">Puzzle setup file:</label>
+            <input type="text" id="puzzle-setup" class="textbox">
+        </div>
+        <div>
+            <label class="label" for="remaining-words">Remaining words:</label>
+            <input type="text" id="remaining-words" class="textbox">
+        </div>
+        <div>
+            <label class="label" for="puzzle-log">Puzzle solver log:</label>
+            <textarea id="puzzle-log" class="textbox log"></textarea>
+        </div>
+        <div>
+            <label class="label" for="found-groups">Found groups:</label>
+            <input type="text" id="found-groups" class="textbox">
+        </div>
+        <div class="button-grid">
+            <button>Y</button>
+            <button>G</button>
+            <button>B</button>
+            <button>P</button>
+            <button>O</button>
+            <button>N</button>
+            <button>M</button>
+            <button>EXIT</button>
+        </div>
+    </div>
+</body>
+</html>
