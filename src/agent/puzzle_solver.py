@@ -478,20 +478,37 @@ async def one_away_analyzer(
     single_topic_groups = []
     possible_anchor_words_list = list(itertools.combinations(one_away_group, 3))
 
-    for anchor_list in possible_anchor_words_list:
-        # determine if the anchor words can be related to a single topic
+    async def process_anchor_words(anchor_list: List[str]) -> List[str]:
         anchor_words = "\n\n" + ", ".join(anchor_list)
         prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), HumanMessage(anchor_words)]
         response = await chat_with_llm(prompt)
+        return anchor_words, response
 
-        logger.info(f"\n>>>Anchor Words: {anchor_list}")
-        logger.info(response)
+    single_topic_groups = await asyncio.gather(
+        *[process_anchor_words(anchor_list) for anchor_list in possible_anchor_words_list]
+    )
 
-        if response["response"] == "single":
+    single_topic_groups = [
+        RecommendedGroup(words=x[0], connection_description=x[1]["explanation"])
+        for x in single_topic_groups
+        if x[1]["response"] == "single"
+    ]
 
-            single_topic_groups.append(
-                RecommendedGroup(words=anchor_list, connection_description=response["explanation"])
-            )
+    # TODO: clean up code
+    # for anchor_list in possible_anchor_words_list:
+    #     # determine if the anchor words can be related to a single topic
+    #     anchor_words = "\n\n" + ", ".join(anchor_list)
+    #     prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), HumanMessage(anchor_words)]
+    #     response = await chat_with_llm(prompt)
+
+    #     logger.info(f"\n>>>Anchor Words: {anchor_list}")
+    #     logger.info(response)
+
+    #     if response["response"] == "single":
+
+    #         single_topic_groups.append(
+    #             RecommendedGroup(words=anchor_list, connection_description=response["explanation"])
+    #         )
 
     print(f"\n>>>Number of single topic groups: {len(single_topic_groups)}")
     if len(single_topic_groups) > 1:
