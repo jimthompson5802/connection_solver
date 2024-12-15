@@ -65,18 +65,22 @@
                 <textarea id="puzzle-log" class="textbox log"></textarea>
             </div>
             <div class="button-grid">
-                <button>Y</button>
-                <button>G</button>
-                <button>B</button>
-                <button>P</button>
-                <button>O</button>
-                <button>N</button>
-                <button>M</button>
+                <button id="btn-y">Y</button>
+                <button id="btn-g">G</button>
+                <button id="btn-b">B</button>
+                <button id="btn-p">P</button>
+                <button id="btn-o">O</button>
+                <button id="btn-n">N</button>
+                <button id="btn-m">M</button>
             </div>
         </div>
         <div>
             <label class="label" for="found-groups">Found groups:</label>
             <input type="text" id="found-groups" class="textbox" readonly>
+        </div>
+        <div>
+            <label class="label" for="status-message">Status message:</label>
+            <input type="text" id="status-message" class="textbox" readonly>
         </div>
     </div>
     <script>
@@ -92,6 +96,22 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById('remaining-words').value = data.puzzle_words;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById('btn-y').addEventListener('click', function() {
+            const button = this;
+            fetch('/update-solution', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                button.disabled = true;
+                document.getElementById('status-message').value = data.status;
             })
             .catch(error => console.error('Error:', error));
         });
