@@ -179,9 +179,9 @@ def update_solution():
 @app.route("/generate-next", methods=["POST"])
 async def generate_next():
     # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
-    async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
-        logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
-        pass
+    # async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
+    #     logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
+    #     pass
 
     current_state = workflow_graph.get_state(runtime_config)
 
