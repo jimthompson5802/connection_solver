@@ -6,16 +6,22 @@ import tempfile
 import uuid
 import pprint as pp
 import logging
+import aiosqlite
+import asyncio
+
+import pandas as pd
 
 
 from workflow_manager import run_workflow, create_webui_workflow_graph
-from puzzle_solver import PuzzleState
+from puzzle_solver import PuzzleState, generate_vocabulary, generate_embeddings
 from tools import read_file_to_word_list, extract_words_from_image
 
 from flask import Flask, render_template, request, jsonify
 
 pp = pp.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
+
+db_lock = asyncio.Lock()
 
 # get config from api_key.json and setup openai api key
 with open("/openai/api_key.json") as f:
@@ -83,6 +89,14 @@ async def run_webui_workflow(
     return chunk["recommendation_correct_groups"]
 
 
+runtime_config = {
+    "configurable": {
+        "thread_id": str(uuid.uuid4()),
+        "workflow_instructions": workflow_instructions,
+    },
+    "recursion_limit": 50,
+}
+
 app = Flask(__name__)
 
 
@@ -96,14 +110,6 @@ async def setup_puzzle():
     puzzle_setup_fp = request.json.get("setup")
     puzzle_words = await webui_puzzle_setup_function(puzzle_setup_fp)
 
-    runtime_config = {
-        "configurable": {
-            "thread_id": str(uuid.uuid4()),
-            "workflow_instructions": workflow_instructions,
-        },
-        "recursion_limit": 50,
-    }
-
     with tempfile.NamedTemporaryFile(suffix=".db") as tmp_db:
         initial_state = PuzzleState(
             puzzle_status="initalized",
@@ -113,13 +119,54 @@ async def setup_puzzle():
             llm_temperature=0.7,
             vocabulary_db_fp=tmp_db.name,
             recommendation_correct_groups=[],
+            found_count=0,
+            mistake_count=0,
+            recommendation_count=0,
+            llm_retry_count=0,
+            invalid_connections=[],
         )
 
-        # result = await run_webui_workflow(
-        #     workflow_graph,
-        #     initial_state,
-        #     runtime_config,
-        # )
+        print("\nGenerating vocabulary and embeddings for the words...this may take several seconds ")
+        vocabulary = await generate_vocabulary(puzzle_words)
+        # Convert dictionary to DataFrame
+        rows = []
+        for word, definitions in vocabulary.items():
+            for definition in definitions:
+                rows.append({"word": word, "definition": definition})
+        df = pd.DataFrame(rows)
+
+    # Generate embeddings
+    print("\nGenerating embeddings for the definitions")
+    embeddings = generate_embeddings(df["definition"].tolist())
+    # convert embeddings to json strings for storage
+    df["embedding"] = [json.dumps(v) for v in embeddings]
+
+    # store the vocabulary in external database
+    print("\nStoring vocabulary and embeddings in external database")
+
+    async with aiosqlite.connect(tmp_db.name) as conn:
+        async with db_lock:
+            cursor = await conn.cursor()
+            # create the table
+            await cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS vocabulary (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    word TEXT,
+                    definition TEXT,
+                    embedding TEXT
+                )
+                """
+            )
+            await conn.executemany(
+                "INSERT INTO vocabulary (word, definition, embedding) VALUES (?, ?, ?)",
+                df.values.tolist(),
+            )
+            await conn.commit()
+
+    # run workflow until the next human-in-the-loop input needed
+    async for chunk in workflow_graph.astream(initial_state, runtime_config, stream_mode="values"):
+        pass
 
     return jsonify({"status": "success in getting puzzle words", "puzzle_words": puzzle_words})
 
@@ -130,8 +177,20 @@ def update_solution():
 
 
 @app.route("/generate-next", methods=["POST"])
-def generate_next():
-    return jsonify({"status": "Next recommendation will be generated here"})
+async def generate_next():
+    # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
+    async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
+        logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
+        pass
+
+    current_state = workflow_graph.get_state(runtime_config)
+
+    return jsonify(
+        {
+            "status": "Next recommendation will be generated here",
+            "recommended_words": current_state.values["recommended_words"],
+        }
+    )
 
 
 if __name__ == "__main__":
