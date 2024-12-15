@@ -19,4 +19,4 @@ torch
 torch-tb-profiler
 tensorboard
 aiosqlite
-flask
+flask[async]
