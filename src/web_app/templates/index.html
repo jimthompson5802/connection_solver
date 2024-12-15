@@ -63,6 +63,7 @@
             <div style="flex-grow: 1;">
                 <label class="label" for="puzzle-log">Puzzle solver log:</label>
                 <textarea id="puzzle-log" class="textbox log"></textarea>
+                <button id="generate-next-btn">Generate Next Recommendation</button>
             </div>
             <div class="button-grid">
                 <button id="btn-y">Y</button>
@@ -96,6 +97,7 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById('remaining-words').value = data.puzzle_words;
+                document.getElementById('status-message').value = data.status;
             })
             .catch(error => console.error('Error:', error));
         });
@@ -112,6 +114,20 @@
             .then(data => {
                 button.disabled = true;
                 document.getElementById('status-message').value = data.status;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById('generate-next-btn').addEventListener('click', function() {
+            fetch('/generate-next', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('status-message').value = '\n' + data.status;
             })
             .catch(error => console.error('Error:', error));
         });
