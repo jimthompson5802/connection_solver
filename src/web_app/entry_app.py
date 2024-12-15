@@ -3,7 +3,6 @@ import os
 import sys
 from typing import List
 
-sys.path.append("/workspaces/connection_solver/src/agent")
 
 from workflow_manager import run_workflow, create_workflow_graph
 from puzzle_solver import PuzzleState
