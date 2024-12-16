@@ -178,17 +178,13 @@ def update_solution():
 
 @app.route("/generate-next", methods=["POST"])
 async def generate_next():
-    # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
-    # async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
-    #     logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
-    #     pass
-
     current_state = workflow_graph.get_state(runtime_config)
 
     return jsonify(
         {
             "status": "Next recommendation will be generated here",
             "recommended_words": current_state.values["recommended_words"],
+            "connection_reason": current_state.values["recommended_connection"],
         }
     )
 
