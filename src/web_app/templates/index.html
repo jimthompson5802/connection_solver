@@ -23,7 +23,7 @@
             </div>
 
             <div class="controls">
-                <button id="next-recommendation">Get Next Recommendation</button>
+                <button id="next-recommendation" disabled>Get Next Recommendation</button>
             </div>
 
             <div class="recommendation">
@@ -38,17 +38,17 @@
 
             <div class="color-buttons">
                 <h3>Color Selection</h3>
-                <button class="color-btn yellow">Y</button>
-                <button class="color-btn green">G</button>
-                <button class="color-btn blue">B</button>
-                <button class="color-btn purple">P</button>
+                <button class="color-btn yellow" disabled>Y</button>
+                <button class="color-btn green" disabled>G</button>
+                <button class="color-btn blue" disabled>B</button>
+                <button class="color-btn purple" disabled>P</button>
             </div>
 
             <div class="action-buttons">
                 <h3>Actions</h3>
-                <button class="action-btn">O</button>
-                <button class="action-btn">N</button>
-                <button class="action-btn">M</button>
+                <button class="action-btn" disabled>O</button>
+                <button class="action-btn" disabled>N</button>
+                <button class="action-btn" disabled>M</button>
             </div>
 
             <div class="found-groups">
@@ -81,6 +81,10 @@
                 const data = await response.json();
                 if (data.status === "success in getting puzzle words") {
                     document.getElementById('remaining-words').value = data.puzzle_words.join(', ');
+                    // Enable all buttons except setup-btn
+                    document.querySelectorAll('button:not(#setup-btn)').forEach(button => {
+                        button.disabled = false;
+                    });
                 } else {
                     document.getElementById('status-message').value = 'Error setting up puzzle';
                 }
