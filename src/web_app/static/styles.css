@@ -35,10 +35,10 @@ button:hover {
 
 textarea {
     width: 100%;
-    min-height: 100px;
+    height: 4.5em;  /* approximately 3 lines of text */
     margin: 10px 0;
     padding: 10px;
-    resize: vertical;
+    resize: none;  /* prevent manual resizing */
 }
 
 .puzzle-section > div {
@@ -70,12 +70,4 @@ h3 {
 
 .action-btn {
     background-color: #666;
-}
-
-#status-message {
-    min-height: 60px;
-}
-
-.found-groups textarea, .invalid-groups textarea {
-    min-height: 150px;
 }
