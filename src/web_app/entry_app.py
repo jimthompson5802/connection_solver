@@ -11,12 +11,11 @@ import asyncio
 
 import pandas as pd
 
-
 from workflow_manager import run_workflow, create_webui_workflow_graph
 from puzzle_solver import PuzzleState, generate_vocabulary, generate_embeddings
 from tools import read_file_to_word_list, extract_words_from_image
 
-from flask import Flask, render_template, request, jsonify
+from quart import Quart, render_template, request, jsonify
 
 pp = pp.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
@@ -81,7 +80,7 @@ async def run_webui_workflow(
         else:
             raise RuntimeError(f"Unexpected next action: {current_state.next[0]}")
 
-        # run rest of workflow untile the next human-in-the-loop input required for puzzle answer
+        # run rest of workflow until the next human-in-the-loop input required for puzzle answer
         async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
             logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
             pass
@@ -97,22 +96,22 @@ runtime_config = {
     "recursion_limit": 50,
 }
 
-app = Flask(__name__)
+app = Quart(__name__)
 
 
 @app.route("/")
-def index():
-    return render_template("index.html")
+async def index():
+    return await render_template("index.html")
 
 
 @app.route("/setup-puzzle", methods=["POST"])
 async def setup_puzzle():
-    puzzle_setup_fp = request.json.get("setup")
+    puzzle_setup_fp = (await request.json).get("setup")
     puzzle_words = await webui_puzzle_setup_function(puzzle_setup_fp)
 
     with tempfile.NamedTemporaryFile(suffix=".db") as tmp_db:
         initial_state = PuzzleState(
-            puzzle_status="initalized",
+            puzzle_status="initialized",
             current_tool="setup_puzzle",
             tool_status="initialized",
             workflow_instructions=workflow_instructions,
@@ -172,7 +171,7 @@ async def setup_puzzle():
 
 
 @app.route("/update-solution", methods=["POST"])
-def update_solution():
+async def update_solution():
     return jsonify({"status": "Correct recommendation"})
 
 
@@ -190,5 +189,4 @@ async def generate_next():
 
 
 if __name__ == "__main__":
-
     app.run(debug=True)
