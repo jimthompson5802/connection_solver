@@ -204,6 +204,8 @@ async def update_solution():
         logger.debug(f"\nstate: {workflow_graph.get_state(runtime_config)}")
         pass
 
+    # get current state after applying the user response
+    current_state = workflow_graph.get_state(runtime_config)
     return jsonify(
         {
             "status": status_message,

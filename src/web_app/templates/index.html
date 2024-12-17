@@ -17,13 +17,15 @@
         </section>
 
         <section class="puzzle-section">
-            <div class="remaining-words">
+            <div class="words-remaining">
                 <h3>Remaining Words</h3>
-                <textarea id="remaining-words" readonly></textarea>
+                <textarea id="words-remaining" readonly></textarea>
             </div>
 
             <div class="controls">
-                <button id="next-recommendation" disabled>Get Next Recommendation</button>
+                <div class="controls-row">
+                    <button id="next-recommendation" disabled>Get Next Recommendation</button>
+                </div>
             </div>
 
             <div class="recommendation">
@@ -80,7 +82,7 @@
                 });
                 const data = await response.json();
                 if (data.status === "success in getting puzzle words") {
-                    document.getElementById('remaining-words').value = data.puzzle_words.join(', ');
+                    document.getElementById('words-remaining').value = data.puzzle_words.join(', ');
                     // Enable all buttons except setup-btn
                     document.querySelectorAll('button:not(#setup-btn)').forEach(button => {
                         button.disabled = false;
@@ -126,7 +128,7 @@
                     });
                     const data = await response.json();
                     document.getElementById('status-message').value = data.status;
-                    document.getElementById('remaining-words').value = data.words_remaining.join(', ');
+                    document.getElementById('words-remaining').value = data.words_remaining.join(', ');
                     document.getElementById('recommended-group').value = '';
                     document.getElementById('connection-reason').value = '';
                 } catch (error) {
