@@ -117,6 +117,7 @@ async def setup_puzzle():
             workflow_instructions=workflow_instructions,
             llm_temperature=0.7,
             vocabulary_db_fp=tmp_db.name,
+            recommendation_answer_status="",
             recommendation_correct_groups=[],
             found_count=0,
             mistake_count=0,
@@ -174,19 +175,25 @@ async def setup_puzzle():
 @app.route("/update-solution", methods=["POST"])
 async def update_solution():
     data = await request.json
-    color = data.get("color")
+    user_response = data.get("user_response")
+
+    if user_response in ["y", "g", "b", "p"]:
+        logger.info(f"User response: {user_response}")
+        status_message = "Correct recommendation"
+    elif user_response in ["n", "o"]:
+        logger.info(f"User response: {user_response}")
+        status_message = "Incorrect recommendation"
 
     current_state = workflow_graph.get_state(runtime_config)
     logger.debug(f"\nCurrent state: {current_state}")
     logger.info(f"\nNext action: {current_state.next}")
 
     if current_state.next[0] == "apply_recommendation":
-        puzzle_response = color  # Use the color as the puzzle response
 
         workflow_graph.update_state(
             runtime_config,
             {
-                "recommendation_answer_status": puzzle_response,
+                "recommendation_answer_status": user_response,
             },
         )
     else:
@@ -199,7 +206,7 @@ async def update_solution():
 
     return jsonify(
         {
-            "status": "Correct recommendation",
+            "status": status_message,
             "words_remaining": current_state.values["words_remaining"],
             "connection_reason": "",
             "recommeded_words": "",

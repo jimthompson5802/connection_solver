@@ -122,11 +122,11 @@
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ color: button.textContent })
+                        body: JSON.stringify({ user_response: button.textContent })
                     });
                     const data = await response.json();
                     document.getElementById('status-message').value = data.status;
-                    document.getElementById('remaining-words').value = data.remaining_words.join(', ');
+                    document.getElementById('remaining-words').value = data.words_remaining.join(', ');
                     document.getElementById('recommended-group').value = '';
                     document.getElementById('connection-reason').value = '';
                 } catch (error) {
