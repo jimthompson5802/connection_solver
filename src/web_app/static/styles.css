@@ -43,12 +43,14 @@ button:disabled:hover {
 }
 
 textarea {
-    /*width: 100%; */
-    /*height: 4.5em;  /* approximately 3 lines of text */
     margin: 10px 0;
     padding: 10px;
-    resize: none;  /* prevent manual resizing */
+    resize: none;
     font-size: 25px;
+}
+
+#invalid-groups {
+    font-size: 22px;
 }
 
 .group-inputs {

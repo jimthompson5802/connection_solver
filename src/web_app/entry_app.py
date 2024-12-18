@@ -215,6 +215,7 @@ async def update_solution():
             "found_count": current_state.values["found_count"],
             "mistake_count": current_state.values["mistake_count"],
             "found_groups": current_state.values["recommendation_correct_groups"],
+            "invalid_groups": current_state.values["invalid_connections"],
         }
     )
 

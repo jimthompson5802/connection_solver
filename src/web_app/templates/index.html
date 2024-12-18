@@ -19,16 +19,16 @@
         <section class="puzzle-section">
             <div class="words-remaining">
                 <h3>Remaining Words</h3>
-                <textarea id="words-remaining" readonly></textarea>
+                <textarea id="words-remaining" rows="2" cols="40" readonly></textarea>
             </div>
 
             <div class="controls" id="get-next-group">
                 <div class="controls-row">
                     <button id="next-recommendation" disabled>Get Next Recommendation</button>
                     <label for="found-count">Found Count:</label>
-                    <textarea id="found-count" rows="1" cols="5"></textarea>
+                    <textarea id="found-count" rows="1" cols="3"></textarea>
                     <label for="mistake-count">Mistake Count:</label>
-                    <textarea id="mistake-count" rows="1" cols="5"></textarea>
+                    <textarea id="mistake-count" rows="1" cols="3"></textarea>
                 </div>
             </div>
 
@@ -39,7 +39,7 @@
 
             <div class="connection">
                 <h3>Connection Reason</h3>
-                <textarea id="connection-reason" readonly></textarea>
+                <textarea id="connection-reason" rows="2" cols="40" readonly></textarea>
             </div>
 
             <div class="color-buttons">
@@ -59,12 +59,12 @@
 
             <div class="found-groups">
                 <h3>Correct Groups</h3>
-                <textarea id="found-groups" readonly></textarea>
+                <textarea id="found-groups" rows="2" cols="40"  readonly></textarea>
             </div>
 
             <div class="invalid-groups">
                 <h3>Invalid Groups</h3>
-                <textarea id="invalid-groups" readonly></textarea>
+                <textarea id="invalid-groups" rows="2" cols="40" readonly></textarea>
             </div>
 
             <div class="status">
@@ -146,6 +146,7 @@
                     document.getElementById('found-count').value = data.found_count;
                     document.getElementById('mistake-count').value = data.mistake_count;
                     document.getElementById('found-groups').value = data.found_groups.join('\n');
+                    document.getElementById('invalid-groups').value = data.invalid_groups.join('\n');
                     document.getElementById('next-recommendation').disabled = false;
                 } catch (error) {
                     document.getElementById('status-message').value = 'Error: ' + error.message;
