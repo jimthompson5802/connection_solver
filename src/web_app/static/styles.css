@@ -95,6 +95,11 @@ h3 {
 .color-btn.blue { background-color: #4a90e2; }
 .color-btn.purple { background-color: #8a4f9e; }
 
+.color-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
 .action-btn {
     background-color: #666;
 }

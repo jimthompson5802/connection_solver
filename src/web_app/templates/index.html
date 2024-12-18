@@ -126,6 +126,10 @@
         // Add click handlers for color buttons
         document.querySelectorAll('.color-btn, .action-btn').forEach(button => {
             button.addEventListener('click', async () => {
+                // Disable the button if it's a color button
+                if (button.classList.contains('color-btn')) {
+                    button.disabled = true;
+                }
                 try {
                     const response = await fetch('/update-solution', {
                         method: 'POST',
