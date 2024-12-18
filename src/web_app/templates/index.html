@@ -22,9 +22,13 @@
                 <textarea id="words-remaining" readonly></textarea>
             </div>
 
-            <div class="controls">
+            <div class="controls" id="get-next-group">
                 <div class="controls-row">
                     <button id="next-recommendation" disabled>Get Next Recommendation</button>
+                    <label for="found-count">Found Count:</label>
+                    <textarea id="found-count" rows="1" cols="5"></textarea>
+                    <label for="mistake-count">Mistake Count:</label>
+                    <textarea id="mistake-count" rows="1" cols="5"></textarea>
                 </div>
             </div>
 
@@ -96,6 +100,8 @@
         });
 
         document.getElementById('next-recommendation').addEventListener('click', async () => {
+            const nextRecommendationBtn = document.getElementById('next-recommendation');
+            nextRecommendationBtn.disabled = true;
             try {
                 const response = await fetch('/generate-next', {
                     method: 'POST',
@@ -109,9 +115,11 @@
                     document.getElementById('connection-reason').value = data.connection_reason;
                 } else {
                     document.getElementById('status-message').value = 'Error generating recommendation';
+                    nextRecommendationBtn.disabled = false;
                 }
             } catch (error) {
                 document.getElementById('status-message').value = 'Error: ' + error.message;
+                nextRecommendationBtn.disabled = false;
             }
         });
 
@@ -131,6 +139,9 @@
                     document.getElementById('words-remaining').value = data.words_remaining.join(', ');
                     document.getElementById('recommended-group').value = '';
                     document.getElementById('connection-reason').value = '';
+                    document.getElementById('found-count').value = data.found_count;
+                    document.getElementById('mistake-count').value = data.mistake_count;
+                    document.getElementById('next-recommendation').disabled = false;
                 } catch (error) {
                     document.getElementById('status-message').value = 'Error: ' + error.message;
                 }

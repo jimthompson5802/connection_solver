@@ -212,6 +212,8 @@ async def update_solution():
             "words_remaining": current_state.values["words_remaining"],
             "connection_reason": "",
             "recommeded_words": "",
+            "found_count": current_state.values["found_count"],
+            "mistake_count": current_state.values["mistake_count"],
         }
     )
 
@@ -223,7 +225,7 @@ async def generate_next():
     return jsonify(
         {
             "status": "Next recommendation will be generated here",
-            "recommended_words": current_state.values["recommended_words"],
+            "recommended_words": sorted(current_state.values["recommended_words"]),
             "connection_reason": current_state.values["recommended_connection"],
         }
     )

@@ -50,6 +50,23 @@ textarea {
     resize: none;  /* prevent manual resizing */
 }
 
+.group-inputs {
+    display: flex;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.input-area {
+    flex: 1;
+}
+
+.input-area textarea {
+    width: 100%;
+    height: 60px;
+    padding: 8px;
+    margin-top: 5px;
+}
+
 .puzzle-section > div {
     margin-bottom: 20px;
 }
@@ -79,4 +96,14 @@ h3 {
 
 .action-btn {
     background-color: #666;
+}
+
+.controls-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.controls-row label {
+    margin-left: 20px;
 }
