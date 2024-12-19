@@ -53,10 +53,6 @@ textarea {
     font-size: 20px;
 }
 
-#invalid-groups{
-    font-size: 20px;
-}
-
 .group-inputs {
     display: flex;
     gap: 20px;
@@ -110,6 +106,12 @@ h3 {
     background-color: #666;
 }
 
+.status-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
 .controls-row {
     display: flex;
     gap: 20px;
@@ -120,12 +122,3 @@ h3 {
     margin-left: 20px;
 }
 
-.status {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-#status {
-    font-size: 20px;
-}

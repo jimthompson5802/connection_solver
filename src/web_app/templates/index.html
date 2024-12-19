@@ -15,13 +15,11 @@
                 <button id="setup-btn">Setup Puzzle</button>
             </div>
         </section>
-
         <section class="puzzle-section">
             <div class="words-remaining">
                 <h3>Remaining Words</h3>
                 <textarea id="words-remaining" rows="2" cols="40" readonly></textarea>
             </div>
-
             <div class="controls" id="get-next-group">
                 <div class="controls-row">
                     <button id="next-recommendation" disabled>Get Next Recommendation</button>
@@ -31,20 +29,20 @@
                     <textarea id="mistake-count" rows="1" cols="3"></textarea>
                 </div>
             </div>
-
             <div class="recommendation">
                 <h3>Recommended Group</h3>
                 <textarea id="recommended-group" rows="1" cols="40" readonly></textarea>
             </div>
-
             <div class="connection">
                 <h3>Connection Reason</h3>
                 <textarea id="connection-reason" rows="2" cols="40" readonly></textarea>
             </div>
-            <div class="status">
-                <label for="status-message">Status:</label>
-                <textarea id="status-message" rows="1" readonly></textarea>
-            </div>
+            <div class="status-area"></div>
+                <div class="status-row">
+                    <label for="status-message">Status:</label>
+                    <textarea id="status-message" rows="1" cols="40" readonly></textarea>
+                </div>
+            </div>  
             <div class="color-buttons">
                 <h3>Correct Group Color</h3>
                 <button class="color-btn yellow" disabled>y</button>
@@ -52,7 +50,6 @@
                 <button class="color-btn blue" disabled>b</button>
                 <button class="color-btn purple" disabled>p</button>
             </div>
-
             <div class="action-buttons">
                 <h3>Actions</h3>
                 <button class="action-btn" disabled>o</button>
@@ -60,17 +57,14 @@
                 <button class="action-btn" id="manual-override-btn" disabled>manual override</button>
                 <button class="action-btn" id="verify-manual-override-btn" disabled>verify</button>
             </div>
-
             <div class="found-groups">
                 <h3>Correct Groups</h3>
                 <textarea id="found-groups" rows="2" cols="40"  readonly></textarea>
             </div>
-
             <div class="invalid-groups">
                 <h3>Invalid Groups</h3>
                 <textarea id="invalid-groups" rows="2" cols="40" readonly></textarea>
             </div>
-
         </section>
     </div>
     <script>
