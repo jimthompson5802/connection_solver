@@ -125,3 +125,7 @@ h3 {
     align-items: center;
     gap: 10px;
 }
+
+#status {
+    font-size: 20px;
+}

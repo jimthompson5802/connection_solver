@@ -87,6 +87,7 @@
                 const data = await response.json();
                 if (data.status === "success in getting puzzle words") {
                     document.getElementById('words-remaining').value = data.puzzle_words.join(', ');
+                    document.getElementById('status-message').value = data.status;
                     // Enable all buttons except setup-btn
                     document.querySelectorAll('button:not(#setup-btn)').forEach(button => {
                         button.disabled = false;
