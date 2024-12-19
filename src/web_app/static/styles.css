@@ -50,7 +50,11 @@ textarea {
 }
 
 #invalid-groups {
-    font-size: 22px;
+    font-size: 20px;
+}
+
+#invalid-groups{
+    font-size: 20px;
 }
 
 .group-inputs {
@@ -114,4 +118,10 @@ h3 {
 
 .controls-row label {
     margin-left: 20px;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
