@@ -87,7 +87,7 @@ async def extract_words_from_image(image_fp: str) -> List[str]:
     return words
 
 
-def manual_puzzle_setup_prompt() -> List[str]:
+async def manual_puzzle_setup_prompt() -> List[str]:
 
     # pompt user for puzzle source
     puzzle_source_type = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
@@ -97,7 +97,7 @@ def manual_puzzle_setup_prompt() -> List[str]:
     if puzzle_source_type == "file":
         words = read_file_to_word_list(puzzle_source_fp)
     elif puzzle_source_type == "image":
-        words = extract_words_from_image(puzzle_source_fp)
+        words = await extract_words_from_image(puzzle_source_fp)
     else:
         raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
 

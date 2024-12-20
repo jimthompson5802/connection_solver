@@ -126,7 +126,10 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
             "recursion_limit": 50,
         }
 
-        setup_this_puzzle = partial(lambda x: x, solution["words"])
+        async def setup_this_puzzle(solution):
+            return solution
+
+        setup_this_puzzle = partial(setup_this_puzzle, solution["words"])
 
         check_this_puzzle = partial(puzzle_response_function, solution["solution"])
 
