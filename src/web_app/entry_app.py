@@ -165,18 +165,23 @@ async def update_solution():
 
     # get current state after applying the user response
     current_state = workflow_graph.get_state(runtime_config)
-    return jsonify(
-        {
-            "status": status_message,
-            "words_remaining": current_state.values["words_remaining"],
-            "connection_reason": "",
-            "recommeded_words": "",
-            "found_count": current_state.values["found_count"],
-            "mistake_count": current_state.values["mistake_count"],
-            "found_groups": current_state.values["recommendation_correct_groups"],
-            "invalid_groups": [x[1] for x in current_state.values["invalid_connections"]],
-        }
-    )
+
+    response_dict = {
+        "words_remaining": current_state.values["words_remaining"],
+        "connection_reason": "",
+        "recommeded_words": "",
+        "found_count": current_state.values["found_count"],
+        "mistake_count": current_state.values["mistake_count"],
+        "found_groups": current_state.values["recommendation_correct_groups"],
+        "invalid_groups": [x[1] for x in current_state.values["invalid_connections"]],
+    }
+
+    if current_state.values["found_count"] == 4:
+        response_dict["status"] = "PUZZLE SOLVED!!!"
+    elif current_state.values["mistake_count"] == 4:
+        response_dict["status"] = "FAILED TO SOLVE PUZZLE!!!"
+
+    return jsonify(response_dict)
 
 
 @app.route("/generate-next", methods=["POST"])

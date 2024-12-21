@@ -61,11 +61,11 @@
         <section class="result-section">
             <div class="found-groups">
                 <h3>Correct Groups</h3>
-                <textarea id="found-groups" rows="2" cols="40"  readonly></textarea>
+                <textarea id="found-groups" rows="4" cols="40"  readonly></textarea>
             </div>
             <div class="invalid-groups">
                 <h3>Invalid Groups</h3>
-                <textarea id="invalid-groups" rows="2" cols="40" readonly></textarea>
+                <textarea id="invalid-groups" rows="4" cols="40" readonly></textarea>
             </div>
         </section>
     </div>
@@ -83,7 +83,7 @@
                 const data = await response.json();
                 if (data.status === "success in getting puzzle words") {
                     document.getElementById('words-remaining').value = data.puzzle_words.join(', ');
-                    document.getElementById('puzzle-status-message').value = data.status;
+                    document.getElementById('puzzle-status-message').value = "Successfully set up puzzle";
                     // Enable all buttons except setup-btn
                     document.querySelectorAll('button:not(#setup-btn)').forEach(button => {
                         button.disabled = false;
@@ -136,7 +136,11 @@
                         body: JSON.stringify({ user_response: button.textContent })
                     });
                     const data = await response.json();
-                    document.getElementById('puzzle-status-message').value = data.status;
+                    
+                    if (data.status) {
+                        document.getElementById('puzzle-status-message').value = data.status;
+                    }
+                    
                     document.getElementById('words-remaining').value = data.words_remaining.join(', ');
                     document.getElementById('recommended-group').value = '';
                     document.getElementById('connection-reason').value = '';

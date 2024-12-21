@@ -49,24 +49,6 @@ textarea {
     font-size: 20px;
 }
 
-.group-inputs {
-    display: flex;
-    gap: 20px;
-    margin-top: 15px;
-}
-
-.input-area {
-    flex: 1;
-}
-
-.input-area textarea {
-    width: 100%;
-    height: 60px;
-    padding: 8px;
-    margin-top: 5px;
-    font-size: 20px;
-}
-
 .puzzle-section > div {
     margin-bottom: 20px;
 }
