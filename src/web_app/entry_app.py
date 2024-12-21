@@ -221,11 +221,17 @@ async def confirm_manual_override():
     words = data.get("words", [])
 
     current_state = workflow_graph.get_state(runtime_config)
-    workflow_graph.update_state(
-        runtime_config,
-        {"puzzle_status": "executing", "recommended_words": words},
-    )
-    return jsonify({"status": "success"})
+
+    if set(words).issubset(set(current_state.values["words_remaining"])):
+        workflow_graph.update_state(
+            runtime_config,
+            {"recommended_words": words},
+        )
+        status_message = "success"
+    else:
+        status_message = "error"
+
+    return jsonify({"status": status_message})
 
 
 if __name__ == "__main__":

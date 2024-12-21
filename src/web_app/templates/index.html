@@ -74,6 +74,8 @@
     </div>
     <script>
         document.getElementById('setup-btn').addEventListener('click', async () => {
+            // write message to console
+            console.log('Setup button clicked');
             const puzzleFile = document.getElementById('puzzle-file').value;
             try {
                 const response = await fetch('/setup-puzzle', {
@@ -100,6 +102,8 @@
         });
 
         document.getElementById('next-recommendation').addEventListener('click', async () => {
+            // write message to console
+            console.log('Next recommendation button clicked');
             const nextRecommendationBtn = document.getElementById('next-recommendation');
             nextRecommendationBtn.disabled = true;
             try {
@@ -126,6 +130,8 @@
         // Add click handlers for color buttons
         document.querySelectorAll('.color-btn, .response-btn').forEach(button => {
             button.addEventListener('click', async () => {
+                // write message to console
+                console.log('Button clicked:', button.textContent);
                 // Disable the button if it's a color button
                 if (button.classList.contains('color-btn')) {
                     button.disabled = true;
@@ -159,6 +165,8 @@
         });
 
         document.getElementById('manual-override-btn').addEventListener('click', async () => {
+            // write message to console
+            console.log('Manual override button clicked');
             // disable manual override button
             document.getElementById('manual-override-btn').disabled = true;
             // add placeholder text to recommended group textarea
@@ -191,6 +199,8 @@
         });
 
         document.getElementById('confirm-manual-override-btn').addEventListener('click', async () => {
+            // write message to console
+            console.log('Confirm manual override button clicked');
             // Get words from the recommended group textarea
             const words = document.getElementById('recommended-group').value.split(',').map(w => w.trim()).filter(w => w);
             
@@ -206,10 +216,18 @@
                 if (data.status === "success") {
                     document.getElementById('puzzle-status-message').value = "Manual override confirmed";
                     document.getElementById('confirm-manual-override-btn').disabled = true;
-                    // Re-enable color buttons
-                    document.querySelectorAll('.color-btn').forEach(button => {
-                        button.disabled = false;
-                    });
+                    // update recommended group textarea
+                    var textarea = document.getElementById('recommended-group');
+                    textarea.setAttribute('readonly','readonly');
+                    textarea.removeAttribute('placeholder');
+
+                    // add placeholder text to connection reason textarea
+                    var textarea = document.getElementById('connection-reason');
+                    textarea.setAttribute('readonly','readonly');
+                    textarea.removeAttribute('placeholder');
+  
+                } else {
+                    document.getElementById('puzzle-status-message').value = 'Error confirming manual override';
                 }
             } catch (error) {
                 document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
