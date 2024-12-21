@@ -234,5 +234,13 @@ async def confirm_manual_override():
     return jsonify({"status": status_message})
 
 
+@app.route("/terminate", methods=["POST"])
+async def terminate():
+    print("app.route('/terminate')")
+    # Schedule the shutdown after sending response
+    asyncio.get_event_loop().call_later(1, lambda: os._exit(0))
+    return jsonify({"status": "terminating"})
+
+
 if __name__ == "__main__":
     app.run(debug=True)

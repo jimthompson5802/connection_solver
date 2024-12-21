@@ -40,6 +40,7 @@
             <div class="status-row">
                 <label for="puzzle-status-message">Status:</label>
                 <textarea id="puzzle-status-message" rows="1" cols="40" readonly></textarea>
+                <button id="terminate-btn" class="terminate-btn" disabled>Terminate</button>
             </div>
         </section>
         <section class="button-section">  
@@ -90,7 +91,7 @@
                     document.getElementById('words-remaining').value = data.puzzle_words.join(', ');
                     document.getElementById('puzzle-status-message').value = "Successfully set up puzzle";
                     // Enable all buttons except setup-btn
-                    document.querySelectorAll('button:not(#setup-btn)').forEach(button => {
+                    document.querySelectorAll('button:not(#setup-btn):not(#terminate-btn)').forEach(button => {
                         button.disabled = false;
                     });
                 } else {
@@ -158,6 +159,9 @@
                     document.getElementById('found-groups').value = data.found_groups.join('\n');
                     document.getElementById('invalid-groups').value = data.invalid_groups.join('\n');
                     document.getElementById('next-recommendation').disabled = false;
+                    if (data.found_count == 4 || data.mistake_count == 4){
+                        document.getElementById('terminate-btn').disabled = false;
+                    }
                 } catch (error) {
                     document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
                 }
@@ -229,8 +233,21 @@
                 } else {
                     document.getElementById('puzzle-status-message').value = 'Error confirming manual override';
                 }
+                document.getElementById('manual-override-btn').disabled = false;
             } catch (error) {
                 document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
+            }
+        });
+
+        document.getElementById('terminate-btn').addEventListener('click', async () => {
+            console.log('Terminate button clicked');
+            try {
+                await fetch('/terminate', {
+                    method: 'POST'
+                });
+                window.close();
+            } catch (error) {
+                console.error('Error terminating puzzle:', error);
             }
         });
     </script>

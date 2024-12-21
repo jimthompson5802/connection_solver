@@ -91,6 +91,16 @@ h3 {
     color: #333;
 }
 
+.terminate-btn {
+    background-color: #dc3545;
+    color: white;
+    margin-left: 10px;
+}
+
+.terminate-btn:hover {
+    background-color: #bd2130;
+}
+
 .status-row {
     display: flex;
     gap: 10px;
