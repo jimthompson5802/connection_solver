@@ -46,10 +46,6 @@ textarea {
     margin: 10px 0;
     padding: 10px;
     resize: none;
-    font-size: 25px;
-}
-
-#invalid-groups {
     font-size: 20px;
 }
 
@@ -68,6 +64,7 @@ textarea {
     height: 60px;
     padding: 8px;
     margin-top: 5px;
+    font-size: 20px;
 }
 
 .puzzle-section > div {
@@ -122,3 +119,14 @@ h3 {
     margin-left: 20px;
 }
 
+#puzzle-status-message {
+    font-size: 15px;
+}
+
+#invalid-groups {
+    font-size: 15px;
+}
+
+#found-groups {
+    font-size: 15px;
+}

@@ -37,12 +37,12 @@
                 <h3>Connection Reason</h3>
                 <textarea id="connection-reason" rows="2" cols="40" readonly></textarea>
             </div>
-            <div class="status-area"></div>
-                <div class="status-row">
-                    <label for="status-message">Status:</label>
-                    <textarea id="status-message" rows="1" cols="40" readonly></textarea>
-                </div>
-            </div>  
+            <div class="status-row">
+                <label for="puzzle-status-message">Status:</label>
+                <textarea id="puzzle-status-message" rows="1" cols="40" readonly></textarea>
+            </div>
+        </section>
+        <section class="button-section">  
             <div class="color-buttons">
                 <h3>Correct Group Color</h3>
                 <button class="color-btn yellow" disabled>y</button>
@@ -57,6 +57,8 @@
                 <button class="action-btn" id="manual-override-btn" disabled>manual override</button>
                 <button class="action-btn" id="verify-manual-override-btn" disabled>verify</button>
             </div>
+        </section>
+        <section class="result-section">
             <div class="found-groups">
                 <h3>Correct Groups</h3>
                 <textarea id="found-groups" rows="2" cols="40"  readonly></textarea>
@@ -81,16 +83,16 @@
                 const data = await response.json();
                 if (data.status === "success in getting puzzle words") {
                     document.getElementById('words-remaining').value = data.puzzle_words.join(', ');
-                    document.getElementById('status-message').value = data.status;
+                    document.getElementById('puzzle-status-message').value = data.status;
                     // Enable all buttons except setup-btn
                     document.querySelectorAll('button:not(#setup-btn)').forEach(button => {
                         button.disabled = false;
                     });
                 } else {
-                    document.getElementById('status-message').value = 'Error setting up puzzle';
+                    document.getElementById('puzzle-status-message').value = 'Error setting up puzzle';
                 }
             } catch (error) {
-                document.getElementById('status-message').value = 'Error: ' + error.message;
+                document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
             }
         });
 
@@ -109,11 +111,11 @@
                     document.getElementById('recommended-group').value = data.recommended_words.join(', ');
                     document.getElementById('connection-reason').value = data.connection_reason;
                 } else {
-                    document.getElementById('status-message').value = 'Error generating recommendation';
+                    document.getElementById('puzzle-status-message').value = 'Error generating recommendation';
                     nextRecommendationBtn.disabled = false;
                 }
             } catch (error) {
-                document.getElementById('status-message').value = 'Error: ' + error.message;
+                document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
                 nextRecommendationBtn.disabled = false;
             }
         });
@@ -134,7 +136,7 @@
                         body: JSON.stringify({ user_response: button.textContent })
                     });
                     const data = await response.json();
-                    document.getElementById('status-message').value = data.status;
+                    document.getElementById('puzzle-status-message').value = data.status;
                     document.getElementById('words-remaining').value = data.words_remaining.join(', ');
                     document.getElementById('recommended-group').value = '';
                     document.getElementById('connection-reason').value = '';
@@ -144,7 +146,7 @@
                     document.getElementById('invalid-groups').value = data.invalid_groups.join('\n');
                     document.getElementById('next-recommendation').disabled = false;
                 } catch (error) {
-                    document.getElementById('status-message').value = 'Error: ' + error.message;
+                    document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
                 }
             });
         });
