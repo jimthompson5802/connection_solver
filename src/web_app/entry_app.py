@@ -60,11 +60,13 @@ app = Quart(__name__)
 
 @app.route("/")
 async def index():
+    print("app.route('/')")
     return await render_template("index.html")
 
 
 @app.route("/setup-puzzle", methods=["POST"])
 async def setup_puzzle():
+    print("app.route('/setup-puzzle')")
     puzzle_setup_fp = (await request.json).get("setup")
     puzzle_words = await webui_puzzle_setup_function(puzzle_setup_fp)
 
@@ -133,6 +135,7 @@ async def setup_puzzle():
 
 @app.route("/update-solution", methods=["POST"])
 async def update_solution():
+    print("app.route('/update-solution')")
     data = await request.json
     user_response = data.get("user_response")
 
@@ -186,6 +189,7 @@ async def update_solution():
 
 @app.route("/generate-next", methods=["POST"])
 async def generate_next():
+    print("app.route('/generate-next')")
     current_state = workflow_graph.get_state(runtime_config)
 
     return jsonify(
@@ -195,6 +199,33 @@ async def generate_next():
             "connection_reason": current_state.values["recommended_connection"],
         }
     )
+
+
+@app.route("/manual-override", methods=["POST"])
+async def manual_override():
+    print("app.route('/manual-override')")
+    current_state = workflow_graph.get_state(runtime_config)
+    workflow_graph.update_state(
+        runtime_config,
+        {
+            "puzzle_status": "manual_override",
+        },
+    )
+    return jsonify({"status": "success"})
+
+
+@app.route("/confirm-manual-override", methods=["POST"])
+async def confirm_manual_override():
+    print("app.route('/confirm-manual-override')")
+    data = await request.json
+    words = data.get("words", [])
+
+    current_state = workflow_graph.get_state(runtime_config)
+    workflow_graph.update_state(
+        runtime_config,
+        {"puzzle_status": "executing", "recommended_words": words},
+    )
+    return jsonify({"status": "success"})
 
 
 if __name__ == "__main__":

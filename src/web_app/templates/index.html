@@ -50,12 +50,15 @@
                 <button class="color-btn blue" disabled>b</button>
                 <button class="color-btn purple" disabled>p</button>
             </div>
-            <div class="action-buttons">
-                <h3>Actions</h3>
-                <button class="action-btn" disabled>o</button>
-                <button class="action-btn" disabled>n</button>
-                <button class="action-btn" id="manual-override-btn" disabled>manual override</button>
-                <button class="action-btn" id="confirm-manual-override-btn" disabled>confirm manual override</button>
+            <div class="response-buttons">
+                <h3>Puzzle Response</h3>
+                <button class="response-btn" disabled>o</button>
+                <button class="response-btn" disabled>n</button>
+            </div>
+            <div class="manual-override">
+                <h3>Manual Override</h3>
+                <button class="override-btn" id="manual-override-btn" disabled>manual override</button>
+                <button class="override-btn" id="confirm-manual-override-btn" disabled>confirm manual override</button>
             </div>
         </section>
         <section class="result-section">
@@ -121,7 +124,7 @@
         });
 
         // Add click handlers for color buttons
-        document.querySelectorAll('.color-btn, .action-btn').forEach(button => {
+        document.querySelectorAll('.color-btn, .response-btn').forEach(button => {
             button.addEventListener('click', async () => {
                 // Disable the button if it's a color button
                 if (button.classList.contains('color-btn')) {
@@ -153,6 +156,57 @@
                     document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
                 }
             });
+        });
+
+        document.getElementById('manual-override-btn').addEventListener('click', async () => {
+            // disable manual override button
+            document.getElementById('manual-override-btn').disabled = true;
+            // add placeholder text to recommended group textarea
+            document.getElementById('recommended-group').value = 'Enter words here';
+            // add placeholder text to connection reason textarea
+            document.getElementById('connection-reason').value = 'Enter connection reason here';
+            try {
+                const response = await fetch('/manual-override', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.status === "success") {
+                    document.getElementById('puzzle-status-message').value = "Manual override mode activated";
+                    document.getElementById('confirm-manual-override-btn').disabled = false;
+                    document.getElementById('manual-override-btn').disabled = true;
+                }
+            } catch (error) {
+                document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
+            }
+        });
+
+        document.getElementById('confirm-manual-override-btn').addEventListener('click', async () => {
+            // Get words from the recommended group textarea
+            const words = document.getElementById('recommended-group').value.split(',').map(w => w.trim()).filter(w => w);
+            
+            try {
+                const response = await fetch('/confirm-manual-override', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ words: words })
+                });
+                const data = await response.json();
+                if (data.status === "success") {
+                    document.getElementById('puzzle-status-message').value = "Manual override confirmed";
+                    document.getElementById('confirm-manual-override-btn').disabled = true;
+                    // Re-enable color buttons
+                    document.querySelectorAll('.color-btn').forEach(button => {
+                        button.disabled = false;
+                    });
+                }
+            } catch (error) {
+                document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
+            }
         });
     </script>
 </body>
