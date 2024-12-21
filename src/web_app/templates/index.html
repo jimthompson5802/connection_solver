@@ -162,9 +162,16 @@
             // disable manual override button
             document.getElementById('manual-override-btn').disabled = true;
             // add placeholder text to recommended group textarea
-            document.getElementById('recommended-group').value = 'Enter words here';
+            var textarea = document.getElementById('recommended-group');
+            textarea.placeholder = 'Enter comma separated words here...';
+            textarea.removeAttribute('readonly');
+            textarea.value = '';
             // add placeholder text to connection reason textarea
-            document.getElementById('connection-reason').value = 'Enter connection reason here';
+            var textarea = document.getElementById('connection-reason');
+            textarea.placeholder = 'Enter connection reason here...';
+            textarea.removeAttribute('readonly');
+            textarea.value = '';
+
             try {
                 const response = await fetch('/manual-override', {
                     method: 'POST',

@@ -59,14 +59,14 @@ h3 {
     color: #333;
 }
 
-.color-buttons, .action-buttons {
+.color-buttons, .response-buttons {
     margin: 20px 0;
     display: flex;
     gap: 10px;
     align-items: center;
 }
 
-.color-btn, .action-btn {
+.color-btn, .response-btn {
     min-width: 40px;
     height: 40px;
     font-weight: bold;
@@ -82,8 +82,13 @@ h3 {
     cursor: not-allowed;
 }
 
-.action-btn {
+.response-btn {
     background-color: #666;
+}
+
+.override-btn {
+    background-color: #f9d03b;
+    color: #333;
 }
 
 .status-row {
