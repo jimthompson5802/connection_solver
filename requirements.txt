@@ -19,3 +19,4 @@ torch
 torch-tb-profiler
 tensorboard
 aiosqlite
+quart

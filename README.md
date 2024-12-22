@@ -36,6 +36,7 @@ Connections is a word game that challenges players to find themes between words.
 * sqlite3 database to store vocabulary and embedding vectors
 * langgraph compliant method for human-in-the-loop interactions for setup and puzzle results
 * Refactor code to use `asyncio` to reduce run-time latency
+* Web-based puzzle solver interface
 
 ## Release History
 **Agentic Solver**
@@ -58,6 +59,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.9.2 | resolved error when hints are provided in puzzle words |
 | v0.9.3 | reduce one-away analyzer time with asyncio |
 | v0.9.4 | consolidate on chat_with_llm api for puzzle solver |
+| v0.10.0 | Web-based puzzle solver interface |
 
 **Automated Tester**
 | Version | Description |
@@ -463,6 +465,21 @@ The final part is the current state of the game.  The following subset of `Puzzl
     "current_tool": "embedvec_recommender",
 }'
 ```
+
+## Web-based Puzzle Solver Interface
+The agent's workflow was converted to a web-based interface using `Quart`.  The interface allows the user to interact with the agent to solve a Connection Puzzle.  The interface is a single page application.  Here are some screenshots of the interface:
+
+**Interface on start-up**
+
+![](./images/webui1.png)
+
+**Interface during the solving process**
+
+![](./images/webui2.png)
+
+**Interface after the puzzle is solved**
+
+![](./images/webui3.png)
 
 ## Repo Contents
 Major contents of the repo:

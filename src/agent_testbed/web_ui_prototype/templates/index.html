@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Text Generator</title>
+    <style>
+        #output {
+            width: 100%;
+            height: 300px;
+            resize: vertical;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            width: 70%;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <textarea id="output" readonly></textarea>
+    <br>
+    <button onclick="generateText()">Generate Text</button>
+    <button onclick="stopApp()">Stop</button>
+    <button onclick="showCustomTextModal()">Custom Text</button>
+
+    <div id="customTextModal" class="modal">
+        <div class="modal-content">
+            <textarea id="customText" rows="4" style="width: 100%"></textarea>
+            <br>
+            <button onclick="addCustomText()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        let lineCount = 0;
+
+        function generateText() {
+            fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({count: ++lineCount})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('output').value += data.text + '\n';
+            });
+        }
+
+        function stopApp() {
+            fetch('/stop', {
+                method: 'POST'
+            })
+            .then(() => {
+                console.log('Application stopping...');
+            });
+        }
+
+        function showCustomTextModal() {
+            document.getElementById('customTextModal').style.display = 'block';
+            document.getElementById('customText').value = '';
+        }
+
+        function addCustomText() {
+            const customText = document.getElementById('customText').value;
+            document.getElementById('output').value += customText + '\n';
+            document.getElementById('customTextModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('customTextModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

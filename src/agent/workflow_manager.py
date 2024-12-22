@@ -149,7 +149,7 @@ async def run_workflow(
         logger.debug(f"\nCurrent state: {current_state}")
         logger.info(f"\nNext action: {current_state.next}")
         if current_state.next[0] == "setup_puzzle":
-            words = puzzle_setup_function()
+            words = await puzzle_setup_function()
 
             print(f"Setting up Puzzle Words: {words}")
 
@@ -220,6 +220,44 @@ def create_workflow_graph() -> StateGraph:
     workflow_graph = workflow.compile(
         checkpointer=memory_checkpoint,
         interrupt_before=["setup_puzzle", "apply_recommendation"],
+    )
+
+    return workflow_graph
+
+
+def create_webui_workflow_graph() -> StateGraph:
+    workflow = StateGraph(PuzzleState)
+
+    workflow.add_node("run_planner", run_planner)
+    workflow.add_node("get_embedvec_recommendation", get_embedvec_recommendation)
+    workflow.add_node("get_llm_recommendation", get_llm_recommendation)
+    workflow.add_node("get_manual_recommendation", get_manual_recommendation)
+    workflow.add_node("apply_recommendation", apply_recommendation)
+
+    workflow.add_conditional_edges(
+        "run_planner",
+        determine_next_action,
+        {
+            "get_embedvec_recommendation": "get_embedvec_recommendation",
+            "get_llm_recommendation": "get_llm_recommendation",
+            "get_manual_recommendation": "get_manual_recommendation",
+            "apply_recommendation": "apply_recommendation",
+            END: END,
+        },
+    )
+
+    workflow.add_edge("get_llm_recommendation", "run_planner")
+    workflow.add_edge("get_embedvec_recommendation", "run_planner")
+    workflow.add_edge("get_manual_recommendation", "run_planner")
+    workflow.add_edge("apply_recommendation", "run_planner")
+
+    workflow.set_entry_point("run_planner")
+
+    memory_checkpoint = MemorySaver()
+
+    workflow_graph = workflow.compile(
+        checkpointer=memory_checkpoint,
+        interrupt_before=["apply_recommendation"],
     )
 
     return workflow_graph

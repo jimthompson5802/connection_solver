@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Solver</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <section class="setup-section">
+            <div class="input-group">
+                <label for="puzzle-file">Puzzle File:</label>
+                <input type="text" id="puzzle-file" placeholder="Enter puzzle file path">
+                <button id="setup-btn">Setup Puzzle</button>
+            </div>
+        </section>
+        <section class="puzzle-section">
+            <div class="words-remaining">
+                <h3>Remaining Words</h3>
+                <textarea id="words-remaining" rows="2" cols="40" readonly></textarea>
+            </div>
+            <div class="controls" id="get-next-group">
+                <div class="controls-row">
+                    <button id="next-recommendation" disabled>Get Next Recommendation</button>
+                    <label for="found-count">Found Count:</label>
+                    <textarea id="found-count" rows="1" cols="3"></textarea>
+                    <label for="mistake-count">Mistake Count:</label>
+                    <textarea id="mistake-count" rows="1" cols="3"></textarea>
+                </div>
+            </div>
+            <div class="recommendation">
+                <h3>Recommended Group</h3>
+                <textarea id="recommended-group" rows="1" cols="40" readonly></textarea>
+            </div>
+            <div class="connection">
+                <h3>Connection Reason</h3>
+                <textarea id="connection-reason" rows="2" cols="40" readonly></textarea>
+            </div>
+            <div class="status-row">
+                <label for="puzzle-status-message">Status:</label>
+                <textarea id="puzzle-status-message" rows="1" cols="40" readonly></textarea>
+                <button id="terminate-btn" class="terminate-btn" disabled>Terminate</button>
+            </div>
+        </section>
+        <section class="button-section">  
+            <div class="color-buttons">
+                <h3>Correct Group Color</h3>
+                <button class="color-btn yellow" disabled>y</button>
+                <button class="color-btn green" disabled>g</button>
+                <button class="color-btn blue" disabled>b</button>
+                <button class="color-btn purple" disabled>p</button>
+            </div>
+            <div class="response-buttons">
+                <h3>Puzzle Response</h3>
+                <button class="response-btn" disabled>o</button>
+                <button class="response-btn" disabled>n</button>
+            </div>
+            <div class="manual-override">
+                <h3>Manual Override</h3>
+                <button class="override-btn" id="manual-override-btn" disabled>manual override</button>
+                <button class="override-btn" id="confirm-manual-override-btn" disabled>confirm manual override</button>
+            </div>
+        </section>
+        <section class="result-section">
+            <div class="found-groups">
+                <h3>Correct Groups</h3>
+                <textarea id="found-groups" rows="4" cols="40"  readonly></textarea>
+            </div>
+            <div class="invalid-groups">
+                <h3>Invalid Groups</h3>
+                <textarea id="invalid-groups" rows="4" cols="40" readonly></textarea>
+            </div>
+        </section>
+    </div>
+    <script>
+        document.getElementById('setup-btn').addEventListener('click', async () => {
+            // write message to console
+            console.log('Setup button clicked');
+            const puzzleFile = document.getElementById('puzzle-file').value;
+            try {
+                const response = await fetch('/setup-puzzle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ setup: puzzleFile })
+                });
+                const data = await response.json();
+                if (data.status === "success in getting puzzle words") {
+                    document.getElementById('words-remaining').value = data.puzzle_words.join(', ');
+                    document.getElementById('puzzle-status-message').value = "Successfully set up puzzle";
+                    // Enable all buttons except setup-btn
+                    document.querySelectorAll('button:not(#setup-btn):not(#terminate-btn)').forEach(button => {
+                        button.disabled = false;
+                    });
+                } else {
+                    document.getElementById('puzzle-status-message').value = 'Error setting up puzzle';
+                }
+            } catch (error) {
+                document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
+            }
+        });
+
+        document.getElementById('next-recommendation').addEventListener('click', async () => {
+            // write message to console
+            console.log('Next recommendation button clicked');
+            const nextRecommendationBtn = document.getElementById('next-recommendation');
+            nextRecommendationBtn.disabled = true;
+            try {
+                const response = await fetch('/generate-next', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.status === "Next recommendation will be generated here") {
+                    document.getElementById('recommended-group').value = data.recommended_words.join(', ');
+                    document.getElementById('connection-reason').value = data.connection_reason;
+                } else {
+                    document.getElementById('puzzle-status-message').value = 'Error generating recommendation';
+                    nextRecommendationBtn.disabled = false;
+                }
+            } catch (error) {
+                document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
+                nextRecommendationBtn.disabled = false;
+            }
+        });
+
+        // Add click handlers for color buttons
+        document.querySelectorAll('.color-btn, .response-btn').forEach(button => {
+            button.addEventListener('click', async () => {
+                // write message to console
+                console.log('Button clicked:', button.textContent);
+                // Disable the button if it's a color button
+                if (button.classList.contains('color-btn')) {
+                    button.disabled = true;
+                }
+                try {
+                    const response = await fetch('/update-solution', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ user_response: button.textContent })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.status) {
+                        document.getElementById('puzzle-status-message').value = data.status;
+                    }
+                    
+                    document.getElementById('words-remaining').value = data.words_remaining.join(', ');
+                    document.getElementById('recommended-group').value = '';
+                    document.getElementById('connection-reason').value = '';
+                    document.getElementById('found-count').value = data.found_count;
+                    document.getElementById('mistake-count').value = data.mistake_count;
+                    document.getElementById('found-groups').value = data.found_groups.join('\n');
+                    document.getElementById('invalid-groups').value = data.invalid_groups.join('\n');
+                    document.getElementById('next-recommendation').disabled = false;
+                    if (data.found_count == 4 || data.mistake_count == 4){
+                        document.getElementById('terminate-btn').disabled = false;
+                    }
+                } catch (error) {
+                    document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
+                }
+            });
+        });
+
+        document.getElementById('manual-override-btn').addEventListener('click', async () => {
+            // write message to console
+            console.log('Manual override button clicked');
+            // disable manual override button
+            document.getElementById('manual-override-btn').disabled = true;
+            // add placeholder text to recommended group textarea
+            var textarea = document.getElementById('recommended-group');
+            textarea.placeholder = 'Enter comma separated words here...';
+            textarea.removeAttribute('readonly');
+            textarea.value = '';
+            // add placeholder text to connection reason textarea
+            var textarea = document.getElementById('connection-reason');
+            textarea.placeholder = 'Enter connection reason here...';
+            textarea.removeAttribute('readonly');
+            textarea.value = '';
+
+            try {
+                const response = await fetch('/manual-override', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (data.status === "success") {
+                    document.getElementById('puzzle-status-message').value = "Manual override mode activated";
+                    document.getElementById('confirm-manual-override-btn').disabled = false;
+                    document.getElementById('manual-override-btn').disabled = true;
+                }
+            } catch (error) {
+                document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
+            }
+        });
+
+        document.getElementById('confirm-manual-override-btn').addEventListener('click', async () => {
+            // write message to console
+            console.log('Confirm manual override button clicked');
+            // Get words from the recommended group textarea
+            const words = document.getElementById('recommended-group').value.split(',').map(w => w.trim()).filter(w => w);
+            
+            try {
+                const response = await fetch('/confirm-manual-override', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ words: words })
+                });
+                const data = await response.json();
+                if (data.status === "success") {
+                    document.getElementById('puzzle-status-message').value = "Manual override confirmed";
+                    document.getElementById('confirm-manual-override-btn').disabled = true;
+                    // update recommended group textarea
+                    var textarea = document.getElementById('recommended-group');
+                    textarea.setAttribute('readonly','readonly');
+                    textarea.removeAttribute('placeholder');
+
+                    // add placeholder text to connection reason textarea
+                    var textarea = document.getElementById('connection-reason');
+                    textarea.setAttribute('readonly','readonly');
+                    textarea.removeAttribute('placeholder');
+  
+                } else {
+                    document.getElementById('puzzle-status-message').value = 'Error confirming manual override';
+                }
+                document.getElementById('manual-override-btn').disabled = false;
+            } catch (error) {
+                document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
+            }
+        });
+
+        document.getElementById('terminate-btn').addEventListener('click', async () => {
+            console.log('Terminate button clicked');
+            try {
+                await fetch('/terminate', {
+                    method: 'POST'
+                });
+                window.close();
+            } catch (error) {
+                console.error('Error terminating puzzle:', error);
+            }
+        });
+    </script>
+</body>
+</html>

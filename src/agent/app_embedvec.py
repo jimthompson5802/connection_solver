@@ -6,19 +6,9 @@ import logging
 import pprint
 import json
 import os
-import random
 import uuid
-import sqlite3
 import tempfile
 import pprint
-
-
-import numpy as np
-import pandas as pd
-
-from langgraph.graph import StateGraph, END
-from langchain_core.messages import HumanMessage
-from langchain_core.runnables import ConfigurableField
 
 from langchain_core.tracers.context import tracing_v2_enabled
 
@@ -28,7 +18,7 @@ from tools import interact_with_user, manual_puzzle_setup_prompt
 
 
 # specify the version of the agent
-__version__ = "0.9.3"
+__version__ = "0.10.0"
 
 # create logger
 logger = logging.getLogger(__name__)

@@ -1,0 +1,130 @@
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.setup-section {
+    margin-bottom: 30px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 8px;
+    font-size: 20px;
+}
+
+button {
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+button:disabled:hover {
+    background-color: #cccccc;
+}
+
+textarea {
+    margin: 10px 0;
+    padding: 10px;
+    resize: none;
+    font-size: 20px;
+}
+
+.puzzle-section > div {
+    margin-bottom: 20px;
+}
+
+h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.color-buttons, .response-buttons {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.color-btn, .response-btn {
+    min-width: 40px;
+    height: 40px;
+    font-weight: bold;
+}
+
+.color-btn.yellow { background-color: #f9d03b; }
+.color-btn.green { background-color: #61b33b; }
+.color-btn.blue { background-color: #4a90e2; }
+.color-btn.purple { background-color: #8a4f9e; }
+
+.color-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.response-btn {
+    background-color: #666;
+}
+
+.override-btn {
+    background-color: #f9d03b;
+    color: #333;
+}
+
+.terminate-btn {
+    background-color: #dc3545;
+    color: white;
+    margin-left: 10px;
+}
+
+.terminate-btn:hover {
+    background-color: #bd2130;
+}
+
+.status-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.controls-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.controls-row label {
+    margin-left: 20px;
+}
+
+#puzzle-status-message {
+    font-size: 15px;
+}
+
+#invalid-groups {
+    font-size: 15px;
+}
+
+#found-groups {
+    font-size: 15px;
+}
