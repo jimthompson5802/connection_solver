@@ -481,19 +481,16 @@ The agent's workflow was converted to a web-based interface using `Quart`.  The 
 
 ![](./images/webui3.png)
 
-## Repo Contents
-Major contents of the repo:
+## Agentic Virtual Assistant Software Components
+The Connection Solver Virtual Assistant is composed of several software components that work together to solve the Connection Puzzle. Here is an overview of the main components:
 | File/Folder | Description |
 | --- | --- |
-| `src/agent/app.py` | Main entry point for the agent.  Define workflow processing steps (aka graph nodes), workflow transitions (aka graph edges) and `PuzzleState` data structure.  The original LLM-based solver|
-| `src/agent/app_embedvec.py` | Main entry point for the agent.  Define workflow processing steps (aka graph nodes), workflow transitions (aka graph edges) and `PuzzleState` data structure.  The Embedding Vector-based solver.|
-| `src/agent/tools.py` | Tools used by the agent: retrieve puzzle setup, interact with user and interface to OpenAI LLM|
-| `src/agent/embedvec_tools.py` | Tools used by the agent: created embedding vectors, retrieve puzzle setup, interact with user and interface to OpenAI LLM|
-| `src/agent/utils.py` | Utilities to be used by the agent. |
-| `src/agent/tests/` | Unit tests for the agent. |
-| `src/agent_testbed/` | Directory containing technical proof-of-concept code. |
-| `data/` | Directory containing past NYT Connection Puzzles for testing. |
-| `prompt_testbed/` | Directory containing sample prompts used in testing with the OpenAI Playground. |
+| `src/agent/app_embedvec.py`| The main entry point for the application: handles command-line arguments, setting up logging, reading configuration, and running the workflow with the specified setup and response functions. |
+| `src/agent/puzzle_solver.py` | Contains the main logic for solving the puzzle, including functions for setting up the puzzle, generating recommendations, and applying recommendations. It defines the state of the puzzle and includes various helper functions for interacting with language models and generating vocabulary and embeddings. |
+| `src/agent/tools.py` | Provides utility functions for interacting with the user, extracting words from images, and communicating with the language model. |
+| `src/agent/workflow_manager.py` | Manages the workflow by determining the next tool to use based on the current state and running the workflow until completion. |
+| `src/agent/embedvec_workflow_specification.md`| This document provides detailed instructions and a decision table for selecting the appropriate tool based on the current state of the puzzle-solving workflow. It outlines the conditions under which each tool should be used and specifies the actions to take when certain statuses are encountered. |
+
 
 ## Setup
 ### devcontianer
