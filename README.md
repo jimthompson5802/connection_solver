@@ -9,6 +9,7 @@ The agentic approach was inspired by these talks:
 * [What's next for AI agentic workflows ft. Andrew Ng of AI Fund](https://youtu.be/sal78ACtGTc)
 * [How Clearwater Analytics Builds AI Agents with Small Language Models (SLMs)](https://youtu.be/Z-k8Wm2uQmw?t=72)
 
+Six videos, available as a YouTube Playlist, describes the development of the Connection Solver Virtual Assistant.  The playlist can be found [here](https://www.youtube.com/playlist?list=PLF87n7UoTxU7y_HCH_kFFCGKiok0eDGBG).
 
 ## Connection Puzzle Description
 Connections is a word game that challenges players to find themes between words. The user is presented with 16 words and must create groups of four items that share something in common. For example: **Tropical fruit**: banana, mango, pineapple, guava.
