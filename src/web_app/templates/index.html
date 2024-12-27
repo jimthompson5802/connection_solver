@@ -46,20 +46,21 @@
         <section class="button-section">  
             <div class="color-buttons">
                 <h3>Correct Group Color</h3>
-                <button class="color-btn yellow" disabled>y</button>
-                <button class="color-btn green" disabled>g</button>
-                <button class="color-btn blue" disabled>b</button>
-                <button class="color-btn purple" disabled>p</button>
+                <button class="color-btn yellow" response_code="y" disabled>Yellow</button>
+                <button class="color-btn green" response_code="g" disabled>Green</button>
+                <button class="color-btn blue" response_code="b" disabled>Bue</button>
+                <button class="color-btn purple" response_code="p" disabled>Purple</button>
             </div>
             <div class="response-buttons">
                 <h3>Puzzle Response</h3>
-                <button class="response-btn" disabled>o</button>
-                <button class="response-btn" disabled>n</button>
+                <button class="response-btn" response_code="o" disabled>One-away Error</button>
+                <button class="response-btn" response_code="n" disabled>Not Correct</button>
             </div>
             <div class="manual-override">
                 <h3>Manual Override</h3>
                 <button class="override-btn" id="manual-override-btn" disabled>manual override</button>
                 <button class="override-btn" id="confirm-manual-override-btn" disabled>confirm manual override</button>
+                <button class="response-btn" response_code="s" disabled>Switch Recommender</button> 
             </div>
         </section>
         <section class="result-section">
@@ -143,7 +144,7 @@
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ user_response: button.textContent })
+                        body: JSON.stringify({ user_response: button.getAttribute('response_code') })
                     });
                     const data = await response.json();
                     
