@@ -15,10 +15,14 @@ from workflow_manager import run_workflow, create_webui_workflow_graph
 from puzzle_solver import PuzzleState, generate_vocabulary, generate_embeddings
 from tools import read_file_to_word_list, extract_words_from_image
 
+from src.agent import __version__
+
 from quart import Quart, render_template, request, jsonify
 
 pp = pp.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
+
+print(f"Running AVA {__version__}")
 
 db_lock = asyncio.Lock()
 

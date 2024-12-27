@@ -16,9 +16,8 @@ from workflow_manager import run_workflow, create_workflow_graph
 from puzzle_solver import PuzzleState
 from tools import interact_with_user, manual_puzzle_setup_prompt
 
+from src.agent import __version__
 
-# specify the version of the agent
-__version__ = "0.10.0"
 
 # create logger
 logger = logging.getLogger(__name__)
