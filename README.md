@@ -37,6 +37,7 @@ Connections is a word game that challenges players to find themes between words.
 * langgraph compliant method for human-in-the-loop interactions for setup and puzzle results
 * Refactor code to use `asyncio` to reduce run-time latency
 * Web-based puzzle solver interface
+* Toggle between Embedding Vector and LLM-based recommenders
 
 ## Release History
 **Agentic Solver**
