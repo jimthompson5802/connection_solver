@@ -25,9 +25,8 @@ from workflow_manager import run_workflow, create_workflow_graph
 from puzzle_solver import PuzzleState
 from tools import check_one_solution
 
+from src.agent import __version__
 
-# specify the version of the agent
-__version__ = "0.2.0-dev"
 
 # create logger
 logger = logging.getLogger(__name__)

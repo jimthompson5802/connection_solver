@@ -109,7 +109,7 @@ def interact_with_user(gen_words, gen_reason, recommender) -> str:
     logger.info(recommendation_message)
     print(recommendation_message)
 
-    user_instruction = "Is the recommendation accepted? (y/g/b/p/m/o/n): "
+    user_instruction = "Is the recommendation accepted? (y/g/b/p/m/s/o/n): "
     logger.info(user_instruction)
     user_response = input(user_instruction)
 

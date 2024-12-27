@@ -60,12 +60,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.9.3 | reduce one-away analyzer time with asyncio |
 | v0.9.4 | consolidate on chat_with_llm api for puzzle solver |
 | v0.10.0 | Web-based puzzle solver interface |
-
-**Automated Tester**
-| Version | Description |
-| --- | --- |
-| v0.1.0 | Automated tester for Connection Puzzle Solver |
-| v0.2.0 | Automated tester expand asycnio to reduce run-time |
+| v0.11.0 | add support for switching recommenders |
 
 
 ## Sample Runs

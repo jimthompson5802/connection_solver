@@ -558,6 +558,7 @@ async def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
     state["current_tool"] = "embedvec_recommender"
     print(f"\nENTERED {state['current_tool'].upper()}")
     print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
+    print(f"words_remaining: {state['words_remaining']}")
 
     # get candidate list of words from database
     async with aiosqlite.connect(state["vocabulary_db_fp"]) as conn:
@@ -691,17 +692,15 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
         state["recommendation_correct_groups"].append(state["recommended_words"])
 
-        # for embedvec_recommender, remove the words from the vocabulary database
-        if state["current_tool"] == "embedvec_recommender":
-            # remove accepted words from vocabulary.db
-            async with aiosqlite.connect(state["vocabulary_db_fp"]) as conn:
-                async with db_lock:
-                    # remove accepted words from vocabulary.db
-                    # for each word in recommended_words, remove the word from the vocabulary table
-                    for word in state["recommended_words"]:
-                        sql_query = f"DELETE FROM vocabulary WHERE word = '{word}'"
-                        await conn.execute(sql_query)
-                    await conn.commit()
+        # remove accepted words from vocabulary.db
+        async with aiosqlite.connect(state["vocabulary_db_fp"]) as conn:
+            async with db_lock:
+                # remove accepted words from vocabulary.db
+                # for each word in recommended_words, remove the word from the vocabulary table
+                for word in state["recommended_words"]:
+                    sql_query = f"DELETE FROM vocabulary WHERE word = '{word}'"
+                    await conn.execute(sql_query)
+                await conn.commit()
 
         # remove the words from words_remaining
         state["words_remaining"] = [word for word in state["words_remaining"] if word not in state["recommended_words"]]
@@ -766,6 +765,10 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
     elif found_correct_group == "m":
         print("Changing to manual_recommender")
         state["tool_status"] = "manual_recommendation"
+
+    elif found_correct_group == "s":
+        print("switching recommender")
+        state["tool_status"] = "switch_recommender"
 
     else:
         logger.info("Going to next get_recommendation")
