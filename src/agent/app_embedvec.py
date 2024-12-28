@@ -3,12 +3,12 @@
 import argparse
 import asyncio
 import logging
+import pickle
 import pprint
 import json
 import os
 import uuid
 import tempfile
-import pprint
 
 from langchain_core.tracers.context import tracing_v2_enabled
 
@@ -55,6 +55,7 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     parser.add_argument(
         "--trace", action="store_true", default=False, help="Enable langsmith tracing for the application."
     )
+    parser.add_argument("--snapshot_fp", type=str, default=None, help="File path to save snapshot data")
 
     # Parse arguments
     args = parser.parse_args()
@@ -126,6 +127,16 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
                 puzzle_setup_function=manual_puzzle_setup_prompt,
                 puzzle_response_function=interact_with_user,
             )
+
+        # Dump snapshot if the flag is set
+        if args.snapshot_fp:
+            snapshot = list(workflow_graph.checkpointer.list(runtime_config))
+            # save as pickle file
+            with open(args.snapshot_fp, "wb") as f:
+                pickle.dump(snapshot, f)
+            # log the snapshot
+            print(f"Snapshot: {args.snapshot_fp}")
+            logger.info(f"Snapshot: {args.snapshot_fp}")
 
     print("\nFOUND SOLUTIONS")
     pp.pprint(result)
