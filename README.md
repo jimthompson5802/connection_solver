@@ -1,6 +1,6 @@
-# Connection Solver Virtual Assistant Testbed
+# Connections Puzzle Agentic Virtual Assistant Testbed
 
-Experimental project to solve the [NYT Connection puzzles](https://www.nytimes.com/games/connections) using agentic workflow based on the [`langchain` ecosystem](https://python.langchain.com/v0.2/docs/introduction/).  In particular used:
+Experimental project to solve the [NYT Connections puzzles](https://www.nytimes.com/games/connections) using agentic workflow based on the [`langchain` ecosystem](https://python.langchain.com/v0.2/docs/introduction/).  In particular used:
 * [`langchain`'s OpenAI LLM abstraction layer](https://python.langchain.com/v0.2/api_reference/openai/chat_models/langchain_openai.chat_models.base.ChatOpenAI.html#chatopenai) to interact with OpenAI's `gpt-4o` and `gpt-3.5-turbo` models
 * [`langgraph`'s stateful orchestration framework](https://langchain-ai.github.io/langgraph/tutorials/multi_agent/multi-agent-collaboration/#multi-agent-network) to manage the agent's workflow
 * [`langsmith`'s tracing tool](https://www.langchain.com/langsmith) to trace the agent's workflow
@@ -9,12 +9,12 @@ The agentic approach was inspired by these talks:
 * [What's next for AI agentic workflows ft. Andrew Ng of AI Fund](https://youtu.be/sal78ACtGTc)
 * [How Clearwater Analytics Builds AI Agents with Small Language Models (SLMs)](https://youtu.be/Z-k8Wm2uQmw?t=72)
 
-Six videos, available as a YouTube Playlist, describes the development of the Connection Solver Virtual Assistant.  The playlist can be found [here](https://www.youtube.com/playlist?list=PLF87n7UoTxU7y_HCH_kFFCGKiok0eDGBG).
+The YouTube playlist [🔍 Building an Agentic Virtual Assistant (AVA) to Solve the NYT Connections Puzzle](https://www.youtube.com/playlist?list=PLF87n7UoTxU7y_HCH_kFFCGKiok0eDGBG) is a six-video series describing the virtual assistant's development.
 
-## Connection Puzzle Description
+## Connections Puzzle Description
 Connections is a word game that challenges players to find themes between words. The user is presented with 16 words and must create groups of four items that share something in common. For example: **Tropical fruit**: banana, mango, pineapple, guava.
 
-## Features of the Connection Solver Virtual Assistant Agent `app_embedvec.py`
+## Features of the Agentic Virtual Assistant `app_embedvec.py`
 * Extract puzzle words from text file to setup the puzzle
 * LLM based tools to:
   * Extract words from an image to setup the puzzle 
@@ -41,7 +41,6 @@ Connections is a word game that challenges players to find themes between words.
 * Toggle between Embedding Vector and LLM-based recommenders
 
 ## Release History
-**Agentic Solver**
 | Git Tag | Description |
 | --- | --- |
 | v0.1.0 | agent with programmatic planner |
@@ -67,13 +66,13 @@ Connections is a word game that challenges players to find themes between words.
 
 ## Sample Runs
 
-Historical NYT Connection Puzzles were used in testing the agent.  Past puzzles can be found [here](https://word.tips/todays-nyt-connections-answers/).
+Historical NYT Connections Puzzles were used in testing the agent.  Past puzzles can be found [here](https://word.tips/todays-nyt-connections-answers/).
 
 Results for the 10 puzzles used for testing can be found [here](./docs/Example_Runs.md).
 
 **First Time Solves**
 
-"First Time Solves" is using the agent to solve the Connection Puzzle for the first time a Connections Puzzle appears in the NYT over a one-week period. This avoids any bias in the agent's performance that may be the result of LLM training on historical puzzle data found in the Internet.
+"First Time Solves" is using the agent to solve the Connections Puzzle for the first time a Connections Puzzle appears in the NYT over a one-week period. This avoids any bias in the agent's performance that may be the result of LLM training on historical puzzle data found in the Internet.
 
 Starting 2024-11-12 the v0.5.x agent is used to solve that day's puzzle.  A log of the agent's run can be found [here](./docs/first_time_solve_log_v0_5_0.md).
 
@@ -91,7 +90,7 @@ Starting 2024-11-27 the v0.7.x agent is used to solve that day's puzzle.  A log 
 
 **Automated Tester Runs**
 
-This is an automated tester for the Connection Puzzle Solver.  The tester runs the agent on a set of puzzles and records the results.  The results can be found [here](./docs/example_automated_test_run.md).
+This is an automated tester for the Connections Puzzle Solver.  The tester runs the agent on a set of puzzles and records the results.  The results can be found [here](./docs/example_automated_test_run.md).
 
 ## Solution Strategy
 
@@ -170,7 +169,7 @@ For a 50 puzzle run of the agent, a bootstrap analysis was performed to determin
 
 The `one_away_analyzer` function in `embedvec_tools.py` analyzes a group of words to identify subgroups that are related to a single topic and recommends a new word to add to the group. It generates all possible combinations of three words from the input group and uses a language model to determine if each three-word combination can be related to a single topic. If multiple single-topic groups are found, one is selected at random; if only one is found, it is selected; otherwise, no group is selected.
 
-If a single-topic group is selected, the function creates a new prompt with the selected group's three-words and the remaining words, and sends it to the language model to get a fourth word recommendation. The recommended fourth word is combined with the original three word group to form a new group of four words, which is then returned as the Connection Puzzle recommendation. If no single-topic groups are found, the function returns `None`.
+If a single-topic group is selected, the function creates a new prompt with the selected group's three-words and the remaining words, and sends it to the language model to get a fourth word recommendation. The recommended fourth word is combined with the original three word group to form a new group of four words, which is then returned as the Connections Puzzle recommendation. If no single-topic groups are found, the function returns `None`.
 
 Here is an example run demonstrating the one-away error analyzer:
 ```text
@@ -407,7 +406,7 @@ Agent's workflow defintion:
 ```
 
 Diagram of the agent's workflow:
-![Connection Solver Workflow](./images/connection_solver_embedvec_graph.png)
+![Connections Solver Workflow](./images/connection_solver_embedvec_graph.png)
 
 The agent's planner function uses the LLM and current `PuzzleState` to determine the next step in the workflow.  The Planner's prompt consists of three parts.  First is the "system prompt":
 ```python
@@ -464,7 +463,7 @@ The final part is the current state of the game.  The following subset of `Puzzl
 ```
 
 ## Web-based Puzzle Solver Interface
-The agent's workflow was converted to a web-based interface using `Quart`.  The interface allows the user to interact with the agent to solve a Connection Puzzle.  The interface is a single page application.  Here are some screenshots of the interface:
+The agent's workflow was converted to a web-based interface using `Quart`.  The interface allows the user to interact with the agent to solve a Connections Puzzle.  The interface is a single page application.  Here are some screenshots of the interface:
 
 **Interface on start-up**
 
@@ -479,7 +478,7 @@ The agent's workflow was converted to a web-based interface using `Quart`.  The 
 ![](./images/webui3.png)
 
 ## Agentic Virtual Assistant Software Components
-The Connection Solver Virtual Assistant is composed of several software components that work together to solve the Connection Puzzle. Here is an overview of the main components:
+The Connections Puzzle Agentic Virtual Assistant is composed of several software components that work together to solve the Connections Puzzle. Here is an overview of the main components:
 | File/Folder | Description |
 | --- | --- |
 | `src/agent/app_embedvec.py`| The main entry point for the application: handles command-line arguments, setting up logging, reading configuration, and running the workflow with the specified setup and response functions. |
@@ -552,7 +551,7 @@ Note: Due to the random nature of the LLM, the results vary from run to run.  Fo
 
 ## `langsmith` tracing
 
-The `langsmith` tracing tool was used to trace the agent's workflow.  Here is an example trace of the agent solving a Connection Puzzle.:
+The `langsmith` tracing tool was used to trace the agent's workflow.  Here is an example trace of the agent solving a Connections Puzzle.:
 
 ### Overall Trace
 ![Overall Trace](./images/langsmith_overall.png)
