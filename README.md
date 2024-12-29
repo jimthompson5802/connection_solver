@@ -63,6 +63,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.10.0 | Web-based puzzle solver interface |
 | v0.11.0 | add support for switching recommenders |
 | v0.12.0 | add support to extract langgraph snapshot data |
+| v0.13.0 | add prior invalid group detection in embedvec recommender |
 
 
 ## Sample Runs

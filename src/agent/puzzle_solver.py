@@ -578,7 +578,9 @@ async def get_embedvec_recommendation(state: PuzzleState) -> PuzzleState:
     print(f"candidate_lists size: {len(candidate_list)}")
 
     # validate the top 5 candidate list with LLM
-    list_to_validate = "\n".join([str(x) for x in candidate_list[:5]])
+    invalid_group_ids = set([x[0] for x in state["invalid_connections"]])
+    candidate_list = [x for x in candidate_list[:5] if x.group_id not in invalid_group_ids]
+    list_to_validate = "\n".join([str(x) for x in candidate_list])
     recommended_group = await choose_embedvec_item(list_to_validate)
     logger.info(f"Recommended group: {recommended_group}")
 
