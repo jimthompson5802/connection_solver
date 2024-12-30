@@ -201,6 +201,7 @@ async def generate_next():
             "status": "Next recommendation will be generated here",
             "recommended_words": sorted(current_state.values["recommended_words"]),
             "connection_reason": current_state.values["recommended_connection"],
+            "active_recommender": current_state.values["current_tool"],
         }
     )
 
