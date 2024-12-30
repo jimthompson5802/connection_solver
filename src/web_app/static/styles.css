@@ -121,6 +121,10 @@ h3 {
     font-size: 15px;
 }
 
+#active-recommender-message {
+    font-size: 15px;
+}
+
 #invalid-groups {
     font-size: 15px;
 }

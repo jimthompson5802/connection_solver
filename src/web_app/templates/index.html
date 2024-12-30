@@ -42,13 +42,17 @@
                 <textarea id="puzzle-status-message" rows="1" cols="40" readonly></textarea>
                 <button id="terminate-btn" class="terminate-btn" disabled>Terminate</button>
             </div>
+            <div class="status-row">
+                <label for="active-recommender-message">Recommender:</label>
+                <textarea id="active-recommender-message" rows="1" cols="30" readonly></textarea>
+            </div>
         </section>
         <section class="button-section">  
             <div class="color-buttons">
                 <h3>Correct Group Color</h3>
                 <button class="color-btn yellow" response_code="y" disabled>Yellow</button>
                 <button class="color-btn green" response_code="g" disabled>Green</button>
-                <button class="color-btn blue" response_code="b" disabled>Bue</button>
+                <button class="color-btn blue" response_code="b" disabled>Blue</button>
                 <button class="color-btn purple" response_code="p" disabled>Purple</button>
             </div>
             <div class="response-buttons">
@@ -119,6 +123,8 @@
                 if (data.status === "Next recommendation will be generated here") {
                     document.getElementById('recommended-group').value = data.recommended_words.join(', ');
                     document.getElementById('connection-reason').value = data.connection_reason;
+                    document.getElementById('active-recommender-message').value = data.active_recommender;
+                    document.getElementById('puzzle-status-message').value = 'Next recommendation generated';
                 } else {
                     document.getElementById('puzzle-status-message').value = 'Error generating recommendation';
                     nextRecommendationBtn.disabled = false;
@@ -148,13 +154,21 @@
                     });
                     const data = await response.json();
                     
-                    if (data.status) {
-                        document.getElementById('puzzle-status-message').value = data.status;
+                    // if (data.status) {
+                    //     document.getElementById('puzzle-status-message').value = data.status;
+                    // }
+                    if (button.classList.contains('color-btn')) {
+                        document.getElementById('puzzle-status-message').value = "Found group color: " + button.textContent;
+                    }
+
+                    if (button.classList.contains('response-btn')) {
+                        document.getElementById('puzzle-status-message').value = "Puzzle response: " + button.textContent;
                     }
                     
                     document.getElementById('words-remaining').value = data.words_remaining.join(', ');
                     document.getElementById('recommended-group').value = '';
                     document.getElementById('connection-reason').value = '';
+                    document.getElementById('active-recommender-message').value = '';
                     document.getElementById('found-count').value = data.found_count;
                     document.getElementById('mistake-count').value = data.mistake_count;
                     document.getElementById('found-groups').value = data.found_groups.join('\n');
@@ -220,6 +234,7 @@
                 const data = await response.json();
                 if (data.status === "success") {
                     document.getElementById('puzzle-status-message').value = "Manual override confirmed";
+                    document.getElementById('active-recommender-message').value = "Manual Recommender";
                     document.getElementById('confirm-manual-override-btn').disabled = true;
                     // update recommended group textarea
                     var textarea = document.getElementById('recommended-group');
