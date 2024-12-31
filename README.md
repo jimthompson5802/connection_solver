@@ -472,13 +472,22 @@ The agent's workflow was converted to a web-based interface using `Quart`.  The 
 
 ![](./images/webui1.png)
 
-**Interface during the solving process**
+**Generating First Recommendation**
 
 ![](./images/webui2.png)
 
-**Interface after the puzzle is solved**
+**Accepting First Recommendation**
 
 ![](./images/webui3.png)
+
+**Generating Third Recommendation**
+
+![](./images/webui4.png)
+
+**Solved Puzzle**
+
+![](./images/webui5.png)
+
 
 ## Agentic Virtual Assistant Software Components
 The Connections Puzzle Agentic Virtual Assistant is composed of several software components that work together to solve the Connections Puzzle. Here is an overview of the main components:
