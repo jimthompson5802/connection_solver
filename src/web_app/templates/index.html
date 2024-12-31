@@ -176,6 +176,12 @@
                     document.getElementById('next-recommendation').disabled = false;
                     if (data.found_count == 4 || data.mistake_count == 4){
                         document.getElementById('terminate-btn').disabled = false;
+                        if (data.found_count == 4){
+                            document.getElementById('puzzle-status-message').value += "  Puzzle solved!";
+                        }
+                        else{
+                            document.getElementById('puzzle-status-message').value += "  Puzzle failed!";
+                        }
                     }
                 } catch (error) {
                     document.getElementById('puzzle-status-message').value = 'Error: ' + error.message;
