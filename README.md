@@ -472,21 +472,31 @@ The agent's workflow was converted to a web-based interface using `Quart`.  The 
 
 ![](./images/webui1.png)
 
+---
+
 **Generating First Recommendation**
 
 ![](./images/webui2.png)
+
+---
 
 **Accepting First Recommendation**
 
 ![](./images/webui3.png)
 
+---
+
 **Generating Third Recommendation**
 
 ![](./images/webui4.png)
 
+---
+
 **Solved Puzzle**
 
 ![](./images/webui5.png)
+
+---
 
 
 ## Agentic Virtual Assistant Software Components
