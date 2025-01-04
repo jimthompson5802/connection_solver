@@ -468,31 +468,31 @@ The final part is the current state of the game.  The following subset of `Puzzl
 ## Web-based Puzzle Solver Interface
 The agent's workflow was converted to a web-based interface using `Quart`.  The interface allows the user to interact with the agent to solve a Connections Puzzle.  The interface is a single page application.  Here are some screenshots of the interface:
 
-**Interface on start-up**
+### Interface on start-up
 
 ![](./images/webui1.png)
 
 ---
 
-**Generating First Recommendation**
+### Generating First Recommendation
 
 ![](./images/webui2.png)
 
 ---
 
-**Accepting First Recommendation**
+### Accepting First Recommendation
 
 ![](./images/webui3.png)
 
 ---
 
-**Generating Third Recommendation**
+### Generating Third Recommendation
 
 ![](./images/webui4.png)
 
 ---
 
-**Solved Puzzle**
+### Solved Puzzle
 
 ![](./images/webui5.png)
 
