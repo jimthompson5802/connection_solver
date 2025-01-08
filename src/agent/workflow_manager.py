@@ -47,7 +47,11 @@ PLANNER_SYSTEM_MESSAGE = """
 """
 
 
-async def ask_llm_for_next_step(instructions, puzzle_state, model="gpt-3.5-turbo", temperature=0, max_tokens=4096):
+class NextAction(TypedDict):
+    tool: str
+
+
+async def ask_llm_for_next_step(instructions, puzzle_state, model="gpt-4o-mini", temperature=0, max_tokens=4096):
     """
     Asks the language model (LLM) for the next step based on the provided prompt.
 
@@ -69,7 +73,6 @@ async def ask_llm_for_next_step(instructions, puzzle_state, model="gpt-3.5-turbo
         model=model,
         temperature=temperature,
         max_tokens=max_tokens,
-        model_kwargs={"response_format": {"type": "json_object"}},
     )
 
     # Create a prompt by concatenating the system and human messages
@@ -78,12 +81,13 @@ async def ask_llm_for_next_step(instructions, puzzle_state, model="gpt-3.5-turbo
     logger.debug(f"conversation: {pp.pformat(conversation)}")
 
     # Invoke the LLM
-    response = await llm.ainvoke(conversation)
+    llm_structured = llm.with_structured_output(NextAction)
+    response = await llm_structured.ainvoke(conversation)
 
     logger.debug(f"response: {pp.pformat(response)}")
 
     logger.info("Exiting ask_llm_for_next_step")
-    logger.info(f"exiting ask_llm_for_next_step response {response.content}")
+    logger.info(f"exiting ask_llm_for_next_step response {response}")
 
     return response
 
@@ -105,11 +109,11 @@ async def run_planner(state: PuzzleState, config: RunnableConfig) -> PuzzleState
     logger.info(f"\nState for lmm: {puzzle_state.content}")
 
     # get next action from llm
-    next_action = await ask_llm_for_next_step(instructions, puzzle_state, model="gpt-3.5-turbo", temperature=0)
+    next_action = await ask_llm_for_next_step(instructions, puzzle_state, model="gpt-4o-mini", temperature=0)
 
-    logger.info(f"\nNext action from llm: {next_action.content}")
+    logger.info(f"\nNext action from llm: {next_action}")
 
-    state["tool_to_use"] = json.loads(next_action.content)["tool"]
+    state["tool_to_use"] = next_action["tool"]
 
     logger.info("Exiting run_planner:")
     logger.debug(f"\nExiting run_planner State: {pp.pformat(state)}")
