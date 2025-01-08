@@ -77,7 +77,7 @@ async def extract_words_from_image(image_fp: str) -> List[str]:
     )
 
     # Get the response from the model
-    response = await chat_with_llm([message])
+    response = await chat_with_llm([message], structured_output=True)
 
     words = [w.lower() for w in json.loads(response.content)["words"]]
 
@@ -135,16 +135,17 @@ def check_one_solution(solution, *, gen_words: List[str], gen_reason: str, recom
         return "n"
 
 
-async def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096):
+async def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096, structured_output_class=None):
 
     # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
     llm = ChatOpenAI(
         model=model,
         temperature=temperature,
         max_tokens=max_tokens,
-        model_kwargs={"response_format": {"type": "json_object"}},
     )
 
-    result = await llm.ainvoke(prompt)
+    structured_llm = llm.with_structured_output(structured_output_class)
+
+    result = await structured_llm.ainvoke(prompt)
 
     return result
