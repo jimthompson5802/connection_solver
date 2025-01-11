@@ -427,44 +427,44 @@ def get_candidate_words(df: pd.DataFrame) -> list:
 #     return response
 
 
-ANCHOR_WORDS_SYSTEM_PROMPT = (
-    "you are an expert in the nuance of the english language.\n\n"
-    "You will be given three words. you must determine if the three words can be related to a single topic.\n\n"
-    "To make that determination, do the following:\n"
-    "* Determine common contexts for each word. \n"
-    "* Determine if there is a context that is shared by all three words.\n"
-    "* respond 'single' if a single topic can be found that applies to all three words, otherwise 'multiple'.\n"
-    "* Provide an explanation for the response.\n\n"
-    "return response in json with the key 'response' with the value 'single' or 'multiple' and the key 'explanation' with the reason for the response."
-)
+# ANCHOR_WORDS_SYSTEM_PROMPT = (
+#     "you are an expert in the nuance of the english language.\n\n"
+#     "You will be given three words. you must determine if the three words can be related to a single topic.\n\n"
+#     "To make that determination, do the following:\n"
+#     "* Determine common contexts for each word. \n"
+#     "* Determine if there is a context that is shared by all three words.\n"
+#     "* respond 'single' if a single topic can be found that applies to all three words, otherwise 'multiple'.\n"
+#     "* Provide an explanation for the response.\n\n"
+#     "return response in json with the key 'response' with the value 'single' or 'multiple' and the key 'explanation' with the reason for the response."
+# )
 
 
-class AnchorWordsAnalysis(TypedDict):
-    response: str
-    explanation: str
+# class AnchorWordsAnalysis(TypedDict):
+#     response: str
+#     explanation: str
 
 
-CREATE_GROUP_SYSTEM_PROMPT = """
-you will be given a list called the "anchor_words".
+# CREATE_GROUP_SYSTEM_PROMPT = """
+# you will be given a list called the "anchor_words".
 
-You will be given list of "candidate_words", select the one word that is most higly connected to the "anchor_words".
+# You will be given list of "candidate_words", select the one word that is most higly connected to the "anchor_words".
 
-Steps:
-1. First identify the common connection that is present in all the "anchor_words".  If each word has multiple meanings, consider the meaning that is most common among the "anchor_words".
+# Steps:
+# 1. First identify the common connection that is present in all the "anchor_words".  If each word has multiple meanings, consider the meaning that is most common among the "anchor_words".
 
-2. Now test each word from the "candidate_words" and decide which one has the highest degree of connection to the "anchor_words".    
+# 2. Now test each word from the "candidate_words" and decide which one has the highest degree of connection to the "anchor_words".
 
-3. Return the word that is most connected to the "anchor_words" and the reason for its selection in json structure.  The word should have the key "word" and the explanation should have the key "explanation".
-"""
+# 3. Return the word that is most connected to the "anchor_words" and the reason for its selection in json structure.  The word should have the key "word" and the explanation should have the key "explanation".
+# """
 
 
-class OneAwayRecommendation(TypedDict):
-    word: str
-    explanation: str
+# class OneAwayRecommendation(TypedDict):
+#     word: str
+#     explanation: str
 
 
 async def one_away_analyzer(
-    state: PuzzleState, one_away_group: List[str], words_remaining: List[str]
+    state: PuzzleState, one_away_group: List[str], words_remaining: List[str], config: RunnableConfig
 ) -> List[Tuple[str, List[str]]]:
     print("\nENTERED ONE-AWAY ANALYZER")
     print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
@@ -474,8 +474,9 @@ async def one_away_analyzer(
 
     async def process_anchor_words(anchor_list: List[str]) -> List[str]:
         anchor_words = "\n\n" + ", ".join(anchor_list)
-        prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), HumanMessage(anchor_words)]
-        response = await chat_with_llm(prompt, structured_output_class=AnchorWordsAnalysis)
+        # prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), HumanMessage(anchor_words)]
+        # response = await chat_with_llm(prompt, structured_output_class=AnchorWordsAnalysis)
+        response = await config["configurable"]["llm_interface"].analyze_anchor_words_group(anchor_words)
         return anchor_list, response
 
     single_topic_groups = await asyncio.gather(
@@ -513,9 +514,12 @@ async def one_away_analyzer(
         user_prompt += "\n\n" + "candidate_words: " + ", ".join(words_to_test)
         logger.info(f"single-topic user prompt:\n {user_prompt}")
 
-        prompt = [SystemMessage(CREATE_GROUP_SYSTEM_PROMPT), HumanMessage(user_prompt)]
+        # TODO: clean up
+        # prompt = [SystemMessage(CREATE_GROUP_SYSTEM_PROMPT), HumanMessage(user_prompt)]
 
-        response = await chat_with_llm(prompt, structured_output_class=OneAwayRecommendation)
+        # response = await chat_with_llm(prompt, structured_output_class=OneAwayRecommendation)
+        response = await config["configurable"]["llm_interface"].generate_one_away_recommendation(user_prompt)
+
         logger.info(response)
         new_group = list(selected_word_group.words) + [response["word"]]
         one_away_group_recommendation = RecommendedGroup(
@@ -692,7 +696,7 @@ async def get_llm_recommendation(state: PuzzleState, config: RunnableConfig) -> 
     return state
 
 
-async def apply_recommendation(state: PuzzleState) -> PuzzleState:
+async def apply_recommendation(state: PuzzleState, config: RunnableConfig) -> PuzzleState:
     logger.info("Entering apply_recommendation:")
     logger.debug(f"\nEntering apply_recommendation State: {pp.pformat(state)}")
 
@@ -746,7 +750,7 @@ async def apply_recommendation(state: PuzzleState) -> PuzzleState:
 
                     # perform one-away analysis
                     one_away_group_recommendation = await one_away_analyzer(
-                        state, invalid_group, state["words_remaining"]
+                        state, invalid_group, state["words_remaining"], config
                     )
 
                     # check if one_away_group_recommendation is a prior mistake

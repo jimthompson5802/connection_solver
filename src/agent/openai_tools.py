@@ -137,6 +137,42 @@ class EmbedVecGroup(TypedDict):
     explanation: str
 
 
+ANCHOR_WORDS_SYSTEM_PROMPT = (
+    "you are an expert in the nuance of the english language.\n\n"
+    "You will be given three words. you must determine if the three words can be related to a single topic.\n\n"
+    "To make that determination, do the following:\n"
+    "* Determine common contexts for each word. \n"
+    "* Determine if there is a context that is shared by all three words.\n"
+    "* respond 'single' if a single topic can be found that applies to all three words, otherwise 'multiple'.\n"
+    "* Provide an explanation for the response.\n\n"
+    "return response in json with the key 'response' with the value 'single' or 'multiple' and the key 'explanation' with the reason for the response."
+)
+
+
+class AnchorWordsAnalysis(TypedDict):
+    response: str
+    explanation: str
+
+
+ONE_AWAY_RECOMMENDATION_SYSTEM_PROMPT = """
+you will be given a list called the "anchor_words".
+
+You will be given list of "candidate_words", select the one word that is most higly connected to the "anchor_words".
+
+Steps:
+1. First identify the common connection that is present in all the "anchor_words".  If each word has multiple meanings, consider the meaning that is most common among the "anchor_words".
+
+2. Now test each word from the "candidate_words" and decide which one has the highest degree of connection to the "anchor_words".    
+
+3. Return the word that is most connected to the "anchor_words" and the reason for its selection in json structure.  The word should have the key "word" and the explanation should have the key "explanation".
+"""
+
+
+class OneAwayRecommendation(TypedDict):
+    word: str
+    explanation: str
+
+
 class ExtractedWordsFromImage(TypedDict):
     words: List[str]
 
@@ -232,3 +268,38 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         response = await structured_llm.ainvoke([message])
 
         return response
+
+    async def analyze_anchor_words_group(self, anchor_words_group):
+        """
+        Analyzes a group of anchor words to determine if they are related to a single topic.
+
+        Args:
+            anchor_words_group (list): A list of three anchor words to be analyzed.
+
+        Returns:
+            dict: The analysis result in JSON format.
+        """
+        prompt = HumanMessage(anchor_words_group)
+        prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), prompt]
+
+        structured_llm = self.llm.with_structured_output(AnchorWordsAnalysis)
+        result = await structured_llm.ainvoke(prompt)
+
+        return result
+
+    async def generate_one_away_recommendation(self, anchor_words_prompt: str):
+        """
+        Generates a recommendation for a single word that is one letter away from the provided prompt.
+
+        Args:
+            anchor_words_prompt (str): The prompt containing the anchor words.
+
+        Returns:
+            dict: The recommendation in JSON format.
+        """
+        prompt = [SystemMessage(ONE_AWAY_RECOMMENDATION_SYSTEM_PROMPT), HumanMessage(anchor_words_prompt)]
+
+        structured_llm = self.llm.with_structured_output(OneAwayRecommendation)
+        result = await structured_llm.ainvoke(prompt)
+
+        return result
