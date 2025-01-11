@@ -11,6 +11,7 @@ import uuid
 import tempfile
 
 from langchain_core.tracers.context import tracing_v2_enabled
+from langchain_core.runnables import RunnableConfig
 
 from workflow_manager import run_workflow, create_workflow_graph
 from puzzle_solver import PuzzleState
@@ -91,13 +92,13 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
 
     workflow_graph.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
 
-    runtime_config = {
-        "configurable": {
+    runtime_config = RunnableConfig(
+        configurable={
             "thread_id": str(uuid.uuid4()),
             "workflow_instructions": workflow_instructions,
         },
-        "recursion_limit": 50,
-    }
+        recursion_limit=50,
+    )
 
     with tempfile.NamedTemporaryFile(suffix=".db") as tmp_db:
         initial_state = PuzzleState(

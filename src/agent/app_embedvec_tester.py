@@ -17,7 +17,7 @@ import pandas as pd
 
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage
-from langchain_core.runnables import ConfigurableField
+from langchain_core.runnables import ConfigurableField, RunnableConfig
 
 from langchain_core.tracers.context import tracing_v2_enabled
 
@@ -117,13 +117,13 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
         #     description="Workflow Instructions for the Connection Solver",
         # )
 
-        runtime_config = {
-            "configurable": {
+        runtime_config = RunnableConfig(
+            configurable={
                 "thread_id": str(uuid.uuid4()),
                 "workflow_instructions": workflow_instructions,
             },
-            "recursion_limit": 50,
-        }
+            recursion_limit=50,
+        )
 
         async def setup_this_puzzle(solution):
             return solution
