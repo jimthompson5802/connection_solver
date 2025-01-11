@@ -137,6 +137,10 @@ class EmbedVecGroup(TypedDict):
     explanation: str
 
 
+class ExtractedWordsFromImage(TypedDict):
+    words: List[str]
+
+
 class LLMOpenAIInterface(LLMInterfaceBase):
     """class for OpenAI LLM Interface"""
 
@@ -213,6 +217,18 @@ class LLMOpenAIInterface(LLMInterfaceBase):
 
         return response
 
-    async def extract_words_from_image(image_fp: str) -> List[str]:
+    async def extract_words_from_image(self, encoded_image: str):
         """extracts words from an image"""
-        pass
+        # Create a message with text and image
+        message = HumanMessage(
+            content=[
+                {"type": "text", "text": "extract words from the image and return as a json list"},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_image}"}},
+            ]
+        )
+
+        structured_llm = self.llm.with_structured_output(ExtractedWordsFromImage)
+
+        response = await structured_llm.ainvoke([message])
+
+        return response

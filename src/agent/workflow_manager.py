@@ -137,7 +137,7 @@ def determine_next_action(state: PuzzleState) -> str:
 async def run_workflow(
     workflow_graph,
     initial_state: PuzzleState,
-    runtime_config: dict,
+    runtime_config: RunnableConfig,
     *,
     puzzle_setup_function: callable = None,
     puzzle_response_function: callable = None,
@@ -153,7 +153,7 @@ async def run_workflow(
         logger.debug(f"\nCurrent state: {current_state}")
         logger.info(f"\nNext action: {current_state.next}")
         if current_state.next[0] == "setup_puzzle":
-            words = await puzzle_setup_function()
+            words = await puzzle_setup_function(runtime_config)
 
             print(f"Setting up Puzzle Words: {words}")
 

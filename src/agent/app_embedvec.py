@@ -2,6 +2,7 @@
 
 import argparse
 import asyncio
+from functools import partial
 import logging
 import pickle
 import pprint
@@ -16,6 +17,7 @@ from langchain_core.runnables import RunnableConfig
 from workflow_manager import run_workflow, create_workflow_graph
 from puzzle_solver import PuzzleState
 from tools import interact_with_user, manual_puzzle_setup_prompt
+from openai_tools import LLMOpenAIInterface
 
 from src.agent import __version__
 
@@ -92,13 +94,22 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
 
     workflow_graph.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
 
+    llm_interface = LLMOpenAIInterface(
+        model_name="gpt-4o",
+        temperature=0.7,
+        max_tokens=4096,
+    )
+
     runtime_config = RunnableConfig(
         configurable={
             "thread_id": str(uuid.uuid4()),
             "workflow_instructions": workflow_instructions,
+            "llm_interface": llm_interface,
         },
         recursion_limit=50,
     )
+
+    setup_this_puzzle = partial(manual_puzzle_setup_prompt, runtime_config)
 
     with tempfile.NamedTemporaryFile(suffix=".db") as tmp_db:
         initial_state = PuzzleState(

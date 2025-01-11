@@ -7,6 +7,7 @@ from typing import List, TypedDict
 
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 
 
 with open("/openai/api_key.json") as f:
@@ -50,7 +51,7 @@ def read_file_to_word_list(file_location: str) -> List[str]:
         return []
 
 
-async def extract_words_from_image(image_fp: str) -> List[str]:
+async def extract_words_from_image_file(image_fp: str, config: RunnableConfig) -> List[str]:
     """
     Encodes an image to base64 and sends it to the OpenAI LLM to extract words from the image.
 
@@ -68,18 +69,20 @@ async def extract_words_from_image(image_fp: str) -> List[str]:
     with open(image_fp, "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode("utf-8")
 
+    # TODO: clean-up
     # Create a message with text and image
-    message = HumanMessage(
-        content=[
-            {"type": "text", "text": "extract words from the image and return as a json list"},
-            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}},
-        ]
-    )
+    # message = HumanMessage(
+    #     content=[
+    #         {"type": "text", "text": "extract words from the image and return as a json list"},
+    #         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}},
+    #     ]
+    # )
 
     # Get the response from the model
-    response = await chat_with_llm([message], structured_output=True)
+    # response = await chat_with_llm([message])
+    response = await config["configurable"]["llm_interface"].extract_words_from_image(base64_image)
 
-    words = [w.lower() for w in json.loads(response.content)["words"]]
+    words = [w.lower() for w in response["words"]]
 
     logger.info("Exiting extract_words_from_image")
     logger.debug(f"Exiting extract_words_from_image response {words}")
@@ -87,7 +90,7 @@ async def extract_words_from_image(image_fp: str) -> List[str]:
     return words
 
 
-async def manual_puzzle_setup_prompt() -> List[str]:
+async def manual_puzzle_setup_prompt(config: RunnableConfig) -> List[str]:
 
     # pompt user for puzzle source
     puzzle_source_type = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
@@ -97,7 +100,7 @@ async def manual_puzzle_setup_prompt() -> List[str]:
     if puzzle_source_type == "file":
         words = read_file_to_word_list(puzzle_source_fp)
     elif puzzle_source_type == "image":
-        words = await extract_words_from_image(puzzle_source_fp)
+        words = await extract_words_from_image_file(puzzle_source_fp, config=config)
     else:
         raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
 
