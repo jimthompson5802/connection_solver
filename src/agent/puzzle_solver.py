@@ -113,7 +113,7 @@ class PuzzleState(TypedDict):
     puzzle_checker_response: Optional[str] = None
 
 
-async def setup_puzzle(state: PuzzleState) -> PuzzleState:
+async def setup_puzzle(state: PuzzleState, config: RunnableConfig) -> PuzzleState:
     logger.info("Entering setup_puzzle:")
     logger.debug(f"\nEntering setup_puzzle State: {pp.pformat(state)}")
 
@@ -135,7 +135,9 @@ async def setup_puzzle(state: PuzzleState) -> PuzzleState:
 
     # generate vocabulary for the words
     print("\nGenerating vocabulary and embeddings for the words...this may take several seconds ")
-    vocabulary = await generate_vocabulary(state["words_remaining"])
+    # TODO: Clean up code
+    # vocabulary = await generate_vocabulary(state["words_remaining"], config["configurable"]["llm_interface"])
+    vocabulary = await config["configurable"]["llm_interface"].generate_vocabulary(state["words_remaining"])
 
     # Convert dictionary to DataFrame
     rows = []
@@ -179,50 +181,51 @@ async def setup_puzzle(state: PuzzleState) -> PuzzleState:
     return state
 
 
-VOCABULARY_SYSTEM_MESSAGE = SystemMessage(
-    """
-You are an expert in language and knowledgeable on how words are used.
+# TODO: Clean up code
+# VOCABULARY_SYSTEM_MESSAGE = SystemMessage(
+#     """
+# You are an expert in language and knowledgeable on how words are used.
 
-Your task is to generate as many diverse definitions as possible for the given word.  Follow these steps:
+# Your task is to generate as many diverse definitions as possible for the given word.  Follow these steps:
 
-1. come up with a list of all possible parts of speech that the given word can be,e.g., noun, verb, adjective, etc.
-2. for each part of speech, generate one or more examples of the given word for that parts of speech.  preappend the part of speech to the examples, e.g., "noun: example1", "verb: example2", etc.
-3. combine all examples into a single list.
+# 1. come up with a list of all possible parts of speech that the given word can be,e.g., noun, verb, adjective, etc.
+# 2. for each part of speech, generate one or more examples of the given word for that parts of speech.  preappend the part of speech to the examples, e.g., "noun: example1", "verb: example2", etc.
+# 3. combine all examples into a single list.
 
-Return your response as a JSON object with the key "result" and the examples as a list of strings.
+# Return your response as a JSON object with the key "result" and the examples as a list of strings.
 
-example:
-{
-    "result": [
-    "noun: example1", 
-    "noun: example2", 
-    "adjective: example3",
-    "verb: example4"
-    ]
-}
+# example:
+# {
+#     "result": [
+#     "noun: example1",
+#     "noun: example2",
+#     "adjective: example3",
+#     "verb: example4"
+#     ]
+# }
 
-"""
-)
-
-
-class VocabularyResults(TypedDict):
-    result: List[str]
+# """
+# )
 
 
-async def generate_vocabulary(words):
+# class VocabularyResults(TypedDict):
+#     result: List[str]
 
-    vocabulary = {}
 
-    async def process_word(the_word):
-        prompt = f"\n\ngiven word: {the_word}"
-        prompt = HumanMessage(prompt)
-        prompt = [VOCABULARY_SYSTEM_MESSAGE, prompt]
-        result = await chat_with_llm(prompt, structured_output_class=VocabularyResults)
-        vocabulary[the_word] = result["result"]
+# async def generate_vocabulary(words, llm_interface):
 
-    await asyncio.gather(*[process_word(word) for word in words])
+#     vocabulary = {}
 
-    return vocabulary
+#     async def process_word(the_word):
+#         prompt = f"\n\ngiven word: {the_word}"
+#         prompt = HumanMessage(prompt)
+#         prompt = [VOCABULARY_SYSTEM_MESSAGE, prompt]
+#         result = await chat_with_llm(prompt, structured_output_class=VocabularyResults)
+#         vocabulary[the_word] = result["result"]
+
+#     await asyncio.gather(*[process_word(word) for word in words])
+
+#     return vocabulary
 
 
 def generate_embeddings(definitions, model="text-embedding-3-small"):
@@ -343,83 +346,84 @@ def get_candidate_words(df: pd.DataFrame) -> list:
     return unique_candidate_list
 
 
+# TODO: Clean up
 # Used ChatGPT to get an initial system message with this prompt:
 # "What is a good system prompt to solve the NYT Connection Puzzle that returns a JSON output?"
 # Revised the system message to be based on development experience.
-LLM_RECOMMENDER_SYSTEM_MESSAGE = SystemMessage(
-    """
-    You are a helpful assistant in solving the New York Times Connection Puzzle.
+# LLM_RECOMMENDER_SYSTEM_MESSAGE = SystemMessage(
+#     """
+#     You are a helpful assistant in solving the New York Times Connection Puzzle.
 
-    The New York Times Connection Puzzle involves identifying groups of four related items from a grid of 16 words. Each word can belong to only one group, and there are generally 4 groups to identify. Your task is to examine the provided words, identify the possible groups based on thematic connections, and then suggest the groups one by one.
+#     The New York Times Connection Puzzle involves identifying groups of four related items from a grid of 16 words. Each word can belong to only one group, and there are generally 4 groups to identify. Your task is to examine the provided words, identify the possible groups based on thematic connections, and then suggest the groups one by one.
 
-    # Steps
+#     # Steps
 
-    1. **Review the candidate words**: Look at the words provided in the candidate list carefully.
-    2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
-    3. **Group Words**: Attempt to form groups of four words that share a common theme.
-    4. **Avoid invalid groups**: Do not include word groups that are known to be invalid.
-    5. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
-    6. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
-    7. **Solution output**: Select only the highest confidence group.  Generate only a json response as shown in the **Output Format** section.
+#     1. **Review the candidate words**: Look at the words provided in the candidate list carefully.
+#     2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
+#     3. **Group Words**: Attempt to form groups of four words that share a common theme.
+#     4. **Avoid invalid groups**: Do not include word groups that are known to be invalid.
+#     5. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
+#     6. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
+#     7. **Solution output**: Select only the highest confidence group.  Generate only a json response as shown in the **Output Format** section.
 
-    # Output Format
+#     # Output Format
 
-    Provide the solution with the highest confidence group and their themes in a structured format. The JSON output should contain keys "words" that is the list of the connected words and "connection" describing the connection among the words.
+#     Provide the solution with the highest confidence group and their themes in a structured format. The JSON output should contain keys "words" that is the list of the connected words and "connection" describing the connection among the words.
 
-    ```json
-    {"words": ["Word1", "Word2", "Word3", "Word4"], "connection": "..."},
-    ```
+#     ```json
+#     {"words": ["Word1", "Word2", "Word3", "Word4"], "connection": "..."},
+#     ```
 
-    No other text.
+#     No other text.
 
-    # Examples
+#     # Examples
 
-    **Example:**
+#     **Example:**
 
-    - **Input:** ["prime", "dud", "shot", "card", "flop", "turn", "charge", "rainforest", "time", "miss", "plastic", "kindle", "chance", "river", "bust", "credit"]
-    
-    - **Output:**
-    {"words": [ "bust", "dud", "flop", "mist"], "connection": "clunker"}
+#     - **Input:** ["prime", "dud", "shot", "card", "flop", "turn", "charge", "rainforest", "time", "miss", "plastic", "kindle", "chance", "river", "bust", "credit"]
 
-    No other text.
+#     - **Output:**
+#     {"words": [ "bust", "dud", "flop", "mist"], "connection": "clunker"}
 
-    # Notes
+#     No other text.
 
-    - Ensure all thematic connections make logical sense.
-    - Consider edge cases where a word could potentially fit into more than one category.
-    - Focus on clear and accurate thematic grouping to aid in solving the puzzle efficiently.
-    """
-)
+#     # Notes
 
-
-class LLMRecommendation(TypedDict):
-    words: List[str]
-    connection: str
+#     - Ensure all thematic connections make logical sense.
+#     - Consider edge cases where a word could potentially fit into more than one category.
+#     - Focus on clear and accurate thematic grouping to aid in solving the puzzle efficiently.
+#     """
+# )
 
 
-async def ask_llm_for_solution(prompt):
-    """
-    Asks the OpenAI LLM for a solution based on the provided prompt.
+# class LLMRecommendation(TypedDict):
+#     words: List[str]
+#     connection: str
 
-    Parameters:
-    prompt (str): The input prompt to be sent to the LLM.
 
-    Returns:
-    dict: The response from the LLM in JSON format.
-    """
-    logger.info("Entering ask_llm_for_solution")
-    logger.debug(f"Entering ask_llm_for_solution Prompt: {prompt.content}")
+# async def ask_llm_for_solution(prompt):
+#     """
+#     Asks the OpenAI LLM for a solution based on the provided prompt.
 
-    # Create a prompt by concatenating the system and human messages
-    conversation = [LLM_RECOMMENDER_SYSTEM_MESSAGE, prompt]
+#     Parameters:
+#     prompt (str): The input prompt to be sent to the LLM.
 
-    # Invoke the LLM
-    response = await chat_with_llm(conversation, structured_output_class=LLMRecommendation)
+#     Returns:
+#     dict: The response from the LLM in JSON format.
+#     """
+#     logger.info("Entering ask_llm_for_solution")
+#     logger.debug(f"Entering ask_llm_for_solution Prompt: {prompt.content}")
 
-    logger.info("Exiting ask_llm_for_solution")
-    logger.debug(f"exiting ask_llm_for_solution response {response}")
+#     # Create a prompt by concatenating the system and human messages
+#     conversation = [LLM_RECOMMENDER_SYSTEM_MESSAGE, prompt]
 
-    return response
+#     # Invoke the LLM
+#     response = await chat_with_llm(conversation, structured_output_class=LLMRecommendation)
+
+#     logger.info("Exiting ask_llm_for_solution")
+#     logger.debug(f"exiting ask_llm_for_solution response {response}")
+
+#     return response
 
 
 ANCHOR_WORDS_SYSTEM_PROMPT = (
@@ -618,7 +622,7 @@ HUMAN_MESSAGE_BASE = """
     """
 
 
-async def get_llm_recommendation(state: PuzzleState) -> PuzzleState:
+async def get_llm_recommendation(state: PuzzleState, config: RunnableConfig) -> PuzzleState:
     logger.info("Entering get_recommendation")
     logger.debug(f"Entering get_recommendation State: {pp.pformat(state)}")
 
@@ -626,8 +630,9 @@ async def get_llm_recommendation(state: PuzzleState) -> PuzzleState:
     print(f"\nENTERED {state['current_tool'].upper()}")
     print(f"found count: {state['found_count']}, mistake_count: {state['mistake_count']}")
 
-    # build prompt for llm
-    prompt = HUMAN_MESSAGE_BASE
+    # TODO: clean up
+    # # build prompt for llm
+    # prompt = HUMAN_MESSAGE_BASE
 
     attempt_count = 0
     while True:
@@ -649,7 +654,8 @@ async def get_llm_recommendation(state: PuzzleState) -> PuzzleState:
         logger.info(f"\nPrompt for llm: {prompt.content}")
 
         # get recommendation from llm
-        llm_response = await ask_llm_for_solution(prompt)
+        # llm_response = await ask_llm_for_solution(prompt)  # TODO: clean up
+        llm_response = await config["configurable"]["llm_interface"].ask_llm_for_solution(prompt)
 
         if isinstance(llm_response, list):
             logger.debug(f"\nLLM response is list")

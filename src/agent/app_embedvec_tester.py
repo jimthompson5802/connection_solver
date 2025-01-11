@@ -15,15 +15,15 @@ from functools import partial
 import numpy as np
 import pandas as pd
 
-from langgraph.graph import StateGraph, END
-from langchain_core.messages import HumanMessage
-from langchain_core.runnables import ConfigurableField, RunnableConfig
+from langchain_core.runnables import RunnableConfig
 
 from langchain_core.tracers.context import tracing_v2_enabled
 
 from workflow_manager import run_workflow, create_workflow_graph
 from puzzle_solver import PuzzleState
 from tools import check_one_solution
+
+from openai_tools import LLMOpenAIInterface
 
 from src.agent import __version__
 
@@ -117,10 +117,17 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
         #     description="Workflow Instructions for the Connection Solver",
         # )
 
+        llm_interface = LLMOpenAIInterface(
+            model_name="gpt-4o",
+            temperature=0.7,
+            max_tokens=4096,
+        )
+
         runtime_config = RunnableConfig(
             configurable={
                 "thread_id": str(uuid.uuid4()),
                 "workflow_instructions": workflow_instructions,
+                "llm_interface": llm_interface,
             },
             recursion_limit=50,
         )
