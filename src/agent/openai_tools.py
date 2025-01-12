@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 import asyncio
 import logging
 from typing import List, TypedDict
@@ -6,46 +5,9 @@ from typing import List, TypedDict
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 
+from tools import LLMInterfaceBase
+
 logger = logging.getLogger(__name__)
-
-
-class LLMInterfaceBase(ABC):
-    """base class for LLM Interface"""
-
-    @abstractmethod
-    def __init__(self, model_name: str, **kwargs):
-        """setups up LLM Model"""
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def generate_vocabulary(self, words):
-        """creates definitions for all the words"""
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def choose_embedvec_item(self, candidates):
-        """chooses an item from a list of candidates"""
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def ask_llm_for_solution(self, prompt):
-        """asks the LLM for a solution to a prompt"""
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def extract_words_from_image(encoded_image: str) -> List[str]:
-        """extracts words from an image"""
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def analyze_anchor_words_group(self, anchor_words_group):
-        """analyzes a group of anchor words"""
-        raise NotImplementedError()
-
-    @abstractmethod
-    async def generate_one_away_recommendation(self, anchor_words_prompt: str):
-        """generates a recommendation for a single word that is one away from the correct group"""
-        raise NotImplementedError()
 
 
 VOCABULARY_SYSTEM_MESSAGE = """
@@ -190,15 +152,36 @@ class ExtractedWordsFromImage(TypedDict):
 class LLMOpenAIInterface(LLMInterfaceBase):
     """class for OpenAI LLM Interface"""
 
-    def __init__(self, model_name: str, temperature=0.7, max_tokens=4096, **kwargs):
+    def __init__(
+        self,
+        word_analyzer_llm_name: str = "gpt-4o",
+        image_extraction_llm_name: str = "gpt-4o",
+        workflow_llm_name: str = "gpt-3.5-turbo",
+        temperature: float = 0.7,
+        max_tokens=4096,
+        **kwargs,
+    ):
         """setups up LLM Model"""
-        self.model_name = model_name
+        self.word_analyzer_llm_name = word_analyzer_llm_name
+        self.workflow_llm_name = workflow_llm_name
         self.temperature = temperature
         self.max_tokens = max_tokens
 
-        self.llm = ChatOpenAI(
-            model=self.model_name,
+        self.word_analyzer_llm = ChatOpenAI(
+            model=self.word_analyzer_llm_name,
             temperature=self.temperature,
+            max_tokens=self.max_tokens,
+        )
+
+        self.image_extraction_llm = ChatOpenAI(
+            model=image_extraction_llm_name,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+        )
+
+        self.workflow_llm = ChatOpenAI(
+            model=self.workflow_llm_name,
+            temperature=0,
             max_tokens=self.max_tokens,
         )
 
@@ -211,7 +194,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             prompt = f"\n\ngiven word: {the_word}"
             prompt = HumanMessage(prompt)
             prompt = [system_message, prompt]
-            structured_llm = self.llm.with_structured_output(VocabularyResults)
+            structured_llm = self.word_analyzer_llm.with_structured_output(VocabularyResults)
             result = await structured_llm.ainvoke(prompt)
             vocabulary[the_word] = result["result"]
 
@@ -233,7 +216,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         prompt = HumanMessage(candidates)
         prompt = [SystemMessage(EMBEDVEC_SYSTEM_MESSAGE), prompt]
 
-        structured_llm = self.llm.with_structured_output(EmbedVecGroup)
+        structured_llm = self.word_analyzer_llm.with_structured_output(EmbedVecGroup)
         result = await structured_llm.ainvoke(prompt)
 
         return result
@@ -255,7 +238,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         conversation = [SystemMessage(LLM_RECOMMENDER_SYSTEM_MESSAGE), prompt]
 
         # Invoke the LLM
-        structured_llm = self.llm.with_structured_output(LLMRecommendation)
+        structured_llm = self.word_analyzer_llm.with_structured_output(LLMRecommendation)
         response = await structured_llm.ainvoke(conversation)
 
         logger.info("Exiting ask_llm_for_solution")
@@ -273,7 +256,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             ]
         )
 
-        structured_llm = self.llm.with_structured_output(ExtractedWordsFromImage)
+        structured_llm = self.image_extraction_llm.with_structured_output(ExtractedWordsFromImage)
 
         response = await structured_llm.ainvoke([message])
 
@@ -292,7 +275,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         prompt = HumanMessage(anchor_words_group)
         prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), prompt]
 
-        structured_llm = self.llm.with_structured_output(AnchorWordsAnalysis)
+        structured_llm = self.word_analyzer_llm.with_structured_output(AnchorWordsAnalysis)
         result = await structured_llm.ainvoke(prompt)
 
         return result
@@ -309,7 +292,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         """
         prompt = [SystemMessage(ONE_AWAY_RECOMMENDATION_SYSTEM_PROMPT), HumanMessage(anchor_words_prompt)]
 
-        structured_llm = self.llm.with_structured_output(OneAwayRecommendation)
+        structured_llm = self.word_analyzer_llm.with_structured_output(OneAwayRecommendation)
         result = await structured_llm.ainvoke(prompt)
 
         return result

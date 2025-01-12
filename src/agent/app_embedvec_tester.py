@@ -110,11 +110,7 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     async def solve_a_puzzle(i, solution, workflow_instructions):
         print(f"\n>>>>SOLVING PUZZLE {i+1}")
 
-        llm_interface = LLMOpenAIInterface(
-            model_name="gpt-4o",
-            temperature=0.7,
-            max_tokens=4096,
-        )
+        llm_interface = LLMOpenAIInterface()
 
         runtime_config = RunnableConfig(
             configurable={

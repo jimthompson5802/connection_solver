@@ -4,6 +4,7 @@ import json
 import logging
 import pprint as pp
 from typing import List, TypedDict
+from abc import ABC, abstractmethod
 
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -18,6 +19,45 @@ api_key = config["key"]
 logger = logging.getLogger(__name__)
 
 pp = pp.PrettyPrinter(indent=4)
+
+
+class LLMInterfaceBase(ABC):
+    """base class for LLM Interface"""
+
+    @abstractmethod
+    def __init__(self, model_name: str, **kwargs):
+        """setups up LLM Model"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def generate_vocabulary(self, words):
+        """creates definitions for all the words"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def choose_embedvec_item(self, candidates):
+        """chooses an item from a list of candidates"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def ask_llm_for_solution(self, prompt):
+        """asks the LLM for a solution to a prompt"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def extract_words_from_image(encoded_image: str) -> List[str]:
+        """extracts words from an image"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def analyze_anchor_words_group(self, anchor_words_group):
+        """analyzes a group of anchor words"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def generate_one_away_recommendation(self, anchor_words_prompt: str):
+        """generates a recommendation for a single word that is one away from the correct group"""
+        raise NotImplementedError()
 
 
 def compute_group_id(word_group: list) -> str:

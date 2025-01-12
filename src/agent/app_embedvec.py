@@ -87,11 +87,7 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
 
     workflow_graph.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
 
-    llm_interface = LLMOpenAIInterface(
-        model_name="gpt-4o",
-        temperature=0.7,
-        max_tokens=4096,
-    )
+    llm_interface = LLMOpenAIInterface()
 
     runtime_config = RunnableConfig(
         configurable={
