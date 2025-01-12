@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import pprint as pp
+import textwrap
 from typing import List, TypedDict
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -10,136 +11,6 @@ from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from tools import LLMInterfaceBase
 
 logger = logging.getLogger(__name__)
-
-
-LLM_RECOMMENDER_SYSTEM_MESSAGE = """
-    You are a helpful assistant in solving the New York Times Connection Puzzle.
-
-    The New York Times Connection Puzzle involves identifying groups of four related items from a grid of 16 words. Each word can belong to only one group, and there are generally 4 groups to identify. Your task is to examine the provided words, identify the possible groups based on thematic connections, and then suggest the groups one by one.
-
-    # Steps
-
-    1. **Review the candidate words**: Look at the words provided in the candidate list carefully.
-    2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
-    3. **Group Words**: Attempt to form groups of four words that share a common theme.
-    4. **Avoid invalid groups**: Do not include word groups that are known to be invalid.
-    5. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
-    6. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
-    7. **Solution output**: Select only the highest confidence group.  Generate only a json response as shown in the **Output Format** section.
-
-    # Output Format
-
-    Provide the solution with the highest confidence group and their themes in a structured format. The JSON output should contain keys "words" that is the list of the connected words and "connection" describing the connection among the words.
-
-    ```json
-    {"words": ["Word1", "Word2", "Word3", "Word4"], "connection": "..."},
-    ```
-
-    No other text.
-
-    # Examples
-
-    **Example:**
-
-    - **Input:** ["prime", "dud", "shot", "card", "flop", "turn", "charge", "rainforest", "time", "miss", "plastic", "kindle", "chance", "river", "bust", "credit"]
-    
-    - **Output:**
-    {"words": [ "bust", "dud", "flop", "mist"], "connection": "clunker"}
-
-    No other text.
-
-    # Notes
-
-    - Ensure all thematic connections make logical sense.
-    - Consider edge cases where a word could potentially fit into more than one category.
-    - Focus on clear and accurate thematic grouping to aid in solving the puzzle efficiently.
-    """
-
-
-class LLMRecommendation(TypedDict):
-    words: List[str]
-    connection: str
-
-
-EMBEDVEC_SYSTEM_MESSAGE = """
-    anaylyze the following set of "candidate group" of 4 words.
-    
-    For each  "candidate group"  determine if the 4 words are connected by a single theme or concept.
-
-    eliminate "candidate group" where the 4 words are not connected by a single theme or concept.
-
-    return the "candidate group" that is unlike the other word groups
-
-    if there is no  "candidate group" connected by a single theme or concept, return the group with the highest group metric.
-
-    return response in json with the
-    * key "candidate_group" for the "candidate group" that is connected by a single theme or concept that is the most unique about the "candidate group".  This is a list of 4 words.
-    * key "explanation" with a few word summary for the reason for the response.
-    """
-
-
-class EmbedVecGroup(TypedDict):
-    candidate_group: List[str]
-    explanation: str
-
-
-ANCHOR_WORDS_SYSTEM_PROMPT = (
-    "you are an expert in the nuance of the english language.\n\n"
-    "You will be given three words. you must determine if the three words can be related to a single topic.\n\n"
-    "To make that determination, do the following:\n"
-    "* Determine common contexts for each word. \n"
-    "* Determine if there is a context that is shared by all three words.\n"
-    "* respond 'single' if a single topic can be found that applies to all three words, otherwise 'multiple'.\n"
-    "* Provide an explanation for the response.\n\n"
-    "return response in json with the key 'response' with the value 'single' or 'multiple' and the key 'explanation' with the reason for the response."
-)
-
-
-class AnchorWordsAnalysis(TypedDict):
-    response: str
-    explanation: str
-
-
-ONE_AWAY_RECOMMENDATION_SYSTEM_PROMPT = """
-you will be given a list called the "anchor_words".
-
-You will be given list of "candidate_words", select the one word that is most higly connected to the "anchor_words".
-
-Steps:
-1. First identify the common connection that is present in all the "anchor_words".  If each word has multiple meanings, consider the meaning that is most common among the "anchor_words".
-
-2. Now test each word from the "candidate_words" and decide which one has the highest degree of connection to the "anchor_words".    
-
-3. Return the word that is most connected to the "anchor_words" and the reason for its selection in json structure.  The word should have the key "word" and the explanation should have the key "explanation".
-"""
-
-
-class OneAwayRecommendation(TypedDict):
-    word: str
-    explanation: str
-
-
-PLANNER_SYSTEM_MESSAGE = """
-    You are an expert in managing the sequence of a workflow. Your task is to
-    determine the next tool to use given the current state of the workflow.
-
-    the eligible tools to use are: ["setup_puzzle", "get_llm_recommendation", "apply_recommendation", "get_embedvec_recommendation", "get_manual_recommendation", "END"]
-
-    The important information for the workflow state is to consider are: "puzzle_status", "tool_status", and "current_tool".
-
-    Using the provided instructions, you will need to determine the next tool to use.
-
-    output response in json format with key word "tool" and the value as the output string.
-    
-"""
-
-
-class NextAction(TypedDict):
-    tool: str
-
-
-class ExtractedWordsFromImage(TypedDict):
-    words: List[str]
 
 
 class LLMOpenAIInterface(LLMInterfaceBase):
@@ -198,7 +69,9 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             dict: A dictionary where the keys are the input words and the values are
                   the structured vocabulary results.
         """
-        VOCABULARY_SYSTEM_MESSAGE = """
+
+        VOCABULARY_SYSTEM_MESSAGE = textwrap.dedent(
+            """
             You are an expert in language and knowledgeable on how words are used.
 
             Your task is to generate as many diverse definitions as possible for the given word.  Follow these steps:
@@ -219,12 +92,13 @@ class LLMOpenAIInterface(LLMInterfaceBase):
                 ]
             }}
             """
+        )
 
+        # Define the structured output for the vocabulary results
         class VocabularyResults(TypedDict):
             result: List[str]
 
         vocabulary = {}
-        system_message = SystemMessage(VOCABULARY_SYSTEM_MESSAGE)
 
         given_word_template = ChatPromptTemplate(
             [
@@ -243,10 +117,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             Returns:
                 None: The result is stored in the vocabulary dictionary with the word as the key.
             """
-            # prompt = f"\n\ngiven word: {the_word}"
             prompt = given_word_template.invoke({"the_word": the_word})
-            # prompt = HumanMessage(prompt)
-            # prompt = [system_message, prompt]
             structured_llm = self.word_analyzer_llm.with_structured_output(VocabularyResults)
             result = await structured_llm.ainvoke(prompt.to_messages())
             vocabulary[the_word] = result["result"]
@@ -282,6 +153,29 @@ class LLMOpenAIInterface(LLMInterfaceBase):
 
         """
 
+        EMBEDVEC_SYSTEM_MESSAGE = textwrap.dedent(
+            """
+            anaylyze the following set of "candidate group" of 4 words.
+            
+            For each  "candidate group"  determine if the 4 words are connected by a single theme or concept.
+
+            eliminate "candidate group" where the 4 words are not connected by a single theme or concept.
+
+            return the "candidate group" that is unlike the other word groups
+
+            if there is no  "candidate group" connected by a single theme or concept, return the group with the highest group metric.
+
+            return response in json with the
+            * key "candidate_group" for the "candidate group" that is connected by a single theme or concept that is the most unique about the "candidate group".  This is a list of 4 words.
+            * key "explanation" with a few word summary for the reason for the response.
+            """
+        )
+
+        # Define the structured output for the embedded vector item
+        class EmbedVecGroup(TypedDict):
+            candidate_group: List[str]
+            explanation: str
+
         prompt = HumanMessage(candidates)
         prompt = [SystemMessage(EMBEDVEC_SYSTEM_MESSAGE), prompt]
 
@@ -290,7 +184,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
 
         return result
 
-    async def ask_llm_for_solution(self, prompt: str) -> dict:
+    async def ask_llm_for_solution(self, words_remaining: str) -> dict:
         """
         Asks the OpenAI LLM for a solution based on the provided prompt.
 
@@ -300,15 +194,78 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         Returns:
         dict: containing keys: "words" for the recommended word group and "connection" for the connection reason.
         """
-        logger.info("Entering ask_llm_for_solution")
-        logger.debug(f"Entering ask_llm_for_solution Prompt: {prompt.content}")
 
-        # Create a prompt by concatenating the system and human messages
-        conversation = [SystemMessage(LLM_RECOMMENDER_SYSTEM_MESSAGE), prompt]
+        LLM_RECOMMENDER_SYSTEM_MESSAGE = textwrap.dedent(
+            """
+            You are a helpful assistant in solving the New York Times Connection Puzzle.
+
+            The New York Times Connection Puzzle involves identifying groups of four related items from a grid of 16 words. Each word can belong to only one group, and there are generally 4 groups to identify. Your task is to examine the provided words, identify the possible groups based on thematic connections, and then suggest the groups one by one.
+
+            # Steps
+
+            1. **Review the candidate words**: Look at the words provided in the candidate list carefully.
+            2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
+            3. **Group Words**: Attempt to form groups of four words that share a common theme.
+            4. **Avoid invalid groups**: Do not include word groups that are known to be invalid.
+            5. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
+            6. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
+            7. **Solution output**: Select only the highest confidence group.  Generate only a json response as shown in the **Output Format** section.
+
+            # Output Format
+
+            Provide the solution with the highest confidence group and their themes in a structured format. The JSON output should contain keys "words" that is the list of the connected words and "connection" describing the connection among the words.
+
+            ```json
+            {{"words": ["Word1", "Word2", "Word3", "Word4"], "connection": "..."}},
+            ```
+
+            No other text.
+
+            # Examples
+
+            **Example:**
+
+            - **Input:** ["prime", "dud", "shot", "card", "flop", "turn", "charge", "rainforest", "time", "miss", "plastic", "kindle", "chance", "river", "bust", "credit"]
+            
+            - **Output:**
+            {{"words": [ "bust", "dud", "flop", "mist"], "connection": "clunker"}}
+
+            No other text.
+
+            # Notes
+
+            - Ensure all thematic connections make logical sense.
+            - Consider edge cases where a word could potentially fit into more than one category.
+            - Focus on clear and accurate thematic grouping to aid in solving the puzzle efficiently.
+            """
+        )
+
+        HUMAN_MESSAGE_BASE = textwrap.dedent(
+            """
+            From the following candidate list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection. 
+
+            candidate list: {candidate_list}     
+            """
+        )
+
+        # Define the structured output for the LLM recommendation
+        class LLMRecommendation(TypedDict):
+            words: List[str]
+            connection: str
+
+        logger.info("Entering ask_llm_for_solution")
+        logger.debug(f"Entering ask_llm_for_solution words remaining: {words_remaining}")
+
+        prompt = ChatPromptTemplate(
+            [
+                ("system", LLM_RECOMMENDER_SYSTEM_MESSAGE),
+                ("user", HUMAN_MESSAGE_BASE),
+            ]
+        ).invoke({"candidate_list": words_remaining})
 
         # Invoke the LLM
         structured_llm = self.word_analyzer_llm.with_structured_output(LLMRecommendation)
-        response = await structured_llm.ainvoke(conversation)
+        response = await structured_llm.ainvoke(prompt.to_messages())
 
         logger.info("Exiting ask_llm_for_solution")
         logger.debug(f"exiting ask_llm_for_solution response {response}")
@@ -325,6 +282,11 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         Returns:
             dict: A list of words extracted from the image under the key "words".
         """
+
+        # Define the structured output for the image extraction
+        class ExtractedWordsFromImage(TypedDict):
+            words: List[str]
+
         # Create a message with text and image
         message = HumanMessage(
             content=[
@@ -349,15 +311,42 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         Returns:
             dict: The analysis result in JSON format.
         """
-        prompt = HumanMessage(anchor_words_group)
-        prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), prompt]
+
+        ANCHOR_WORDS_SYSTEM_PROMPT = textwrap.dedent(
+            """
+            You are an expert in the nuance of the english language.
+
+            You will be given three words. you must determine if the three words can be related to a single topic.
+
+            To make that determination, do the following:
+            * Determine common contexts for each word. 
+            * Determine if there is a context that is shared by all three words.
+            * respond 'single' if a single topic can be found that applies to all three words, otherwise 'multiple'.
+            * Provide an explanation for the response.
+
+            Return response in json with the key 'response' with the value 'single' or 'multiple' and the key 'explanation' with the reason for the response.
+            """
+        )
+
+        ANCHOR_LIST_PROMPT = "\n{anchor_words_group}"
+
+        class AnchorWordsAnalysis(TypedDict):
+            response: str
+            explanation: str
+
+        prompt = ChatPromptTemplate(
+            [
+                ("system", ANCHOR_WORDS_SYSTEM_PROMPT),
+                ("user", ANCHOR_LIST_PROMPT),
+            ]
+        ).invoke({"anchor_words_group": anchor_words_group})
 
         structured_llm = self.word_analyzer_llm.with_structured_output(AnchorWordsAnalysis)
-        result = await structured_llm.ainvoke(prompt)
+        result = await structured_llm.ainvoke(prompt.to_messages())
 
         return result
 
-    async def generate_one_away_recommendation(self, anchor_words_prompt: str) -> dict:
+    async def generate_one_away_recommendation(self, anchor_words: str, candidate_words_remaining: str) -> dict:
         """
         Generates a recommendation for a single word that is one letter away from the provided prompt.
 
@@ -367,10 +356,42 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         Returns:
             dict: The recommendation in JSON format.
         """
-        prompt = [SystemMessage(ONE_AWAY_RECOMMENDATION_SYSTEM_PROMPT), HumanMessage(anchor_words_prompt)]
+
+        ONE_AWAY_RECOMMENDATION_SYSTEM_PROMPT = textwrap.dedent(
+            """
+        you will be given a list called the "anchor_words".
+
+        You will be given list of "candidate_words", select the one word that is most higly connected to the "anchor_words".
+
+        Steps:
+        1. First identify the common connection that is present in all the "anchor_words".  If each word has multiple meanings, consider the meaning that is most common among the "anchor_words".
+
+        2. Now test each word from the "candidate_words" and decide which one has the highest degree of connection to the "anchor_words".    
+
+        3. Return the word that is most connected to the "anchor_words" and the reason for its selection in json structure.  The word should have the key "word" and the explanation should have the key "explanation".
+        """
+        )
+
+        USER_PROMPT = "\nanchor_words: {anchor_words_prompt}\n\ncandidate_words: {candidate_words}"
+
+        class OneAwayRecommendation(TypedDict):
+            word: str
+            explanation: str
+
+        prompt = ChatPromptTemplate(
+            [
+                ("system", ONE_AWAY_RECOMMENDATION_SYSTEM_PROMPT),
+                ("user", USER_PROMPT),
+            ]
+        ).invoke(
+            {
+                "anchor_words_prompt": anchor_words,
+                "candidate_words": candidate_words_remaining,
+            }
+        )
 
         structured_llm = self.word_analyzer_llm.with_structured_output(OneAwayRecommendation)
-        result = await structured_llm.ainvoke(prompt)
+        result = await structured_llm.ainvoke(prompt.to_messages())
 
         return result
 
@@ -387,18 +408,45 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         Returns:
             AIMessage: The response from the LLM containing the next step.
         """
+
+        PLANNER_SYSTEM_MESSAGE = textwrap.dedent(
+            """
+            You are an expert in managing the sequence of a workflow. Your task is to
+            determine the next tool to use given the current state of the workflow.
+
+            the eligible tools to use are: ["setup_puzzle", "get_llm_recommendation", "apply_recommendation", "get_embedvec_recommendation", "get_manual_recommendation", "END"]
+
+            The important information for the workflow state is to consider are: "puzzle_status", "tool_status", and "current_tool".
+
+            Using the provided instructions, you will need to determine the next tool to use.
+
+            output response in json format with key word "tool" and the value as the output string.
+            
+            {instructions}
+            """
+        )
+
+        PUZZLE_STATE_PROMPT = "\npuzzle state: {puzzle_state}"
+
+        # Define the structured output for the next action to be taken by the workflow
+        class NextAction(TypedDict):
+            tool: str
+
         logger.info("Entering ask_llm_for_next_step")
         logger.debug(f"Entering ask_llm_for_next_step Instructions: {instructions}")
         logger.debug(f"Entering ask_llm_for_next_step Prompt: {puzzle_state}")
 
         # Create a prompt by concatenating the system and human messages
-        conversation = [SystemMessage(PLANNER_SYSTEM_MESSAGE), HumanMessage(instructions + puzzle_state)]
-
-        logger.debug(f"conversation: {pp.pformat(conversation)}")
+        prompt = ChatPromptTemplate(
+            [
+                ("system", PLANNER_SYSTEM_MESSAGE),
+                ("user", PUZZLE_STATE_PROMPT),
+            ]
+        ).invoke({"instructions": instructions, "puzzle_state": puzzle_state})
 
         # Invoke the LLM
         llm_structured = self.workflow_llm.with_structured_output(NextAction)
-        response = await llm_structured.ainvoke(conversation)
+        response = await llm_structured.ainvoke(prompt.to_messages())
 
         logger.debug(f"response: {pp.pformat(response)}")
 

@@ -43,10 +43,8 @@ async def run_planner(state: PuzzleState, config: RunnableConfig) -> PuzzleState
 
     # convert state to json string
     relevant_state = {k: state[k] for k in KEY_PUZZLE_STATE_FIELDS}
-    puzzle_state = "\npuzzle state:\n" + json.dumps(relevant_state)
+    puzzle_state = json.dumps(relevant_state)
 
-    # wrap the state in a human message
-    puzzle_state = puzzle_state
     logger.info(f"\nState for lmm: {puzzle_state}")
 
     # get next action from llm

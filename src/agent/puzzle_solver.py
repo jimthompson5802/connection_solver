@@ -253,9 +253,7 @@ async def one_away_analyzer(
     possible_anchor_words_list = list(itertools.combinations(one_away_group, 3))
 
     async def process_anchor_words(anchor_list: List[str]) -> List[str]:
-        anchor_words = "\n\n" + ", ".join(anchor_list)
-        # prompt = [SystemMessage(ANCHOR_WORDS_SYSTEM_PROMPT), HumanMessage(anchor_words)]
-        # response = await chat_with_llm(prompt, structured_output_class=AnchorWordsAnalysis)
+        anchor_words = ", ".join(anchor_list)
         response = await config["configurable"]["llm_interface"].analyze_anchor_words_group(anchor_words)
         return anchor_list, response
 
@@ -290,11 +288,13 @@ async def one_away_analyzer(
         print(f"\n>>>Selected single-topic group:\n{selected_word_group}")
         # remove original one-away invalid group from the remaining word list
         words_to_test = [x for x in words_remaining if x not in one_away_group]
-        user_prompt = "\n\nanchor_words: " + ",".join(selected_word_group.words)
-        user_prompt += "\n\n" + "candidate_words: " + ", ".join(words_to_test)
-        logger.info(f"single-topic user prompt:\n {user_prompt}")
+        anchor_words = ",".join(selected_word_group.words)
+        candidate_words_remaining = ", ".join(words_to_test)
+        logger.info(f"user prompt input:\n {anchor_words}\n{candidate_words_remaining}")
 
-        response = await config["configurable"]["llm_interface"].generate_one_away_recommendation(user_prompt)
+        response = await config["configurable"]["llm_interface"].generate_one_away_recommendation(
+            anchor_words, candidate_words_remaining
+        )
 
         logger.info(response)
         new_group = list(selected_word_group.words) + [response["word"]]
@@ -399,11 +399,6 @@ async def get_embedvec_recommendation(state: PuzzleState, config: RunnableConfig
     return state
 
 
-HUMAN_MESSAGE_BASE = """
-    From the following candidate list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection.      
-    """
-
-
 async def get_llm_recommendation(state: PuzzleState, config: RunnableConfig) -> PuzzleState:
     logger.info("Entering get_recommendation")
     logger.debug(f"Entering get_recommendation State: {pp.pformat(state)}")
@@ -418,21 +413,19 @@ async def get_llm_recommendation(state: PuzzleState, config: RunnableConfig) -> 
         if attempt_count > RETRY_LIMIT:
             break
         print(f"attempt_count: {attempt_count}")
-        prompt = HUMAN_MESSAGE_BASE
+
         # scramble the remaining words for more robust group selection
         if np.random.uniform() < 0.5:
             random.shuffle(state["words_remaining"])
         else:
             state["words_remaining"].reverse()
         print(f"words_remaining: {state['words_remaining']}")
-        prompt += f"candidate list: {', '.join(state['words_remaining'])}\n"
+        words_remaining = ", ".join(state["words_remaining"])
 
-        prompt = HumanMessage(prompt)
-
-        logger.info(f"\nPrompt for llm: {prompt.content}")
+        logger.info(f"\nwords remaining for llm: {words_remaining}")
 
         # get recommendation from llm
-        llm_response = await config["configurable"]["llm_interface"].ask_llm_for_solution(prompt)
+        llm_response = await config["configurable"]["llm_interface"].ask_llm_for_solution(words_remaining)
 
         if isinstance(llm_response, list):
             logger.debug(f"\nLLM response is list")
