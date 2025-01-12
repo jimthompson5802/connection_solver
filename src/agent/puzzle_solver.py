@@ -144,7 +144,7 @@ async def setup_puzzle(state: PuzzleState, config: RunnableConfig) -> PuzzleStat
 
     # Generate embeddings
     print("\nGenerating embeddings for the definitions")
-    embeddings = generate_embeddings(df["definition"].tolist())
+    embeddings = config["configurable"]["llm_interface"].generate_embeddings(df["definition"].tolist())
     # convert embeddings to json strings for storage
     df["embedding"] = [json.dumps(v) for v in embeddings]
 
@@ -175,16 +175,6 @@ async def setup_puzzle(state: PuzzleState, config: RunnableConfig) -> PuzzleStat
     logger.debug(f"\nExiting setup_puzzle State: {pp.pformat(state)}")
 
     return state
-
-
-def generate_embeddings(definitions, model="text-embedding-3-small"):
-
-    # setup embedding model
-    embed_model = OpenAIEmbeddings(model=model)
-
-    embeddings = embed_model.embed_documents(definitions)
-
-    return embeddings
 
 
 def get_candidate_words(df: pd.DataFrame) -> list:

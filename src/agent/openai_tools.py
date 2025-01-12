@@ -3,7 +3,7 @@ import logging
 import pprint as pp
 from typing import List, TypedDict
 
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.messages import SystemMessage, HumanMessage
 
 from tools import LLMInterfaceBase
@@ -177,6 +177,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         word_analyzer_llm_name: str = "gpt-4o",
         image_extraction_llm_name: str = "gpt-4o",
         workflow_llm_name: str = "gpt-4o-mini",
+        embedding_model_name: str = "text-embedding-3-small",
         temperature: float = 0.7,
         max_tokens=4096,
         **kwargs,
@@ -184,6 +185,8 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         """setups up LLM Model"""
         self.word_analyzer_llm_name = word_analyzer_llm_name
         self.workflow_llm_name = workflow_llm_name
+        self.image_extraction_llm_name = image_extraction_llm_name
+        self.embendding_model_name = embedding_model_name
         self.temperature = temperature
         self.max_tokens = max_tokens
 
@@ -194,7 +197,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         )
 
         self.image_extraction_llm = ChatOpenAI(
-            model=image_extraction_llm_name,
+            model=self.image_extraction_llm_name,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
         )
@@ -204,6 +207,8 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             temperature=0,
             max_tokens=self.max_tokens,
         )
+
+        self.embedding_model = OpenAIEmbeddings(model=self.embendding_model_name)
 
     async def generate_vocabulary(self, words: List[str]) -> dict:
         """
@@ -244,6 +249,21 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         await asyncio.gather(*[process_word(word) for word in words])
 
         return vocabulary
+
+    def generate_embeddings(self, definitions: List[str]) -> List[List[float]]:
+        """
+        Generate embeddings for a list of definitions.
+
+        Args:
+            definitions (List[str]): A list of strings where each string is a definition to be embedded.
+
+        Returns:
+            List[List[float]]: A list of embeddings, where each embedding is a list of floats.
+        """
+
+        embeddings = self.embedding_model.embed_documents(definitions)
+
+        return embeddings
 
     async def choose_embedvec_item(self, candidates: str) -> dict:
         """

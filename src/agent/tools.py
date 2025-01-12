@@ -35,6 +35,11 @@ class LLMInterfaceBase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def generate_embeddings(self, definitions: List[str]) -> List[List[float]]:
+        """generates embeddings for the definitions"""
+        raise NotImplementedError()
+
+    @abstractmethod
     async def choose_embedvec_item(self, candidates):
         """chooses an item from a list of candidates"""
         raise NotImplementedError()
