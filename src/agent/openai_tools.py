@@ -5,38 +5,11 @@ from typing import List, TypedDict
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 
 from tools import LLMInterfaceBase
 
 logger = logging.getLogger(__name__)
-
-
-VOCABULARY_SYSTEM_MESSAGE = """
-    You are an expert in language and knowledgeable on how words are used.
-
-    Your task is to generate as many diverse definitions as possible for the given word.  Follow these steps:
-
-    1. come up with a list of all possible parts of speech that the given word can be,e.g., noun, verb, adjective, etc.
-    2. for each part of speech, generate one or more examples of the given word for that parts of speech.  preappend the part of speech to the examples, e.g., "noun: example1", "verb: example2", etc.
-    3. combine all examples into a single list.
-
-    Return your response as a JSON object with the key "result" and the examples as a list of strings.
-
-    example:
-    {
-        "result": [
-        "noun: example1", 
-        "noun: example2", 
-        "adjective: example3",
-        "verb: example4"
-        ]
-    }
-
-    """
-
-
-class VocabularyResults(TypedDict):
-    result: List[str]
 
 
 LLM_RECOMMENDER_SYSTEM_MESSAGE = """
@@ -225,9 +198,40 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             dict: A dictionary where the keys are the input words and the values are
                   the structured vocabulary results.
         """
+        VOCABULARY_SYSTEM_MESSAGE = """
+            You are an expert in language and knowledgeable on how words are used.
+
+            Your task is to generate as many diverse definitions as possible for the given word.  Follow these steps:
+
+            1. come up with a list of all possible parts of speech that the given word can be,e.g., noun, verb, adjective, etc.
+            2. for each part of speech, generate one or more examples of the given word for that parts of speech.  preappend the part of speech to the examples, e.g., "noun: example1", "verb: example2", etc.
+            3. combine all examples into a single list.
+
+            Return your response as a JSON object with the key "result" and the examples as a list of strings.
+
+            example:
+            {{
+                "result": [
+                "noun: example1", 
+                "noun: example2", 
+                "adjective: example3",
+                "verb: example4"
+                ]
+            }}
+            """
+
+        class VocabularyResults(TypedDict):
+            result: List[str]
 
         vocabulary = {}
         system_message = SystemMessage(VOCABULARY_SYSTEM_MESSAGE)
+
+        given_word_template = ChatPromptTemplate(
+            [
+                ("system", VOCABULARY_SYSTEM_MESSAGE),
+                ("user", "\ngiven word: {the_word}"),
+            ]
+        )
 
         async def process_word(the_word: str) -> dict:
             """
@@ -239,11 +243,12 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             Returns:
                 None: The result is stored in the vocabulary dictionary with the word as the key.
             """
-            prompt = f"\n\ngiven word: {the_word}"
-            prompt = HumanMessage(prompt)
-            prompt = [system_message, prompt]
+            # prompt = f"\n\ngiven word: {the_word}"
+            prompt = given_word_template.invoke({"the_word": the_word})
+            # prompt = HumanMessage(prompt)
+            # prompt = [system_message, prompt]
             structured_llm = self.word_analyzer_llm.with_structured_output(VocabularyResults)
-            result = await structured_llm.ainvoke(prompt)
+            result = await structured_llm.ainvoke(prompt.to_messages())
             vocabulary[the_word] = result["result"]
 
         await asyncio.gather(*[process_word(word) for word in words])
