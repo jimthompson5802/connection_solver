@@ -25,7 +25,14 @@ from quart import Quart, render_template, request, jsonify
 
 # Parse CLI arguments
 parser = argparse.ArgumentParser(description="Web App for Puzzle Solver")
-parser.add_argument("--llm_interface", type=str, default="openai", help="LLM interface to use")
+
+parser.add_argument(
+    "--llm_interface",
+    type=str,
+    default="openai",
+    help="Set the LLM interface to use (e.g., openai, other_llm), default is 'openai'",
+)
+
 args = parser.parse_args()
 
 # TODO: this is temporary until a more formal way of registring LLM interfaces is implemented

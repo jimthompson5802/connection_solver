@@ -61,7 +61,10 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     parser = argparse.ArgumentParser(description="Set logging level for the application.")
 
     parser.add_argument(
-        "--llm_interface", type=str, default="openai", help="Set the LLM interface to use (e.g., openai, other_llm)"
+        "--llm_interface",
+        type=str,
+        default="openai",
+        help="Set the LLM interface to use (e.g., openai, other_llm), default is 'openai'",
     )
 
     parser.add_argument(

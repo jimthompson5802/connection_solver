@@ -628,16 +628,20 @@ $ python src/agent/app_embedvec.py --log-level DEBUG
 ```
 Command line options:
 ```text
-usage: app_embedvec.py [-h] [--log-level LOG_LEVEL] [--trace]
+Running Connection Solver Agent with EmbedVec Recommender 0.15.0
+usage: app_embedvec.py [-h] [--llm_interface LLM_INTERFACE] [--log-level LOG_LEVEL] [--trace] [--snapshot_fp SNAPSHOT_FP]
 
 Set logging level for the application.
 
 options:
   -h, --help            show this help message and exit
+  --llm_interface LLM_INTERFACE
+                        Set the LLM interface to use (e.g., openai, other_llm), default is 'openai'
   --log-level LOG_LEVEL
                         Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
   --trace               Enable langsmith tracing for the application.
-```
+  --snapshot_fp SNAPSHOT_FP
+  ```
 
 Note: Due to the random nature of the LLM, the results vary from run to run.  For example, running the same puzzle multiple times may result in different recommendations from the LLM.  As a result, the puzzle may get solved in one run and not in another.
 
