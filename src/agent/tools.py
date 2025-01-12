@@ -138,17 +138,18 @@ def check_one_solution(solution, *, gen_words: List[str], gen_reason: str, recom
         return "n"
 
 
-async def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096, structured_output_class=None):
+# TODO: clean-up
+# async def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096, structured_output_class=None):
 
-    # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
-    llm = ChatOpenAI(
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-    )
+#     # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
+#     llm = ChatOpenAI(
+#         model=model,
+#         temperature=temperature,
+#         max_tokens=max_tokens,
+#     )
 
-    structured_llm = llm.with_structured_output(structured_output_class)
+#     structured_llm = llm.with_structured_output(structured_output_class)
 
-    result = await structured_llm.ainvoke(prompt)
+#     result = await structured_llm.ainvoke(prompt)
 
-    return result
+#     return result

@@ -20,7 +20,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langgraph.graph import END, StateGraph
 from langgraph.checkpoint.memory import MemorySaver
 
-from tools import compute_group_id, chat_with_llm
+from tools import compute_group_id  # , chat_with_llm
 
 logger = logging.getLogger(__name__)
 

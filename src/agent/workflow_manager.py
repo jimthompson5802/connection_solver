@@ -153,7 +153,7 @@ async def run_workflow(
         logger.debug(f"\nCurrent state: {current_state}")
         logger.info(f"\nNext action: {current_state.next}")
         if current_state.next[0] == "setup_puzzle":
-            words = await puzzle_setup_function(runtime_config)
+            words = await puzzle_setup_function()
 
             print(f"Setting up Puzzle Words: {words}")
 
