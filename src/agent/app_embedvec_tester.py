@@ -21,12 +21,17 @@ from langchain_core.tracers.context import tracing_v2_enabled
 
 from workflow_manager import run_workflow, create_workflow_graph
 from puzzle_solver import PuzzleState
-from tools import check_one_solution
+from tools import check_one_solution, llm_interface_registry
 
 from openai_tools import LLMOpenAIInterface
 
 from src.agent import __version__
 
+# TODO: this is temporary until a more formal way of registring LLM interfaces is implemented
+# register the LLM interfaces available
+llm_interface_registry = {
+    "openai": LLMOpenAIInterface,
+}
 
 # create logger
 logger = logging.getLogger(__name__)
@@ -58,6 +63,11 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     print(f"Running Connection Solver Agent Tester {__version__}")
 
     parser = argparse.ArgumentParser(description="Set logging level for the application.")
+
+    parser.add_argument(
+        "--llm_interface", type=str, default="openai", help="Set the LLM interface to use (e.g., openai, other_llm)"
+    )
+
     parser.add_argument(
         "--log-level", type=str, default="INFO", help="Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
     )
@@ -110,7 +120,7 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     async def solve_a_puzzle(i, solution, workflow_instructions):
         print(f"\n>>>>SOLVING PUZZLE {i+1}")
 
-        llm_interface = LLMOpenAIInterface()
+        llm_interface = llm_interface_registry[args.llm_interface]()
 
         runtime_config = RunnableConfig(
             configurable={

@@ -8,12 +8,13 @@ import pprint as pp
 import logging
 import aiosqlite
 import asyncio
+import argparse  # Add argparse import
 
 import pandas as pd
 
 from workflow_manager import create_webui_workflow_graph
 from puzzle_solver import PuzzleState
-from tools import read_file_to_word_list, extract_words_from_image_file
+from tools import read_file_to_word_list, extract_words_from_image_file, llm_interface_registry
 from openai_tools import LLMOpenAIInterface
 
 from langchain_core.runnables import RunnableConfig
@@ -21,6 +22,18 @@ from langchain_core.runnables import RunnableConfig
 from src.agent import __version__
 
 from quart import Quart, render_template, request, jsonify
+
+# Parse CLI arguments
+parser = argparse.ArgumentParser(description="Web App for Puzzle Solver")
+parser.add_argument("--llm_interface", type=str, default="openai", help="LLM interface to use")
+args = parser.parse_args()
+
+# TODO: this is temporary until a more formal way of registring LLM interfaces is implemented
+# register the LLM interfaces available
+llm_interface_registry = {
+    "openai": LLMOpenAIInterface,
+}
+
 
 pp = pp.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
@@ -55,7 +68,7 @@ async def webui_puzzle_setup_function(puzzle_setup_fp: str, config: RunnableConf
 
 
 # setup interace to LLM
-llm_interface = LLMOpenAIInterface()
+llm_interface = llm_interface_registry[args.llm_interface]()
 
 # setup runtime config
 runtime_config = {
