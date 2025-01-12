@@ -33,8 +33,18 @@ class LLMInterfaceBase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    async def extract_words_from_image(image_fp: str) -> List[str]:
+    async def extract_words_from_image(encoded_image: str) -> List[str]:
         """extracts words from an image"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def analyze_anchor_words_group(self, anchor_words_group):
+        """analyzes a group of anchor words"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def generate_one_away_recommendation(self, anchor_words_prompt: str):
+        """generates a recommendation for a single word that is one away from the correct group"""
         raise NotImplementedError()
 
 
