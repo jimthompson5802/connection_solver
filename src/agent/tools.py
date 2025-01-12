@@ -69,15 +69,6 @@ async def extract_words_from_image_file(image_fp: str, config: RunnableConfig) -
     with open(image_fp, "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode("utf-8")
 
-    # TODO: clean-up
-    # Create a message with text and image
-    # message = HumanMessage(
-    #     content=[
-    #         {"type": "text", "text": "extract words from the image and return as a json list"},
-    #         {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}},
-    #     ]
-    # )
-
     # Get the response from the model
     # response = await chat_with_llm([message])
     response = await config["configurable"]["llm_interface"].extract_words_from_image(base64_image)
@@ -136,20 +127,3 @@ def check_one_solution(solution, *, gen_words: List[str], gen_reason: str, recom
             return "o"
     else:
         return "n"
-
-
-# TODO: clean-up
-# async def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096, structured_output_class=None):
-
-#     # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
-#     llm = ChatOpenAI(
-#         model=model,
-#         temperature=temperature,
-#         max_tokens=max_tokens,
-#     )
-
-#     structured_llm = llm.with_structured_output(structured_output_class)
-
-#     result = await structured_llm.ainvoke(prompt)
-
-#     return result

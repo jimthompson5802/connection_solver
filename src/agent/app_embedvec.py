@@ -83,13 +83,6 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     with open("src/agent/embedvec_workflow_specification.md", "r") as f:
         workflow_instructions = f.read()
 
-    # TODO: determine how this is used
-    # workflow_instructions_config = ConfigurableField(
-    #     id="workflow_instructions",
-    #     name="Workflow Instructions",
-    #     description="Workflow Instructions for the Connection Solver",
-    # )
-
     workflow_graph = create_workflow_graph()
 
     workflow_graph.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
