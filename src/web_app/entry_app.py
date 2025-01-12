@@ -8,16 +8,39 @@ import pprint as pp
 import logging
 import aiosqlite
 import asyncio
+import argparse  # Add argparse import
 
 import pandas as pd
 
-from workflow_manager import run_workflow, create_webui_workflow_graph
-from puzzle_solver import PuzzleState, generate_vocabulary, generate_embeddings
-from tools import read_file_to_word_list, extract_words_from_image
+from workflow_manager import create_webui_workflow_graph
+from puzzle_solver import PuzzleState
+from tools import read_file_to_word_list, extract_words_from_image_file, llm_interface_registry
+from openai_tools import LLMOpenAIInterface
+
+from langchain_core.runnables import RunnableConfig
 
 from src.agent import __version__
 
 from quart import Quart, render_template, request, jsonify
+
+# Parse CLI arguments
+parser = argparse.ArgumentParser(description="Web App for Puzzle Solver")
+
+parser.add_argument(
+    "--llm_interface",
+    type=str,
+    default="openai",
+    help="Set the LLM interface to use (e.g., openai, other_llm), default is 'openai'",
+)
+
+args = parser.parse_args()
+
+# TODO: this is temporary until a more formal way of registring LLM interfaces is implemented
+# register the LLM interfaces available
+llm_interface_registry = {
+    "openai": LLMOpenAIInterface,
+}
+
 
 pp = pp.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
@@ -38,23 +61,28 @@ with open("src/agent/embedvec_webui_workflow_specification.md", "r") as f:
 workflow_graph = create_webui_workflow_graph()
 
 
-async def webui_puzzle_setup_function(puzzle_setup_fp: str) -> List[str]:
+async def webui_puzzle_setup_function(puzzle_setup_fp: str, config: RunnableConfig) -> List[str]:
     # get suffix of the file path
     suffix = puzzle_setup_fp.split(".")[-1]
     if suffix == "txt":
         words = read_file_to_word_list(puzzle_setup_fp)
     elif suffix == "png":
-        words = await extract_words_from_image(puzzle_setup_fp)
+        words = await extract_words_from_image_file(puzzle_setup_fp, config)
     else:
         ValueError(f"Unsupported file type: {suffix}")
 
     return words
 
 
+# setup interace to LLM
+llm_interface = llm_interface_registry[args.llm_interface]()
+
+# setup runtime config
 runtime_config = {
     "configurable": {
         "thread_id": str(uuid.uuid4()),
         "workflow_instructions": workflow_instructions,
+        "llm_interface": llm_interface,
     },
     "recursion_limit": 50,
 }
@@ -72,7 +100,7 @@ async def index():
 async def setup_puzzle():
     print("app.route('/setup-puzzle')")
     puzzle_setup_fp = (await request.json).get("setup")
-    puzzle_words = await webui_puzzle_setup_function(puzzle_setup_fp)
+    puzzle_words = await webui_puzzle_setup_function(puzzle_setup_fp, runtime_config)
 
     with tempfile.NamedTemporaryFile(suffix=".db") as tmp_db:
         initial_state = PuzzleState(
@@ -93,7 +121,7 @@ async def setup_puzzle():
         )
 
         print("\nGenerating vocabulary and embeddings for the words...this may take several seconds ")
-        vocabulary = await generate_vocabulary(puzzle_words)
+        vocabulary = await llm_interface.generate_vocabulary(puzzle_words)
         # Convert dictionary to DataFrame
         rows = []
         for word, definitions in vocabulary.items():
@@ -103,7 +131,7 @@ async def setup_puzzle():
 
     # Generate embeddings
     print("\nGenerating embeddings for the definitions")
-    embeddings = generate_embeddings(df["definition"].tolist())
+    embeddings = llm_interface.generate_embeddings(df["definition"].tolist())
     # convert embeddings to json strings for storage
     df["embedding"] = [json.dumps(v) for v in embeddings]
 

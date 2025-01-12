@@ -4,10 +4,16 @@ import json
 import logging
 import pprint as pp
 from typing import List, TypedDict
+from abc import ABC, abstractmethod
 
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 
+
+# temporary llm interface registry
+# manually update this as other LLM interfaces are added
+llm_interface_registry = {}
 
 with open("/openai/api_key.json") as f:
     config = json.load(f)
@@ -17,6 +23,55 @@ api_key = config["key"]
 logger = logging.getLogger(__name__)
 
 pp = pp.PrettyPrinter(indent=4)
+
+
+class LLMInterfaceBase(ABC):
+    """base class for LLM Interface"""
+
+    @abstractmethod
+    def __init__(self, model_name: str, **kwargs):
+        """setups up LLM Model"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def generate_vocabulary(self, words):
+        """creates definitions for all the words"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def generate_embeddings(self, definitions: List[str]) -> List[List[float]]:
+        """generates embeddings for the definitions"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def choose_embedvec_item(self, candidates):
+        """chooses an item from a list of candidates"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def ask_llm_for_solution(self, prompt):
+        """asks the LLM for a solution to a prompt"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def extract_words_from_image(encoded_image: str) -> List[str]:
+        """extracts words from an image"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def analyze_anchor_words_group(self, anchor_words_group):
+        """analyzes a group of anchor words"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def generate_one_away_recommendation(self, anchor_words_prompt: str):
+        """generates a recommendation for a single word that is one away from the correct group"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def ask_llm_for_next_step(self, instructions: str, puzzle_state: str):
+        """asks the LLM for the next step in the workflow"""
+        raise NotImplementedError()
 
 
 def compute_group_id(word_group: list) -> str:
@@ -50,7 +105,7 @@ def read_file_to_word_list(file_location: str) -> List[str]:
         return []
 
 
-async def extract_words_from_image(image_fp: str) -> List[str]:
+async def extract_words_from_image_file(image_fp: str, config: RunnableConfig) -> List[str]:
     """
     Encodes an image to base64 and sends it to the OpenAI LLM to extract words from the image.
 
@@ -68,18 +123,11 @@ async def extract_words_from_image(image_fp: str) -> List[str]:
     with open(image_fp, "rb") as image_file:
         base64_image = base64.b64encode(image_file.read()).decode("utf-8")
 
-    # Create a message with text and image
-    message = HumanMessage(
-        content=[
-            {"type": "text", "text": "extract words from the image and return as a json list"},
-            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}},
-        ]
-    )
-
     # Get the response from the model
-    response = await chat_with_llm([message])
+    # response = await chat_with_llm([message])
+    response = await config["configurable"]["llm_interface"].extract_words_from_image(base64_image)
 
-    words = [w.lower() for w in json.loads(response.content)["words"]]
+    words = [w.lower() for w in response["words"]]
 
     logger.info("Exiting extract_words_from_image")
     logger.debug(f"Exiting extract_words_from_image response {words}")
@@ -87,7 +135,7 @@ async def extract_words_from_image(image_fp: str) -> List[str]:
     return words
 
 
-async def manual_puzzle_setup_prompt() -> List[str]:
+async def manual_puzzle_setup_prompt(config: RunnableConfig) -> List[str]:
 
     # pompt user for puzzle source
     puzzle_source_type = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
@@ -97,7 +145,7 @@ async def manual_puzzle_setup_prompt() -> List[str]:
     if puzzle_source_type == "file":
         words = read_file_to_word_list(puzzle_source_fp)
     elif puzzle_source_type == "image":
-        words = await extract_words_from_image(puzzle_source_fp)
+        words = await extract_words_from_image_file(puzzle_source_fp, config=config)
     else:
         raise ValueError("Invalid input source. Please enter 'file' or 'image'.")
 
@@ -133,18 +181,3 @@ def check_one_solution(solution, *, gen_words: List[str], gen_reason: str, recom
             return "o"
     else:
         return "n"
-
-
-async def chat_with_llm(prompt, model="gpt-4o", temperature=0.7, max_tokens=4096):
-
-    # Initialize the OpenAI LLM with your API key and specify the GPT-4o model
-    llm = ChatOpenAI(
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        model_kwargs={"response_format": {"type": "json_object"}},
-    )
-
-    result = await llm.ainvoke(prompt)
-
-    return result

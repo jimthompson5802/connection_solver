@@ -65,6 +65,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.12.0 | add support to extract langgraph snapshot data |
 | v0.13.0 | add prior invalid group detection in embedvec recommender |
 | v0.14.0 | update webui with active recommender identifier |
+| v0.15.0 | Introduced LLMInterface class design components and use of prompt templates |
 
 
 ## Sample Runs
@@ -94,6 +95,76 @@ Starting 2024-11-27 the v0.7.x agent is used to solve that day's puzzle.  A log 
 **Automated Tester Runs**
 
 This is an automated tester for the Connections Puzzle Solver.  The tester runs the agent on a set of puzzles and records the results.  The results can be found [here](./docs/example_automated_test_run.md).
+
+## High-level Design
+
+The `LLMInterfaceBase` class is the base class for interacting with language models. It provides a common interface for interacting with different language models that may be used in different parts of the solution process such as methods for generating vocabulary, embeddings, recommendations and workflow management.
+
+This class provides a structured way to support LLM from different vendors.  At the moment, the `LLMOpenAIInterface` class is the only implementation of the `LLMInterfaceBase` class.  The `LLMOpenAIInterface` class provides specific implementations for interacting with OpenAI's language models.  A future release will demonstrate how to use the `LLMInterfaceBase` class to interact with other vendor's language models.
+
+### Methods
+
+1. **\_\_init\_\_**
+    - Initializes the language model interface.  Primarily this defines the language model(s) to be used and the temperature and max_tokens to be used in the language model calls.
+
+1. **generate_vocabulary**
+    - Asynchronously generates vocabulary definitions for a list of words using a language model.  This is used to setup the puzzle.
+    - Returns a dictionary with words as keys and their definitions as values.
+
+2. **generate_embeddings**
+    - Generates embeddings for a list of definitions.  This is used to setup the puzzle.
+    - Returns a list of embeddings.
+
+3. **choose_embedvec_item**
+    - Asynchronously chooses an embedded vector item from a list of candidates.  Used by embedding vector-based recommendation generator.
+    - Returns a dictionary with the chosen item and an explanation.
+
+4. **ask_llm_for_solution**
+    - Asks the language model for a solution based on a provided prompt.  Used by the llm recommendation generator.
+    - Returns a dictionary with the recommended word group and connection reason.
+
+5. **extract_words_from_image**
+    - Extracts words from a base64 encoded image.  Used by puzzle setup.
+    - Returns a dictionary with the extracted words.
+
+6. **analyze_anchor_words_group**
+    - Analyzes a group of anchor words to determine if they are related to a single topic.  This part of the one-away error analyzer.
+    - Returns a dictionary with the analysis result.
+
+7. **generate_one_away_recommendation**
+    - Generates a recommendation for a single word that is one letter away from the provided prompt.  This is used by the one-away error analyzer.
+    - Returns a dictionary with the recommendation.
+
+8. **ask_llm_for_next_step**
+    - Asks the language model for the next step based on the provided prompt.  This is used by the agent's planner to determine the next step in the workflow.
+    - Returns a dictionary with the next action.
+
+
+### LLMOpenAIInterface Class
+The `LLMOpenAIInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with OpenAI's language models. Models used in this implementation are OpenAI's
+* `gpt-4o` the word analysis to generate group recommendations
+* `gpt-4o-mini` for workflow management
+* `text-embedding-3-small` for generating vector embeddings
+
+
+**Example Initialization**
+```python
+class LLMOpenAIInterface(LLMInterfaceBase):
+    def __init__(self, word_analyzer_llm_name: str = "gpt-4o", image_extraction_llm_name: str = "gpt-4o", workflow_llm_name: str = "gpt-4o-mini", embedding_model_name: str = "text-embedding-3-small", temperature: float = 0.7, max_tokens=4096, **kwargs):
+        self.word_analyzer_llm_name = word_analyzer_llm_name
+        self.workflow_llm_name = workflow_llm_name
+        self.image_extraction_llm_name = image_extraction_llm_name
+        self.embendding_model_name = embedding_model_name
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+
+        self.word_analyzer_llm = ChatOpenAI(model=self.word_analyzer_llm_name, temperature=self.temperature, max_tokens=self.max_tokens)
+        self.image_extraction_llm = ChatOpenAI(model=self.image_extraction_llm_name, temperature=self.temperature, max_tokens=self.max_tokens)
+        self.workflow_llm = ChatOpenAI(model=self.workflow_llm_name, temperature=0, max_tokens=self.max_tokens)
+        self.embedding_model = OpenAIEmbeddings(model=self.embendding_model_name)
+```
+
+
 
 ## Solution Strategy
 
@@ -557,16 +628,20 @@ $ python src/agent/app_embedvec.py --log-level DEBUG
 ```
 Command line options:
 ```text
-usage: app_embedvec.py [-h] [--log-level LOG_LEVEL] [--trace]
+Running Connection Solver Agent with EmbedVec Recommender 0.15.0
+usage: app_embedvec.py [-h] [--llm_interface LLM_INTERFACE] [--log-level LOG_LEVEL] [--trace] [--snapshot_fp SNAPSHOT_FP]
 
 Set logging level for the application.
 
 options:
   -h, --help            show this help message and exit
+  --llm_interface LLM_INTERFACE
+                        Set the LLM interface to use (e.g., openai, other_llm), default is 'openai'
   --log-level LOG_LEVEL
                         Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
   --trace               Enable langsmith tracing for the application.
-```
+  --snapshot_fp SNAPSHOT_FP
+  ```
 
 Note: Due to the random nature of the LLM, the results vary from run to run.  For example, running the same puzzle multiple times may result in different recommendations from the LLM.  As a result, the puzzle may get solved in one run and not in another.
 
