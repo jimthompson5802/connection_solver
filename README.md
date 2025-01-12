@@ -649,9 +649,16 @@ Note: Due to the random nature of the LLM, the results vary from run to run.  Fo
 ## Ollama Server
 From command MacOS command line
 
+**Start up the Ollama Server**
 ```bash
 $ cd ${workspaceFolder}/.devcontainer
 $ docker-compose up -d
+```
+
+**Stop the Ollama Server**
+```bash
+$ cd ${workspaceFolder}/.devcontainer
+$ docker-compose down
 ```
 
 ## `langsmith` tracing
