@@ -59,6 +59,11 @@ class LLMInterfaceBase(ABC):
         """generates a recommendation for a single word that is one away from the correct group"""
         raise NotImplementedError()
 
+    @abstractmethod
+    async def ask_llm_for_next_step(self, instructions: str, puzzle_state: str):
+        """asks the LLM for the next step in the workflow"""
+        raise NotImplementedError()
+
 
 def compute_group_id(word_group: list) -> str:
     return hashlib.md5("".join(sorted(word_group)).encode()).hexdigest()
