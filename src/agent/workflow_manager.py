@@ -32,84 +32,25 @@ logger = logging.getLogger(__name__)
 
 KEY_PUZZLE_STATE_FIELDS = ["puzzle_status", "tool_status", "current_tool"]
 
-PLANNER_SYSTEM_MESSAGE = """
-    You are an expert in managing the sequence of a workflow. Your task is to
-    determine the next tool to use given the current state of the workflow.
-
-    the eligible tools to use are: ["setup_puzzle", "get_llm_recommendation", "apply_recommendation", "get_embedvec_recommendation", "get_manual_recommendation", "END"]
-
-    The important information for the workflow state is to consider are: "puzzle_status", "tool_status", and "current_tool".
-
-    Using the provided instructions, you will need to determine the next tool to use.
-
-    output response in json format with key word "tool" and the value as the output string.
-    
-"""
-
-
-class NextAction(TypedDict):
-    tool: str
-
-
-async def ask_llm_for_next_step(instructions, puzzle_state, model="gpt-4o-mini", temperature=0, max_tokens=4096):
-    """
-    Asks the language model (LLM) for the next step based on the provided prompt.
-
-    Args:
-        prompt (AIMessage): The prompt containing the content to be sent to the LLM.
-        model (str, optional): The model to be used by the LLM. Defaults to "gpt-3.5-turbo".
-        temperature (float, optional): The temperature setting for the LLM, controlling the randomness of the output. Defaults to 0.
-        max_tokens (int, optional): The maximum number of tokens for the LLM response. Defaults to 4096.
-
-    Returns:
-        AIMessage: The response from the LLM containing the next step.
-    """
-    logger.info("Entering ask_llm_for_next_step")
-    logger.debug(f"Entering ask_llm_for_next_step Instructions: {instructions.content}")
-    logger.debug(f"Entering ask_llm_for_next_step Prompt: {puzzle_state.content}")
-
-    # Initialize the OpenAI LLM for next steps
-    llm = ChatOpenAI(
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-    )
-
-    # Create a prompt by concatenating the system and human messages
-    conversation = [PLANNER_SYSTEM_MESSAGE, instructions, puzzle_state]
-
-    logger.debug(f"conversation: {pp.pformat(conversation)}")
-
-    # Invoke the LLM
-    llm_structured = llm.with_structured_output(NextAction)
-    response = await llm_structured.ainvoke(conversation)
-
-    logger.debug(f"response: {pp.pformat(response)}")
-
-    logger.info("Exiting ask_llm_for_next_step")
-    logger.info(f"exiting ask_llm_for_next_step response {response}")
-
-    return response
-
 
 async def run_planner(state: PuzzleState, config: RunnableConfig) -> PuzzleState:
     logger.info("Entering run_planner:")
     logger.debug(f"\nEntering run_planner State: {pp.pformat(state)}")
 
     # workflow instructions
-    instructions = HumanMessage(config["configurable"]["workflow_instructions"])
-    logger.debug(f"\nWorkflow instructions:\n{instructions.content}")
+    instructions = config["configurable"]["workflow_instructions"]
+    logger.debug(f"\nWorkflow instructions:\n{instructions}")
 
     # convert state to json string
     relevant_state = {k: state[k] for k in KEY_PUZZLE_STATE_FIELDS}
     puzzle_state = "\npuzzle state:\n" + json.dumps(relevant_state)
 
     # wrap the state in a human message
-    puzzle_state = HumanMessage(puzzle_state)
-    logger.info(f"\nState for lmm: {puzzle_state.content}")
+    puzzle_state = puzzle_state
+    logger.info(f"\nState for lmm: {puzzle_state}")
 
     # get next action from llm
-    next_action = await ask_llm_for_next_step(instructions, puzzle_state, model="gpt-4o-mini", temperature=0)
+    next_action = await config["configurable"]["llm_interface"].ask_llm_for_next_step(instructions, puzzle_state)
 
     logger.info(f"\nNext action from llm: {next_action}")
 

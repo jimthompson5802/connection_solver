@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import pprint as pp
 from typing import List, TypedDict
 
 from langchain_openai import ChatOpenAI
@@ -145,6 +146,25 @@ class OneAwayRecommendation(TypedDict):
     explanation: str
 
 
+PLANNER_SYSTEM_MESSAGE = """
+    You are an expert in managing the sequence of a workflow. Your task is to
+    determine the next tool to use given the current state of the workflow.
+
+    the eligible tools to use are: ["setup_puzzle", "get_llm_recommendation", "apply_recommendation", "get_embedvec_recommendation", "get_manual_recommendation", "END"]
+
+    The important information for the workflow state is to consider are: "puzzle_status", "tool_status", and "current_tool".
+
+    Using the provided instructions, you will need to determine the next tool to use.
+
+    output response in json format with key word "tool" and the value as the output string.
+    
+"""
+
+
+class NextAction(TypedDict):
+    tool: str
+
+
 class ExtractedWordsFromImage(TypedDict):
     words: List[str]
 
@@ -156,7 +176,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         self,
         word_analyzer_llm_name: str = "gpt-4o",
         image_extraction_llm_name: str = "gpt-4o",
-        workflow_llm_name: str = "gpt-3.5-turbo",
+        workflow_llm_name: str = "gpt-4o-mini",
         temperature: float = 0.7,
         max_tokens=4096,
         **kwargs,
@@ -296,3 +316,36 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         result = await structured_llm.ainvoke(prompt)
 
         return result
+
+    async def ask_llm_for_next_step(self, instructions: str, puzzle_state: str):
+        """
+        Asks the language model (LLM) for the next step based on the provided prompt.
+
+        Args:
+            prompt (AIMessage): The prompt containing the content to be sent to the LLM.
+            model (str, optional): The model to be used by the LLM. Defaults to "gpt-3.5-turbo".
+            temperature (float, optional): The temperature setting for the LLM, controlling the randomness of the output. Defaults to 0.
+            max_tokens (int, optional): The maximum number of tokens for the LLM response. Defaults to 4096.
+
+        Returns:
+            AIMessage: The response from the LLM containing the next step.
+        """
+        logger.info("Entering ask_llm_for_next_step")
+        logger.debug(f"Entering ask_llm_for_next_step Instructions: {instructions}")
+        logger.debug(f"Entering ask_llm_for_next_step Prompt: {puzzle_state}")
+
+        # Create a prompt by concatenating the system and human messages
+        conversation = [SystemMessage(PLANNER_SYSTEM_MESSAGE), HumanMessage(instructions + puzzle_state)]
+
+        logger.debug(f"conversation: {pp.pformat(conversation)}")
+
+        # Invoke the LLM
+        llm_structured = self.workflow_llm.with_structured_output(NextAction)
+        response = await llm_structured.ainvoke(conversation)
+
+        logger.debug(f"response: {pp.pformat(response)}")
+
+        logger.info("Exiting ask_llm_for_next_step")
+        logger.info(f"exiting ask_llm_for_next_step response {response}")
+
+        return response
