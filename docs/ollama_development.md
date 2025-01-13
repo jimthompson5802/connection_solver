@@ -157,7 +157,101 @@ During handling of the above exception, another exception occurred:
 ```
 
 ## later run of code
-It appears that asyncio is not returning correctly, the code will fail at different points in the process, usually just after a call the LLM that appears to return `None`, i.e., the LLM is not returning a response. 
+It appears that asyncio is not returning correctly, the code will fail at different points in the process, usually just after a call the LLM that appears to return `None`, i.e., the LLM is not returning a response.   Following are examples of this error type.
+
+```
+/workspaces/connection_solver/src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid 
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(253, 253)
+(253, 253)
+candidate_lists size: 91
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['hail', 'kayak', 'rain', 'snow'] with connection forming or consisting of ice pellets that fall from a cloud
+Recommendation ['hail', 'kayak', 'rain', 'snow'] is incorrect, one away from correct
+
+ENTERED ONE-AWAY ANALYZER
+found count: 0, mistake_count: 1
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/runpy.py", line 198, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/runpy.py", line 88, in _run_code
+    exec(code, run_globals)
+  File "/home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/adapter/../../debugpy/launcher/../../debugpy/__main__.py", line 71, in <module>
+    cli.main()
+  File "/home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/adapter/../../debugpy/launcher/../../debugpy/../debugpy/server/cli.py", line 501, in main
+    run()
+  File "/home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/adapter/../../debugpy/launcher/../../debugpy/../debugpy/server/cli.py", line 351, in run_file
+    runpy.run_path(target, run_name="__main__")
+  File "/home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/_vendored/pydevd/_pydevd_bundle/pydevd_runpy.py", line 310, in run_path
+    return _run_module_code(code, init_globals, run_name, pkg_name=pkg_name, script_name=fname)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/_vendored/pydevd/_pydevd_bundle/pydevd_runpy.py", line 127, in _run_module_code
+    _run_code(code, mod_globals, init_globals, mod_name, mod_spec, pkg_name, script_name)
+  File "/home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/_vendored/pydevd/_pydevd_bundle/pydevd_runpy.py", line 118, in _run_code
+    exec(code, run_globals)
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 188, in <module>
+    results = asyncio.run(main(None, check_one_solution))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 180, in main
+    found_solutions = await asyncio.gather(
+                      ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 167, in solve_a_puzzle
+    result = await run_workflow(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/workflow_manager.py", line 120, in run_workflow
+    async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/__init__.py", line 1878, in astream
+    async for _ in runner.atick(
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/runner.py", line 362, in atick
+    await arun_with_retry(
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/retry.py", line 132, in arun_with_retry
+    return await task.proc.ainvoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/langgraph/utils/runnable.py", line 445, in ainvoke
+    input = await step.ainvoke(input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/langgraph/utils/runnable.py", line 236, in ainvoke
+    ret = await asyncio.create_task(coro, context=context)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/puzzle_solver.py", line 516, in apply_recommendation
+    one_away_group_recommendation = await one_away_analyzer(
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/puzzle_solver.py", line 264, in one_away_analyzer
+    single_topic_groups = [
+                          ^
+  File "/workspaces/connection_solver/src/agent/puzzle_solver.py", line 270, in <listcomp>
+    if x[1]["response"] == "single"
+       ~~~~^^^^^^^^^^^^
+TypeError: 'NoneType' object is not subscriptable
+During task with name 'apply_recommendation' and id 'cb1d296b-ba73-b1d1-671d-b0adabac8ace'
+```
+
+
 ```
 /workspaces/connection_solver/src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid 
 Running Connection Solver Agent Tester 0.16.0-dev
