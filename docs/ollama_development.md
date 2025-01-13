@@ -1,6 +1,235 @@
-## first run of the code, 
-llama3.2 as workflow llm is not working.
+# Ollama Development
+
+Unless noted otherwise, the LLMOllamaInterface will be using OpenAi gpt-4o-mini as the LLM for the workflow manager.  Llama3.2 is used for all Connection Word Analyzers.  This combination is known as `hybrid`.
+
+## Comparision run between OpenAI and Llama3.2 LLM use
+
+### OpenAI
+```text
+$ python src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl 
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Entering LLMOpenAIInterface.__init__
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(102, 102)
+(102, 102)
+candidate_lists size: 74
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['hail', 'rain', 'sleet', 'snow'] with connection The words are all types of precipitation.
+The words are all types of precipitation. ~ wet weather: ['hail', 'rain', 'sleet', 'snow'] == ['hail', 'rain', 'sleet', 'snow']
+Recommendation ['hail', 'rain', 'sleet', 'snow'] is correct
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 1, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'level', 'racecar', 'bucks', 'tab']
+(78, 78)
+(78, 78)
+candidate_lists size: 63
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['level', 'option', 'shift', 'tab'] with connection Connected by the theme of computer-related actions or features.
+Recommendation ['level', 'option', 'shift', 'tab'] is incorrect, one away from correct
+
+ENTERED ONE-AWAY ANALYZER
+found count: 1, mistake_count: 1
+
+>>>Number of single topic groups: 2
+More than one single-topic group recommendations, selecting one at random.
+
+>>>Selected single-topic group:
+Recommended Group: ('option', 'shift', 'tab')
+Connection Description: The three words 'option', 'shift', and 'tab' can all be related to a single topic within the context of computer keyboards and software applications. Each word is commonly associated with keyboard keys and their functions. 'Option' refers to a modifier key on Apple keyboards, 'Shift' is a key used to type uppercase letters or other alternate 'upper' characters, and 'Tab' is a key used to navigate between fields in applications or to insert a tab character. Therefore, all three words share a common context in computing, specifically keyboard usage.
+
+>>>One-away group recommendations:
+one_away_group_recommendation is a new recommendation
+using one_away_group_recommendation
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['option', 'return', 'shift', 'tab'] with connection The common connection among the anchor words 'option', 'shift', and 'tab' is that they are all keys on a keyboard. 'Return' also refers to a key on a keyboard (often synonymous with 'enter'), making it the most connected word to the anchor words.
+The common connection among the anchor words 'option', 'shift', and 'tab' is that they are all keys on a keyboard. 'Return' also refers to a key on a keyboard (often synonymous with 'enter'), making it the most connected word to the anchor words. ~ keyboard keys: ['option', 'return', 'shift', 'tab'] == ['option', 'return', 'shift', 'tab']
+Recommendation ['option', 'return', 'shift', 'tab'] is correct
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 2, mistake_count: 1
+words_remaining: ['nets', 'heat', 'jazz', 'mom', 'kayak', 'level', 'racecar', 'bucks']
+(53, 53)
+(53, 53)
+candidate_lists size: 26
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['heat', 'jazz', 'mom', 'racecar'] with connection The words are connected by their association with distinct characteristics or themes (heat, jazz, maternal care, racecars).
+Recommendation ['heat', 'jazz', 'mom', 'racecar'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 2, mistake_count: 2
+attempt_count: 1
+words_remaining: ['heat', 'jazz', 'mom', 'level', 'kayak', 'racecar', 'bucks', 'nets']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['kayak', 'level', 'mom', 'racecar'] with connection palindromes
+palindromes ~ palindromes: ['kayak', 'level', 'mom', 'racecar'] == ['kayak', 'level', 'mom', 'racecar']
+Recommendation ['kayak', 'level', 'mom', 'racecar'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 3, mistake_count: 2
+attempt_count: 1
+words_remaining: ['bucks', 'heat', 'jazz', 'nets']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'heat', 'jazz', 'nets'] with connection NBA basketball teams
+NBA basketball teams ~ nba teams: ['bucks', 'heat', 'jazz', 'nets'] == ['bucks', 'heat', 'jazz', 'nets']
+Recommendation ['bucks', 'heat', 'jazz', 'nets'] is correct
+SOLVED THE CONNECTION PUZZLE!!!
+
+
+FINAL PUZZLE STATE:
+{'current_tool': 'llm_recommender',
+ 'found_count': 4,
+ 'invalid_connections': [['13d2a286f09038042098e5ab1874d93f',
+                          ['level', 'option', 'shift', 'tab']],
+                         ['a316f19aa1f69c8589f969d5a3b84982',
+                          ['heat', 'jazz', 'mom', 'racecar']]],
+ 'llm_retry_count': 0,
+ 'llm_temperature': 0.7,
+ 'mistake_count': 2,
+ 'puzzle_status': 'initialized',
+ 'recommendation_answer_status': 'correct',
+ 'recommendation_correct_groups': [['hail', 'rain', 'sleet', 'snow'],
+                                   ['option', 'shift', 'tab', 'return'],
+                                   ['kayak', 'level', 'mom', 'racecar'],
+                                   ['bucks', 'heat', 'jazz', 'nets']],
+ 'recommendation_count': 6,
+ 'recommended_connection': 'NBA basketball teams',
+ 'recommended_correct': True,
+ 'recommended_words': ['bucks', 'heat', 'jazz', 'nets'],
+ 'tool_status': 'puzzle_completed',
+ 'tool_to_use': 'END',
+ 'vocabulary_db_fp': '/tmp/tmp1hc3cli1.db',
+ 'words_remaining': []}
+
+FOUND SOLUTIONS
+[   ['hail', 'rain', 'sleet', 'snow'],
+    ['option', 'shift', 'tab', 'return'],
+    ['kayak', 'level', 'mom', 'racecar'],
+    ['bucks', 'heat', 'jazz', 'nets']]
+ALL GROUPS FOUND
+[   [   ['hail', 'rain', 'sleet', 'snow'],
+        ['option', 'shift', 'tab', 'return'],
+        ['kayak', 'level', 'mom', 'racecar'],
+        ['bucks', 'heat', 'jazz', 'nets']]]
+   solved_puzzle  number_found                                       groups_found
+0           True             4  [[hail, rain, sleet, snow], [option, shift, ta...
 ```
+
+### Llama3.2  (hybrid)
+```text
+vscode ➜ /workspaces/connection_solver (support-ollama-models) $ python src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Entering LLMOllamaInterface.__init__
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(82, 82)
+(82, 82)
+candidate_lists size: 58
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['hail', 'jazz', 'snow', 'tab'] with connection to fall from the sky in the form of ice pellets, often accompanied by loud rattling or pounding sound; to make into ice or frost by snowfall; to press the keys on a keyboard in a rhythmic pattern
+Recommendation ['hail', 'jazz', 'snow', 'tab'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 1
+attempt_count: 1
+words_remaining: ['snow', 'hail', 'tab', 'bucks', 'racecar', 'level', 'sleet', 'rain', 'option', 'kayak', 'shift', 'mom', 'jazz', 'heat', 'return', 'nets']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['hail', 'rain', 'sleet', 'snow'] with connection precipitation
+precipitation ~ wet weather: ['hail', 'rain', 'sleet', 'snow'] == ['hail', 'rain', 'sleet', 'snow']
+Recommendation ['hail', 'rain', 'sleet', 'snow'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 1
+attempt_count: 1
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'level', 'racecar', 'bucks', 'tab']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['heat', 'jazz', 'nets', 'return'] with connection 
+Recommendation ['heat', 'jazz', 'nets', 'return'] is incorrect, one away from correct
+
+ENTERED ONE-AWAY ANALYZER
+found count: 1, mistake_count: 2
+Traceback (most recent call last):
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 188, in <module>
+    results = asyncio.run(main(None, check_one_solution))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 180, in main
+    found_solutions = await asyncio.gather(
+                      ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 167, in solve_a_puzzle
+    result = await run_workflow(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/workflow_manager.py", line 120, in run_workflow
+    async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/__init__.py", line 1878, in astream
+    async for _ in runner.atick(
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/runner.py", line 362, in atick
+    await arun_with_retry(
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/retry.py", line 132, in arun_with_retry
+    return await task.proc.ainvoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/langgraph/utils/runnable.py", line 445, in ainvoke
+    input = await step.ainvoke(input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/langgraph/utils/runnable.py", line 236, in ainvoke
+    ret = await asyncio.create_task(coro, context=context)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/puzzle_solver.py", line 516, in apply_recommendation
+    one_away_group_recommendation = await one_away_analyzer(
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/puzzle_solver.py", line 264, in one_away_analyzer
+    single_topic_groups = [
+                          ^
+  File "/workspaces/connection_solver/src/agent/puzzle_solver.py", line 270, in <listcomp>
+    if x[1]["response"] == "single"
+       ~~~~^^^^^^^^^^^^
+TypeError: 'NoneType' object is not subscriptable
+During task with name 'apply_recommendation' and id '7633233c-0507-e5ac-69c2-deccc20f9bdf'
+```
+
+
+## Run with using Llama3.2 as the LLM for the entire process, including workflow manager
+
+llama3.2 as workflow llm is not working, falling back to use OpenAI for workflow.  Calling this combination `hybrid`.
+
+```text
 Running Connection Solver Agent Tester 0.15.0
 
 >>>>SOLVING PUZZLE 1
@@ -156,10 +385,11 @@ asyncio.exceptions.CancelledError
 During handling of the above exception, another exception occurred:
 ```
 
-## later run of code
+
+## Additional runs with Llama3.2 (hybrid)
 It appears that asyncio is not returning correctly, the code will fail at different points in the process, usually just after a call the LLM that appears to return `None`, i.e., the LLM is not returning a response.   Following are examples of this error type.
 
-```
+```text
 /workspaces/connection_solver/src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid 
 Running Connection Solver Agent Tester 0.16.0-dev
 
