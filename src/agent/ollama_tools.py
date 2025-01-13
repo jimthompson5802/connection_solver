@@ -28,6 +28,9 @@ class LLMOllamaInterface(LLMInterfaceBase):
         **kwargs,
     ):
         """setups up LLM Model"""
+        logger.info("Entering LLMOllamaInterface.__init__")
+        print("Entering LLMOllamaInterface.__init__")
+
         self.word_analyzer_llm_name = word_analyzer_llm_name
         self.workflow_llm_name = workflow_llm_name
         self.image_extraction_llm_name = image_extraction_llm_name
