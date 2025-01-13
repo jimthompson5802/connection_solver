@@ -1,11 +1,25 @@
 version: '3.8'
 
 services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/python-dev/Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
+      - ${NCPA_ROOT_DIR}/.openai:/openai:cached
+      - ${NCPA_ROOT_DIR}:/desktop:cached
+    command: sleep infinity
+    network_mode: service:ollama
+
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
-    ports:
-      - "11434:11434"
     volumes:
-      - ../local_models:/root/.ollama
+      - ../..:/workspaces:cached
+      - ../local_models:/root/.ollama:cached
     restart: unless-stopped
+
+networks:
+  default:
+    name: ollama-network
