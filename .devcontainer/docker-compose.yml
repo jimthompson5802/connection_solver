@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  app:
+  python-dev:
     build:
       context: ..
       dockerfile: .devcontainer/python-dev/Dockerfile
