@@ -8,6 +8,7 @@ ipykernel
 matplotlib
 seaborn
 langchain
+langchain-mistralai
 langchain-openai
 langchain-ollama
 langchain_community
