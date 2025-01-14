@@ -3,6 +3,7 @@ import logging
 import pprint as pp
 import textwrap
 from typing import List, TypedDict
+import time
 
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI
@@ -127,6 +128,8 @@ class LLMOllamaInterface(LLMInterfaceBase):
             """
             prompt = given_word_template.invoke({"the_word": the_word})
             structured_llm = self.word_analyzer_llm.with_structured_output(VocabularyResults)
+            # sleep for one second to avoid rate limiting
+            time.sleep(1)
             result = structured_llm.invoke(prompt.to_messages())
             vocabulary[the_word] = result["result"]
 
@@ -189,6 +192,7 @@ class LLMOllamaInterface(LLMInterfaceBase):
         prompt = [SystemMessage(EMBEDVEC_SYSTEM_MESSAGE), prompt]
 
         structured_llm = self.word_analyzer_llm.with_structured_output(EmbedVecGroup)
+        time.sleep(1)
         result = structured_llm.invoke(prompt)
 
         return result
@@ -273,6 +277,7 @@ class LLMOllamaInterface(LLMInterfaceBase):
         ).invoke({"candidate_list": words_remaining})
 
         # Invoke the LLM
+        time.sleep(1)
         structured_llm = self.word_analyzer_llm.with_structured_output(LLMRecommendation)
         response = structured_llm.invoke(prompt.to_messages())
 
@@ -305,12 +310,11 @@ class LLMOllamaInterface(LLMInterfaceBase):
         )
 
         structured_llm = self.image_extraction_llm.with_structured_output(ExtractedWordsFromImage)
-
         response = await structured_llm.ainvoke([message])
 
         return response
 
-    async def analyze_anchor_words_group(self, anchor_words_group: str) -> dict:
+    def analyze_anchor_words_group(self, anchor_words_group: str) -> dict:
         """
         Analyzes a group of anchor words to determine if they are related to a single topic.
 
@@ -350,6 +354,7 @@ class LLMOllamaInterface(LLMInterfaceBase):
             ]
         ).invoke({"anchor_words_group": anchor_words_group})
 
+        time.sleep(1)
         structured_llm = self.word_analyzer_llm.with_structured_output(AnchorWordsAnalysis)
         result = structured_llm.invoke(prompt.to_messages())
 
@@ -399,6 +404,7 @@ class LLMOllamaInterface(LLMInterfaceBase):
             }
         )
 
+        time.sleep(1)
         structured_llm = self.word_analyzer_llm.with_structured_output(OneAwayRecommendation)
         result = structured_llm.invoke(prompt.to_messages())
 

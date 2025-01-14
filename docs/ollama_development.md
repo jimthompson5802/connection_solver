@@ -565,7 +565,7 @@ During task with name 'get_embedvec_recommendation' and id '15f6f531-3a21-fb27-f
 
 ## Disabled asyncio in the LLM interface
 
-### This is ayncio disabled for creating the vocabulary definitions.
+### This is ayncio disabled for creating the vocabulary definitions.  this uses the debugger.
 ```text
 cd /workspaces/connection_solver ; /usr/bin/env /usr/local/bin/python /home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/adapter/../../debugpy/launcher 43929 -- /workspaces/connection_solver/src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid 
 Running Connection Solver Agent Tester 0.16.0-dev
@@ -674,7 +674,7 @@ ALL GROUPS FOUND
 0          False             1  [[hail, rain, sleet, snow]]
 ```
 
-### Disabled asyncio for all lmm interactions using llama3.2, workflow uses gpt-4o-mini.
+### Disabled asyncio for all lmm interactions using llama3.2, workflow uses gpt-4o-mini.  uses the debugger.
 ```text
 cd /workspaces/connection_solver ; /usr/bin/env /usr/local/bin/python /home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/adapter/../../debugpy/launcher 55163 -- /workspaces/connection_solver/src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid 
 Running Connection Solver Agent Tester 0.16.0-dev
@@ -780,4 +780,451 @@ ALL GROUPS FOUND
 [[['hail', 'rain', 'sleet', 'snow']]]
    solved_puzzle  number_found                 groups_found
 0          False             1  [[hail, rain, sleet, snow]]
+```
+
+### Disabled asyncio for all lmm interactions using llama3.2, workflow uses gpt-4o-mini.  Running from command line not using debugger.
+```text
+python src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Entering LLMOllamaInterface.__init__
+word_analyzer_llm_name: llama3.2, workflow_llm_name: gpt-4o-mini, image_extraction_llm_name: None, embedding_model_name: llama3.2
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(71, 71)
+(71, 71)
+candidate_lists size: 54
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['hail', 'provide', 'racecar', 'return'] with connection to provide or supply something, especially money
+Recommendation ['hail', 'provide', 'racecar', 'return'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 1
+attempt_count: 1
+words_remaining: ['snow', 'hail', 'tab', 'bucks', 'racecar', 'level', 'sleet', 'rain', 'option', 'kayak', 'shift', 'mom', 'jazz', 'heat', 'return', 'nets']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['hail', 'rain', 'sleet', 'snow'] with connection precipitation
+precipitation ~ wet weather: ['hail', 'rain', 'sleet', 'snow'] == ['hail', 'rain', 'sleet', 'snow']
+Recommendation ['hail', 'rain', 'sleet', 'snow'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 1
+attempt_count: 1
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'level', 'racecar', 'bucks', 'tab']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['heat', 'jazz', 'nets', 'return'] with connection sport
+Recommendation ['heat', 'jazz', 'nets', 'return'] is incorrect, one away from correct
+
+ENTERED ONE-AWAY ANALYZER
+found count: 1, mistake_count: 2
+Traceback (most recent call last):
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 188, in <module>
+    results = asyncio.run(main(None, check_one_solution))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 180, in main
+    found_solutions = await asyncio.gather(
+                      ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 167, in solve_a_puzzle
+    result = await run_workflow(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/workflow_manager.py", line 120, in run_workflow
+    async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/__init__.py", line 1878, in astream
+    async for _ in runner.atick(
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/runner.py", line 362, in atick
+    await arun_with_retry(
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/retry.py", line 132, in arun_with_retry
+    return await task.proc.ainvoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/langgraph/utils/runnable.py", line 445, in ainvoke
+    input = await step.ainvoke(input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/langgraph/utils/runnable.py", line 236, in ainvoke
+    ret = await asyncio.create_task(coro, context=context)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/puzzle_solver.py", line 518, in apply_recommendation
+    one_away_group_recommendation = await one_away_analyzer(
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/puzzle_solver.py", line 266, in one_away_analyzer
+    single_topic_groups = [
+                          ^
+  File "/workspaces/connection_solver/src/agent/puzzle_solver.py", line 272, in <listcomp>
+    if x[1]["response"] == "single"
+       ~~~~^^^^^^^^^^^^
+TypeError: 'NoneType' object is not subscriptable
+During task with name 'apply_recommendation' and id '1657c0b5-15d0-58f6-a621-e18994460cd5'
+vscode ➜ /workspaces/connection_solver (support-ollama-models) $ 
+```
+
+```text
+python src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Entering LLMOllamaInterface.__init__
+word_analyzer_llm_name: llama3.2, workflow_llm_name: gpt-4o-mini, image_extraction_llm_name: None, embedding_model_name: llama3.2
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(74, 74)
+(74, 74)
+candidate_lists size: 57
+Traceback (most recent call last):
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 188, in <module>
+    results = asyncio.run(main(None, check_one_solution))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 653, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 180, in main
+    found_solutions = await asyncio.gather(
+                      ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/app_embedvec_tester.py", line 167, in solve_a_puzzle
+    result = await run_workflow(
+             ^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/workflow_manager.py", line 120, in run_workflow
+    async for chunk in workflow_graph.astream(None, runtime_config, stream_mode="values"):
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/__init__.py", line 1878, in astream
+    async for _ in runner.atick(
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/runner.py", line 362, in atick
+    await arun_with_retry(
+  File "/usr/local/lib/python3.11/site-packages/langgraph/pregel/retry.py", line 132, in arun_with_retry
+    return await task.proc.ainvoke(task.input, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/langgraph/utils/runnable.py", line 445, in ainvoke
+    input = await step.ainvoke(input, config, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/langgraph/utils/runnable.py", line 236, in ainvoke
+    ret = await asyncio.create_task(coro, context=context)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/connection_solver/src/agent/puzzle_solver.py", line 392, in get_embedvec_recommendation
+    state["recommended_words"] = recommended_group["candidate_group"]
+                                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not subscriptable
+During task with name 'get_embedvec_recommendation' and id 'c61c1f40-b912-35af-db85-67f77c81d566'
+vscode ➜ /workspaces/connection_solver (support-ollama-models) $ 
+```
+
+### running from command line, implemented 1 second sleep before each llm call
+```text
+ python src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Entering LLMOllamaInterface.__init__
+word_analyzer_llm_name: llama3.2, workflow_llm_name: gpt-4o-mini, image_extraction_llm_name: None, embedding_model_name: llama3.2
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(72, 72)
+(72, 72)
+candidate_lists size: 52
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'option', 'rain', 'shift'] with connection to give in payment or as payment, to provide something as a choice or alternative, to fall in drops from the sky, to divert the attention of someone or something away from one thing and onto another
+Recommendation ['bucks', 'option', 'rain', 'shift'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 1
+attempt_count: 1
+words_remaining: ['kayak', 'hail', 'racecar', 'option', 'jazz', 'snow', 'rain', 'mom', 'heat', 'level', 'shift', 'tab', 'return', 'nets', 'sleet', 'bucks']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['hail', 'kayak', 'option', 'racecar'] with connection invalid
+Recommendation ['hail', 'kayak', 'option', 'racecar'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 2
+attempt_count: 1
+words_remaining: ['sleet', 'nets', 'jazz', 'kayak', 'tab', 'shift', 'return', 'heat', 'rain', 'snow', 'racecar', 'level', 'option', 'hail', 'bucks', 'mom']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['jazz', 'kayak', 'nets', 'sleet'] with connection type: string, description: shared category
+Recommendation ['jazz', 'kayak', 'nets', 'sleet'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 3
+attempt_count: 1
+words_remaining: ['return', 'nets', 'snow', 'option', 'bucks', 'sleet', 'tab', 'kayak', 'hail', 'mom', 'heat', 'level', 'rain', 'jazz', 'racecar', 'shift']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS [' ', ' ', ' ', "'", "'", "'", "'", "'", "'", "'", "'", ',', ',', ',', '[', ']', 'a', 'a', 'e', 'e', 'h', 'i', 'i', 'l', 'n', 'n', 'n', 'r', 'r', 'r', 's', 't', 't', 'u'] with connection weather
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{'current_tool': 'llm_recommender',
+ 'found_count': 0,
+ 'invalid_connections': [['13e6e74878f8920df82eb11ed3610452',
+                          ['bucks', 'option', 'rain', 'shift']],
+                         ['154146e877914e5310b8c0e094ab6e49',
+                          ['hail', 'kayak', 'option', 'racecar']],
+                         ['0aa7c95785c282402d340b1b2eb50d4c',
+                          ['jazz', 'kayak', 'nets', 'sleet']],
+                         ('e6739c196cdb51c53c6bafcc84162239',
+                          [' ',
+                           ' ',
+                           ' ',
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           ',',
+                           ',',
+                           ',',
+                           '[',
+                           ']',
+                           'a',
+                           'a',
+                           'e',
+                           'e',
+                           'h',
+                           'i',
+                           'i',
+                           'l',
+                           'n',
+                           'n',
+                           'n',
+                           'r',
+                           'r',
+                           'r',
+                           's',
+                           't',
+                           't',
+                           'u'])],
+ 'llm_retry_count': 0,
+ 'llm_temperature': 0.7,
+ 'mistake_count': 4,
+ 'puzzle_status': 'initialized',
+ 'recommendation_answer_status': 'n',
+ 'recommendation_correct_groups': [],
+ 'recommendation_count': 4,
+ 'recommended_connection': '',
+ 'recommended_correct': False,
+ 'recommended_words': [],
+ 'tool_status': 'puzzle_completed',
+ 'tool_to_use': 'END',
+ 'vocabulary_db_fp': '/tmp/tmpz9a20e9t.db',
+ 'words_remaining': ['return',
+                     'nets',
+                     'snow',
+                     'option',
+                     'bucks',
+                     'sleet',
+                     'tab',
+                     'kayak',
+                     'hail',
+                     'mom',
+                     'heat',
+                     'level',
+                     'rain',
+                     'jazz',
+                     'racecar',
+                     'shift']}
+
+FOUND SOLUTIONS
+[]
+ALL GROUPS FOUND
+[[]]
+   solved_puzzle  number_found groups_found
+0          False             0           []
+```
+
+### using the debugger, disabled asyncio for all lmm interactions using llama3.2, workflow uses gpt-4o-mini.
+```text
+cd /workspaces/connection_solver ; /usr/bin/env /usr/local/bin/python /home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/adapter/../../debugpy/launcher 59327 -- /workspaces/connection_solver/src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid 
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Entering LLMOllamaInterface.__init__
+word_analyzer_llm_name: llama3.2, workflow_llm_name: gpt-4o-mini, image_extraction_llm_name: None, embedding_model_name: llama3.2
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(221, 221)
+(221, 221)
+candidate_lists size: 81
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['mom', 'nets', 'option', 'racecar'] with connection 
+Recommendation ['mom', 'nets', 'option', 'racecar'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 1
+attempt_count: 1
+words_remaining: ['kayak', 'tab', 'bucks', 'mom', 'nets', 'level', 'snow', 'return', 'racecar', 'rain', 'jazz', 'shift', 'sleet', 'heat', 'option', 'hail']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'hail', 'heat', 'jazz', 'kayak', 'level', 'mom', 'nets', 'option', 'racecar', 'rain', 'return', 'shift', 'sleet', 'snow', 'tab'] with connection none
+Recommendation ['bucks', 'hail', 'heat', 'jazz', 'kayak', 'level', 'mom', 'nets', 'option', 'racecar', 'rain', 'return', 'shift', 'sleet', 'snow', 'tab'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 2
+attempt_count: 1
+words_remaining: ['hail', 'option', 'heat', 'sleet', 'shift', 'jazz', 'rain', 'racecar', 'return', 'snow', 'level', 'nets', 'mom', 'bucks', 'tab', 'kayak']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS [' ', ' ', ' ', "'", "'", "'", "'", "'", "'", "'", "'", ',', ',', ',', '[', ']', 'a', 'a', 'e', 'e', 'h', 'i', 'i', 'l', 'l', 'n', 'n', 'o', 'r', 's', 's', 't', 'w'] with connection weather
+Recommendation [' ', ' ', ' ', "'", "'", "'", "'", "'", "'", "'", "'", ',', ',', ',', '[', ']', 'a', 'a', 'e', 'e', 'h', 'i', 'i', 'l', 'l', 'n', 'n', 'o', 'r', 's', 's', 't', 'w'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 3
+attempt_count: 1
+words_remaining: ['option', 'kayak', 'rain', 'racecar', 'bucks', 'heat', 'tab', 'mom', 'nets', 'return', 'hail', 'level', 'jazz', 'sleet', 'snow', 'shift']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['kayak', 'option', 'racecar', 'rain'] with connection neologism
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{'current_tool': 'llm_recommender',
+ 'found_count': 0,
+ 'invalid_connections': [['916e20f0ee49fe415608590880f64182',
+                          ['mom', 'nets', 'option', 'racecar']],
+                         ['6c50bd62747dacd074dabbb8beadca6e',
+                          ['bucks',
+                           'hail',
+                           'heat',
+                           'jazz',
+                           'kayak',
+                           'level',
+                           'mom',
+                           'nets',
+                           'option',
+                           'racecar',
+                           'rain',
+                           'return',
+                           'shift',
+                           'sleet',
+                           'snow',
+                           'tab']],
+                         ['2571259050e25d7d47d6683f882cd19a',
+                          [' ',
+                           ' ',
+                           ' ',
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           ',',
+                           ',',
+                           ',',
+                           '[',
+                           ']',
+                           'a',
+                           'a',
+                           'e',
+                           'e',
+                           'h',
+                           'i',
+                           'i',
+                           'l',
+                           'l',
+                           'n',
+                           'n',
+                           'o',
+                           'r',
+                           's',
+                           's',
+                           't',
+                           'w']],
+                         ('2fc39b10190631de538ae650771735ed',
+                          ['kayak', 'option', 'racecar', 'rain'])],
+ 'llm_retry_count': 0,
+ 'llm_temperature': 0.7,
+ 'mistake_count': 4,
+ 'puzzle_status': 'initialized',
+ 'recommendation_answer_status': 'n',
+ 'recommendation_correct_groups': [],
+ 'recommendation_count': 4,
+ 'recommended_connection': '',
+ 'recommended_correct': False,
+ 'recommended_words': [],
+ 'tool_status': 'puzzle_completed',
+ 'tool_to_use': 'END',
+ 'vocabulary_db_fp': '/tmp/tmps8yoi4p8.db',
+ 'words_remaining': ['option',
+                     'kayak',
+                     'rain',
+                     'racecar',
+                     'bucks',
+                     'heat',
+                     'tab',
+                     'mom',
+                     'nets',
+                     'return',
+                     'hail',
+                     'level',
+                     'jazz',
+                     'sleet',
+                     'snow',
+                     'shift']}
+
+FOUND SOLUTIONS
+[]
+ALL GROUPS FOUND
+[[]]
+   solved_puzzle  number_found groups_found
+0          False             0           []
 ```
