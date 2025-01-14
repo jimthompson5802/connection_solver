@@ -38,6 +38,10 @@ class LLMOllamaInterface(LLMInterfaceBase):
         self.temperature = temperature
         self.max_tokens = max_tokens
 
+        print(
+            f"word_analyzer_llm_name: {self.word_analyzer_llm_name}, workflow_llm_name: {self.workflow_llm_name}, image_extraction_llm_name: {self.image_extraction_llm_name}, embedding_model_name: {self.embendding_model_name}"
+        )
+
         self.word_analyzer_llm = ChatOllama(
             model=self.word_analyzer_llm_name,
             temperature=self.temperature,
@@ -111,7 +115,7 @@ class LLMOllamaInterface(LLMInterfaceBase):
             ]
         )
 
-        async def process_word(the_word: str) -> dict:
+        def process_word(the_word: str) -> dict:
             """
             Asynchronously processes a given word using a language model to analyze its vocabulary.
 
@@ -123,10 +127,11 @@ class LLMOllamaInterface(LLMInterfaceBase):
             """
             prompt = given_word_template.invoke({"the_word": the_word})
             structured_llm = self.word_analyzer_llm.with_structured_output(VocabularyResults)
-            result = await structured_llm.ainvoke(prompt.to_messages())
+            result = structured_llm.invoke(prompt.to_messages())
             vocabulary[the_word] = result["result"]
 
-        await asyncio.gather(*[process_word(word) for word in words])
+        for word in words:
+            process_word(word)
 
         return vocabulary
 
@@ -184,7 +189,7 @@ class LLMOllamaInterface(LLMInterfaceBase):
         prompt = [SystemMessage(EMBEDVEC_SYSTEM_MESSAGE), prompt]
 
         structured_llm = self.word_analyzer_llm.with_structured_output(EmbedVecGroup)
-        result = await structured_llm.ainvoke(prompt)
+        result = structured_llm.invoke(prompt)
 
         return result
 
@@ -269,7 +274,7 @@ class LLMOllamaInterface(LLMInterfaceBase):
 
         # Invoke the LLM
         structured_llm = self.word_analyzer_llm.with_structured_output(LLMRecommendation)
-        response = await structured_llm.ainvoke(prompt.to_messages())
+        response = structured_llm.invoke(prompt.to_messages())
 
         logger.info("Exiting ask_llm_for_solution")
         logger.debug(f"exiting ask_llm_for_solution response {response}")
@@ -346,7 +351,7 @@ class LLMOllamaInterface(LLMInterfaceBase):
         ).invoke({"anchor_words_group": anchor_words_group})
 
         structured_llm = self.word_analyzer_llm.with_structured_output(AnchorWordsAnalysis)
-        result = await structured_llm.ainvoke(prompt.to_messages())
+        result = structured_llm.invoke(prompt.to_messages())
 
         return result
 
@@ -395,7 +400,7 @@ class LLMOllamaInterface(LLMInterfaceBase):
         )
 
         structured_llm = self.word_analyzer_llm.with_structured_output(OneAwayRecommendation)
-        result = await structured_llm.ainvoke(prompt.to_messages())
+        result = structured_llm.invoke(prompt.to_messages())
 
         return result
 

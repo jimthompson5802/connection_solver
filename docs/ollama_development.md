@@ -562,3 +562,222 @@ TypeError: 'NoneType' object is not subscriptable
 During task with name 'get_embedvec_recommendation' and id '15f6f531-3a21-fb27-f351-0d5290e10626'
 
 ```
+
+## Disabled asyncio in the LLM interface
+
+### This is ayncio disabled for creating the vocabulary definitions.
+```text
+cd /workspaces/connection_solver ; /usr/bin/env /usr/local/bin/python /home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/adapter/../../debugpy/launcher 43929 -- /workspaces/connection_solver/src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid 
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Entering LLMOllamaInterface.__init__
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(77, 77)
+(77, 77)
+candidate_lists size: 53
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['hail', 'rain', 'sleet', 'snow'] with connection weather conditions
+weather conditions ~ wet weather: ['hail', 'rain', 'sleet', 'snow'] == ['hail', 'rain', 'sleet', 'snow']
+Recommendation ['hail', 'rain', 'sleet', 'snow'] is correct
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 1, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'level', 'racecar', 'bucks', 'tab']
+(56, 56)
+(56, 56)
+candidate_lists size: 38
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['heat', 'jazz', 'level', 'shift'] with connection unique concept related to music
+Recommendation ['heat', 'jazz', 'level', 'shift'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 1
+attempt_count: 1
+words_remaining: ['heat', 'tab', 'kayak', 'nets', 'mom', 'option', 'racecar', 'jazz', 'return', 'bucks', 'level', 'shift']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['heat', 'kayak', 'nets', 'tab'] with connection sports equipment
+Recommendation ['heat', 'kayak', 'nets', 'tab'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 2
+attempt_count: 1
+words_remaining: ['tab', 'kayak', 'bucks', 'mom', 'racecar', 'shift', 'jazz', 'nets', 'heat', 'level', 'return', 'option']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'kayak', 'mom', 'tab'] with connection vehicle
+Recommendation ['bucks', 'kayak', 'mom', 'tab'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 3
+attempt_count: 1
+words_remaining: ['option', 'mom', 'racecar', 'nets', 'bucks', 'kayak', 'shift', 'tab', 'return', 'level', 'jazz', 'heat']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['mom', 'nets', 'option', 'racecar'] with connection none
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{'current_tool': 'llm_recommender',
+ 'found_count': 1,
+ 'invalid_connections': [['ed14c8fe76fc9710d31dc3a29639415b',
+                          ['heat', 'jazz', 'level', 'shift']],
+                         ['8f7e6c63951377b6a2d6b591fdc4a686',
+                          ['heat', 'kayak', 'nets', 'tab']],
+                         ['347774d7334b44d564a4e1d7403dac51',
+                          ['bucks', 'kayak', 'mom', 'tab']],
+                         ('916e20f0ee49fe415608590880f64182',
+                          ['mom', 'nets', 'option', 'racecar'])],
+ 'llm_retry_count': 0,
+ 'llm_temperature': 0.7,
+ 'mistake_count': 4,
+ 'puzzle_status': 'initialized',
+ 'recommendation_answer_status': 'n',
+ 'recommendation_correct_groups': [['hail', 'rain', 'sleet', 'snow']],
+ 'recommendation_count': 5,
+ 'recommended_connection': '',
+ 'recommended_correct': False,
+ 'recommended_words': [],
+ 'tool_status': 'puzzle_completed',
+ 'tool_to_use': 'END',
+ 'vocabulary_db_fp': '/tmp/tmpoy0ge6eg.db',
+ 'words_remaining': ['option',
+                     'mom',
+                     'racecar',
+                     'nets',
+                     'bucks',
+                     'kayak',
+                     'shift',
+                     'tab',
+                     'return',
+                     'level',
+                     'jazz',
+                     'heat']}
+
+FOUND SOLUTIONS
+[['hail', 'rain', 'sleet', 'snow']]
+ALL GROUPS FOUND
+[[['hail', 'rain', 'sleet', 'snow']]]
+   solved_puzzle  number_found                 groups_found
+0          False             1  [[hail, rain, sleet, snow]]
+```
+
+### Disabled asyncio for all lmm interactions using llama3.2, workflow uses gpt-4o-mini.
+```text
+cd /workspaces/connection_solver ; /usr/bin/env /usr/local/bin/python /home/vscode/.vscode-server/extensions/ms-python.debugpy-2024.14.0-linux-x64/bundled/libs/debugpy/adapter/../../debugpy/launcher 55163 -- /workspaces/connection_solver/src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid 
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Entering LLMOllamaInterface.__init__
+word_analyzer_llm_name: llama3.2, workflow_llm_name: gpt-4o-mini, image_extraction_llm_name: None, embedding_model_name: llama3.2
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(73, 73)
+(73, 73)
+candidate_lists size: 56
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['heat', 'jazz', 'option', 'shift'] with connection not connected
+Recommendation ['heat', 'jazz', 'option', 'shift'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 1
+attempt_count: 1
+words_remaining: ['snow', 'hail', 'tab', 'bucks', 'racecar', 'level', 'sleet', 'rain', 'option', 'kayak', 'shift', 'mom', 'jazz', 'heat', 'return', 'nets']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['hail', 'rain', 'sleet', 'snow'] with connection precipitation
+precipitation ~ wet weather: ['hail', 'rain', 'sleet', 'snow'] == ['hail', 'rain', 'sleet', 'snow']
+Recommendation ['hail', 'rain', 'sleet', 'snow'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 1
+attempt_count: 1
+words_remaining: ['heat', 'tab', 'mom', 'bucks', 'return', 'nets', 'kayak', 'option', 'level', 'shift', 'racecar', 'jazz']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'heat', 'mom', 'tab'] with connection team
+Recommendation ['bucks', 'heat', 'mom', 'tab'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 2
+attempt_count: 1
+words_remaining: ['jazz', 'racecar', 'shift', 'level', 'option', 'kayak', 'nets', 'return', 'bucks', 'mom', 'tab', 'heat']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['jazz', 'level', 'racecar', 'shift'] with connection type of gear
+Recommendation ['jazz', 'level', 'racecar', 'shift'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 3
+attempt_count: 1
+words_remaining: ['tab', 'heat', 'nets', 'bucks', 'racecar', 'kayak', 'level', 'option', 'shift', 'return', 'mom', 'jazz']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'heat', 'nets', 'tab'] with connection 
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{'current_tool': 'llm_recommender',
+ 'found_count': 1,
+ 'invalid_connections': [['b1b322eb5be8755e5fbf7619db528aa5',
+                          ['heat', 'jazz', 'option', 'shift']],
+                         ['eac32a4a5796da996879432866676fd2',
+                          ['bucks', 'heat', 'mom', 'tab']],
+                         ['bf31f0ea6682f1989d3de6e07c1b34e6',
+                          ['jazz', 'level', 'racecar', 'shift']],
+                         ('e86357ebc44016c749e68300284758e6',
+                          ['bucks', 'heat', 'nets', 'tab'])],
+ 'llm_retry_count': 0,
+ 'llm_temperature': 0.7,
+ 'mistake_count': 4,
+ 'puzzle_status': 'initialized',
+ 'recommendation_answer_status': 'o',
+ 'recommendation_correct_groups': [['hail', 'rain', 'sleet', 'snow']],
+ 'recommendation_count': 5,
+ 'recommended_connection': '',
+ 'recommended_correct': False,
+ 'recommended_words': [],
+ 'tool_status': 'puzzle_completed',
+ 'tool_to_use': 'END',
+ 'vocabulary_db_fp': '/tmp/tmpktyhnj2i.db',
+ 'words_remaining': ['tab',
+                     'heat',
+                     'nets',
+                     'bucks',
+                     'racecar',
+                     'kayak',
+                     'level',
+                     'option',
+                     'shift',
+                     'return',
+                     'mom',
+                     'jazz']}
+
+FOUND SOLUTIONS
+[['hail', 'rain', 'sleet', 'snow']]
+ALL GROUPS FOUND
+[[['hail', 'rain', 'sleet', 'snow']]]
+   solved_puzzle  number_found                 groups_found
+0          False             1  [[hail, rain, sleet, snow]]
+```
