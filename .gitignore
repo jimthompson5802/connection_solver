@@ -137,6 +137,9 @@ cython_debug/
 # tensorboard logs
 tb_logs/
 
+# local llm models
+local_models/
+
 # exceptions
 !requirements.txt
 !.devcontainer/devcontainer.json
