@@ -11,6 +11,7 @@ services:
       - ${NCPA_ROOT_DIR}:/desktop:cached
     command: sleep infinity
     network_mode: service:ollama
+    env_file: ../../.openai/env_file
 
   ollama:
     image: ollama/ollama:latest
