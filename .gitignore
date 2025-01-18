@@ -143,3 +143,5 @@ local_models/
 # exceptions
 !requirements.txt
 !.devcontainer/devcontainer.json
+!.devcontainer/python-dev/devcontainer.json
+!.devcontainer/ollama-server/devcontainer.json
