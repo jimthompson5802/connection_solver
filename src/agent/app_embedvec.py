@@ -81,17 +81,10 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     # configure the logger
     configure_logging(args.log_level)
 
-    # TODO clean up
-    # get config from api_key.json and setup openai api key
-    # with open("/openai/api_key.json") as f:
-    #     config = json.load(f)
-    # os.environ["OPENAI_API_KEY"] = config["key"]
-
     # setup for tracing if specified
     if args.trace:
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
         # os.environ["LANGCHAIN_PROJECT"] = "Agent-With-LangGraph"
-        # os.environ["LANGCHAIN_API_KEY"] = config["langsmith_key"]  TODO: clean up
     else:
         os.environ["LANGCHAIN_TRACING_V2"] = "false"
 

@@ -8,10 +8,14 @@
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	// "build": {
-	// 	"dockerfile": "Dockerfile",
-	// 	"context": ".."
-	// },
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": ".."
+	},
+	"runArgs":[
+		"--env-file",
+		"../.openai/env_file"
+	],
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},

@@ -49,10 +49,6 @@ print(f"Running AVA {__version__}")
 
 db_lock = asyncio.Lock()
 
-# get config from api_key.json and setup openai api key
-with open("/openai/api_key.json") as f:
-    config = json.load(f)
-os.environ["OPENAI_API_KEY"] = config["key"]
 
 # read in workflow instructions
 with open("src/agent/embedvec_webui_workflow_specification.md", "r") as f:

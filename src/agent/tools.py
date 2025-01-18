@@ -15,7 +15,6 @@ from langchain_core.runnables import RunnableConfig
 # manually update this as other LLM interfaces are added
 llm_interface_registry = {}
 
-# TODO clean up
 # with open("/openai/api_key.json") as f:
 #     config = json.load(f)
 
