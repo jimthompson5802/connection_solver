@@ -7,8 +7,8 @@ services:
       dockerfile: .devcontainer/python-dev/Dockerfile
     volumes:
       - ../..:/workspaces:cached
-      - ${NCPA_ROOT_DIR}/.openai:/openai:cached
-      - ${NCPA_ROOT_DIR}:/desktop:cached
+      # - ${NCPA_ROOT_DIR}/.openai:/openai:cached
+      - .:/desktop:cached
     command: sleep infinity
     network_mode: service:ollama
     env_file: ../../.openai/env_file

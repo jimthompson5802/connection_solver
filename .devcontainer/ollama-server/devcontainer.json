@@ -1,0 +1,17 @@
+{
+    "name": "Ollama Server Dev Container",
+    "dockerComposeFile": "../docker-compose.yml",
+    "service": "ollama",
+    "shutdownAction": "none",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "customizations": {
+        "settings": {
+            "terminal.integrated.shell.linux": "/bin/bash"
+        },
+        "extensions": [
+            "ms-vscode.cpptools",
+            "ms-azuretools.vscode-docker"
+        ]
+    },
+    "postCreateCommand": "echo 'Container setup complete!'"
+}
