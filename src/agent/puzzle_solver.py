@@ -252,16 +252,16 @@ async def one_away_analyzer(
     single_topic_groups = []
     possible_anchor_words_list = list(itertools.combinations(one_away_group, 3))
 
-    def process_anchor_words(anchor_list: List[str]) -> List[str]:
+    async def process_anchor_words(anchor_list: List[str]) -> List[str]:
         anchor_words = ", ".join(anchor_list)
-        response = config["configurable"]["llm_interface"].analyze_anchor_words_group(anchor_words)
+        response = await config["configurable"]["llm_interface"].analyze_anchor_words_group(anchor_words)
         return anchor_list, response
 
-    # single_topic_groups = await asyncio.gather(
-    #     *[process_anchor_words(anchor_list) for anchor_list in possible_anchor_words_list]
-    # )
-    for anchor_list in possible_anchor_words_list:
-        single_topic_groups.append(process_anchor_words(anchor_list))
+    single_topic_groups = await asyncio.gather(
+        *[process_anchor_words(anchor_list) for anchor_list in possible_anchor_words_list]
+    )
+    # for anchor_list in possible_anchor_words_list:
+    #     single_topic_groups.append(process_anchor_words(anchor_list))
 
     single_topic_groups = [
         RecommendedGroup(
