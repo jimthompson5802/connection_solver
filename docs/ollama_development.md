@@ -1228,3 +1228,252 @@ ALL GROUPS FOUND
    solved_puzzle  number_found groups_found
 0          False             0           []
 ```
+
+## partial asyncio disabled for all lmm interactions using llama3.2, workflow uses gpt-4o-mini.
+
+### run in debugger
+```text
+app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid 
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Entering LLMOllamaInterface.__init__
+word_analyzer_llm_name: llama3.2, workflow_llm_name: gpt-4o-mini, image_extraction_llm_name: None, embedding_model_name: llama3.2
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(2071, 2071)
+(2071, 2071)
+candidate_lists size: 56
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'heat', 'level', 'rain'] with connection connected by a single theme or concept, most unique about the group: temperature-related words
+Recommendation ['bucks', 'heat', 'level', 'rain'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 1
+attempt_count: 1
+words_remaining: ['snow', 'hail', 'tab', 'bucks', 'racecar', 'level', 'sleet', 'rain', 'option', 'kayak', 'shift', 'mom', 'jazz', 'heat', 'return', 'nets']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['hail', 'rain', 'sleet', 'snow'] with connection precipitation
+precipitation ~ wet weather: ['hail', 'rain', 'sleet', 'snow'] == ['hail', 'rain', 'sleet', 'snow']
+Recommendation ['hail', 'rain', 'sleet', 'snow'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 1
+attempt_count: 1
+words_remaining: ['option', 'level', 'jazz', 'return', 'tab', 'shift', 'racecar', 'bucks', 'heat', 'mom', 'nets', 'kayak']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['jazz', 'level', 'option', 'return'] with connection  musical term
+Recommendation ['jazz', 'level', 'option', 'return'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 2
+attempt_count: 1
+words_remaining: ['kayak', 'nets', 'mom', 'heat', 'bucks', 'racecar', 'shift', 'tab', 'return', 'jazz', 'level', 'option']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['heat', 'kayak', 'mom', 'nets'] with connection baby
+Recommendation ['heat', 'kayak', 'mom', 'nets'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 3
+attempt_count: 1
+words_remaining: ['option', 'level', 'jazz', 'return', 'tab', 'shift', 'racecar', 'bucks', 'heat', 'mom', 'nets', 'kayak']
+
+repeat invalid group detected: group_id 6a0ee74a5976c181dad5ae7c60fbabe4, recommendation: ['jazz', 'level', 'option', 'return']
+attempt_count: 2
+words_remaining: ['kayak', 'nets', 'mom', 'heat', 'bucks', 'racecar', 'shift', 'tab', 'return', 'jazz', 'level', 'option']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['kayak', 'nets', 'shift', 'tab'] with connection  sport
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{'current_tool': 'llm_recommender',
+ 'found_count': 1,
+ 'invalid_connections': [['92d9000eee791fd4153555e5c59c8e53',
+                          ['bucks', 'heat', 'level', 'rain']],
+                         ['6a0ee74a5976c181dad5ae7c60fbabe4',
+                          ['jazz', 'level', 'option', 'return']],
+                         ['761438a5cc1480115b3153ace14a7891',
+                          ['heat', 'kayak', 'mom', 'nets']],
+                         ('7fc6d254f22b4ba439e0ea6ccd13a4ee',
+                          ['kayak', 'nets', 'shift', 'tab'])],
+ 'llm_retry_count': 0,
+ 'llm_temperature': 0.7,
+ 'mistake_count': 4,
+ 'puzzle_status': 'initialized',
+ 'recommendation_answer_status': 'n',
+ 'recommendation_correct_groups': [['hail', 'rain', 'sleet', 'snow']],
+ 'recommendation_count': 5,
+ 'recommended_connection': '',
+ 'recommended_correct': False,
+ 'recommended_words': [],
+ 'tool_status': 'puzzle_completed',
+ 'tool_to_use': 'END',
+ 'vocabulary_db_fp': '/tmp/tmp5qej5rni.db',
+ 'words_remaining': ['kayak',
+                     'nets',
+                     'mom',
+                     'heat',
+                     'bucks',
+                     'racecar',
+                     'shift',
+                     'tab',
+                     'return',
+                     'jazz',
+                     'level',
+                     'option']}
+
+FOUND SOLUTIONS
+[['hail', 'rain', 'sleet', 'snow']]
+ALL GROUPS FOUND
+[[['hail', 'rain', 'sleet', 'snow']]]
+   solved_puzzle  number_found                 groups_found
+0          False             1  [[hail, rain, sleet, snow]]
+```
+
+### run from command line
+```text
+python src/agent/app_embedvec_tester.py --puzzle_setup_fp data/automated_test_set_0.jsonl --llm_interface hybrid
+Running Connection Solver Agent Tester 0.16.0-dev
+
+>>>>SOLVING PUZZLE 1
+Entering LLMOllamaInterface.__init__
+word_analyzer_llm_name: llama3.2, workflow_llm_name: gpt-4o-mini, image_extraction_llm_name: None, embedding_model_name: llama3.2
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(373, 373)
+(373, 373)
+candidate_lists size: 114
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['hail', 'option', 'rain', 'shift'] with connection resembling or consisting of small balls of ice that fall from the sky during a storm
+Recommendation ['hail', 'option', 'rain', 'shift'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 1
+attempt_count: 1
+words_remaining: ['snow', 'hail', 'tab', 'bucks', 'racecar', 'level', 'sleet', 'rain', 'option', 'kayak', 'shift', 'mom', 'jazz', 'heat', 'return', 'nets']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS [' ', ' ', ' ', "'", "'", "'", "'", "'", "'", "'", "'", ',', ',', ',', '[', ']', 'a', 'a', 'e', 'e', 'h', 'i', 'i', 'l', 'l', 'n', 'n', 'o', 'r', 's', 's', 't', 'w'] with connection precipitation
+Recommendation [' ', ' ', ' ', "'", "'", "'", "'", "'", "'", "'", "'", ',', ',', ',', '[', ']', 'a', 'a', 'e', 'e', 'h', 'i', 'i', 'l', 'l', 'n', 'n', 'o', 'r', 's', 's', 't', 'w'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 2
+attempt_count: 1
+words_remaining: ['bucks', 'racecar', 'mom', 'snow', 'tab', 'option', 'heat', 'nets', 'shift', 'jazz', 'return', 'sleet', 'rain', 'level', 'hail', 'kayak']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'mom', 'racecar', 'snow'] with connection None
+Recommendation ['bucks', 'mom', 'racecar', 'snow'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 0, mistake_count: 3
+attempt_count: 1
+words_remaining: ['kayak', 'hail', 'level', 'rain', 'sleet', 'return', 'jazz', 'shift', 'nets', 'heat', 'option', 'tab', 'snow', 'mom', 'racecar', 'bucks']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['hail', 'kayak', 'level', 'rain'] with connection 
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{'current_tool': 'llm_recommender',
+ 'found_count': 0,
+ 'invalid_connections': [['f2fde7b287fd9c4a238735ae0ffcbebd',
+                          ['hail', 'option', 'rain', 'shift']],
+                         ['2571259050e25d7d47d6683f882cd19a',
+                          [' ',
+                           ' ',
+                           ' ',
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           "'",
+                           ',',
+                           ',',
+                           ',',
+                           '[',
+                           ']',
+                           'a',
+                           'a',
+                           'e',
+                           'e',
+                           'h',
+                           'i',
+                           'i',
+                           'l',
+                           'l',
+                           'n',
+                           'n',
+                           'o',
+                           'r',
+                           's',
+                           's',
+                           't',
+                           'w']],
+                         ['c585256cfeae714070c27e0f89915089',
+                          ['bucks', 'mom', 'racecar', 'snow']],
+                         ('dddbbbe98a1526a7b69072ec611c8c70',
+                          ['hail', 'kayak', 'level', 'rain'])],
+ 'llm_retry_count': 0,
+ 'llm_temperature': 0.7,
+ 'mistake_count': 4,
+ 'puzzle_status': 'initialized',
+ 'recommendation_answer_status': 'n',
+ 'recommendation_correct_groups': [],
+ 'recommendation_count': 4,
+ 'recommended_connection': '',
+ 'recommended_correct': False,
+ 'recommended_words': [],
+ 'tool_status': 'puzzle_completed',
+ 'tool_to_use': 'END',
+ 'vocabulary_db_fp': '/tmp/tmpzozjb7k2.db',
+ 'words_remaining': ['kayak',
+                     'hail',
+                     'level',
+                     'rain',
+                     'sleet',
+                     'return',
+                     'jazz',
+                     'shift',
+                     'nets',
+                     'heat',
+                     'option',
+                     'tab',
+                     'snow',
+                     'mom',
+                     'racecar',
+                     'bucks']}
+
+FOUND SOLUTIONS
+[]
+ALL GROUPS FOUND
+[[]]
+   solved_puzzle  number_found groups_found
+0          False             0           []
+```
