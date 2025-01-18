@@ -1,21 +1,11 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
-	"name": "Python 3",
+	"name": "Python 3 Dev Container",
 	"dockerComposeFile": "../docker-compose.yml",
 	"service": "python-dev",
 	"shutdownAction": "none",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"build": {
-		"dockerfile": "Dockerfile",
-		"context": ".."
-	},
-	"runArgs":[
-		"--env-file",
-		"../.openai/env_file"
-	],
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -23,7 +13,6 @@
 	// mount local source folder into container
 	// Ensure that you have the NCPA_ROOT_DIR environment variable set to allow the container to access the following directories
 	"mounts": [
-		// "source=${localEnv:NCPA_ROOT_DIR}/.openai,target=/openai,type=bind,consistency=cached",
 		"source=${localEnv:NCPA_ROOT_DIR},target=/desktop,type=bind,consistency=cached"
 	],
 
