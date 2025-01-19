@@ -34,10 +34,14 @@ def call_with_structured_output(this_model, this_prompt):
     else:
         prompt = this_prompt
 
-    structured_call = this_model.with_structured_output(TestReturn)
-    response = structured_call.invoke(prompt)
+    if model_id.startswith("mistral"):
+        response = this_model.invoke(prompt)
+        response = json.loads(response.content)
+    else:
+        structured_call = this_model.with_structured_output(TestReturn)
+        response = structured_call.invoke(prompt)
 
-    print(f"\n\n{interface_name} for {model_id} WITH structured output:\n{response}")
+    print(f"\n\n{interface_name} for {model_id} WITH structured output {type(response)}:\n{response}")
 
 
 def call_no_sturcutured_output(this_model, this_prompt):
