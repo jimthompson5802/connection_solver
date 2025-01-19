@@ -23,6 +23,7 @@ from workflow_manager import run_workflow, create_workflow_graph
 from puzzle_solver import PuzzleState
 from tools import check_one_solution, llm_interface_registry
 
+from bedrock_tools import LLMBedrockInterface
 from openai_tools import LLMOpenAIInterface
 
 from src.agent import __version__
@@ -31,6 +32,7 @@ from src.agent import __version__
 # register the LLM interfaces available
 llm_interface_registry = {
     "openai": LLMOpenAIInterface,
+    "bedrock": LLMBedrockInterface,
 }
 
 # create logger

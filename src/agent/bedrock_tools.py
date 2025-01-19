@@ -4,7 +4,8 @@ import pprint as pp
 import textwrap
 from typing import List, TypedDict
 
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_aws import ChatBedrock, BedrockEmbeddings
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 
@@ -13,23 +14,22 @@ from tools import LLMInterfaceBase
 logger = logging.getLogger(__name__)
 
 
-class LLMOpenAIInterface(LLMInterfaceBase):
+class LLMBedrockInterface(LLMInterfaceBase):
     """class for OpenAI LLM Interface"""
 
     def __init__(
         self,
-        word_analyzer_llm_name: str = "gpt-4o",
-        image_extraction_llm_name: str = "gpt-4o",
+        word_analyzer_llm_name: str = "mistral.mistral-7b-instruct-v0:2",
+        image_extraction_llm_name: str = NotImplementedError,
         workflow_llm_name: str = "gpt-4o-mini",
-        embedding_model_name: str = "text-embedding-3-small",
+        embedding_model_name: str = "amazon.titan-embed-text-v2:0",
         temperature: float = 0.7,
         max_tokens=4096,
         **kwargs,
     ):
         """setups up LLM Model"""
 
-        print("LLMOpeAIInterface __init__")
-
+        print("LLMBedrockInterface __init__")
         self.word_analyzer_llm_name = word_analyzer_llm_name
         self.workflow_llm_name = workflow_llm_name
         self.image_extraction_llm_name = image_extraction_llm_name
@@ -37,25 +37,28 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         self.temperature = temperature
         self.max_tokens = max_tokens
 
-        self.word_analyzer_llm = ChatOpenAI(
-            model=self.word_analyzer_llm_name,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
+        self.word_analyzer_llm = ChatBedrock(
+            model_id=self.word_analyzer_llm_name,
+            model_kwargs={"temperature": self.temperature, "max_tokens": self.max_tokens},
         )
 
-        self.image_extraction_llm = ChatOpenAI(
-            model=self.image_extraction_llm_name,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-        )
+        self.image_extraction_llm = None
 
         self.workflow_llm = ChatOpenAI(
             model=self.workflow_llm_name,
-            temperature=0,
+            temperature=self.temperature,
             max_tokens=self.max_tokens,
         )
 
-        self.embedding_model = OpenAIEmbeddings(model=self.embendding_model_name)
+        self.embedding_model = BedrockEmbeddings(model_id=self.embendding_model_name)
+
+    async def llm_check(self):
+        """
+        Check if LLM is working
+        """
+        response = await chat_model.ainvoke("what is capital of hawaii? only return the city's name")
+        print(response.content)
+        return response.content
 
     async def generate_vocabulary(self, words: List[str]) -> dict:
         """
@@ -110,7 +113,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             ]
         )
 
-        async def process_word(the_word: str) -> dict:
+        def process_word(the_word: str) -> dict:
             """
             Asynchronously processes a given word using a language model to analyze its vocabulary.
 
@@ -120,12 +123,15 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             Returns:
                 None: The result is stored in the vocabulary dictionary with the word as the key.
             """
+            print(f"Processing word: {the_word}")
             prompt = given_word_template.invoke({"the_word": the_word})
             structured_llm = self.word_analyzer_llm.with_structured_output(VocabularyResults)
-            result = await structured_llm.ainvoke(prompt.to_messages())
+            result = structured_llm.invoke(prompt.to_messages())
             vocabulary[the_word] = result["result"]
 
-        await asyncio.gather(*[process_word(word) for word in words])
+        # await asyncio.gather(*[process_word(word) for word in words])
+        for word in words:
+            process_word(word)
 
         return vocabulary
 
