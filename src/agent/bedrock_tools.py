@@ -1,10 +1,12 @@
 import asyncio
+import json
 import logging
 import pprint as pp
 import textwrap
-from typing import List, TypedDict
+from typing import List, TypedDict, Dict
 
 from langchain_aws import ChatBedrock, BedrockEmbeddings
+from langchain_aws.chat_models.bedrock import convert_messages_to_prompt_mistral
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
@@ -14,6 +16,7 @@ from tools import LLMInterfaceBase
 logger = logging.getLogger(__name__)
 
 
+#
 class LLMBedrockInterface(LLMInterfaceBase):
     """class for OpenAI LLM Interface"""
 
@@ -52,11 +55,33 @@ class LLMBedrockInterface(LLMInterfaceBase):
 
         self.embedding_model = BedrockEmbeddings(model_id=self.embendding_model_name)
 
+    def _convert_prompt_to_messages(self, in_prompt: List) -> List:
+        """Convert to appropriate formate for LLM"""
+
+        if self.word_analyzer_llm_name.startswith("mistral"):
+            out_prompt = convert_messages_to_prompt_mistral(in_prompt)
+        else:
+            out_prompt = in_prompt
+
+        return out_prompt
+
+    async def _invoke_with_structured_output(self, in_prompt: List, ReponseStucture: Dict) -> Dict:
+        """Invoke LLM with structured output"""
+
+        if self.word_analyzer_llm_name.startswith("mistral"):
+            response = await self.word_analyzer_llm.ainvoke(in_prompt)
+            response = json.loads(response.content)
+        else:
+            structured_call = self.word_analyzer_llm.with_structured_output(ReponseStucture)
+            response = await structured_call.ainvoke(in_prompt)
+
+        return response
+
     async def llm_check(self):
         """
         Check if LLM is working
         """
-        response = await chat_model.ainvoke("what is capital of hawaii? only return the city's name")
+        response = await self.word_analyzer_llm.ainvoke("what is capital of hawaii? only return the city's name")
         print(response.content)
         return response.content
 
@@ -113,7 +138,7 @@ class LLMBedrockInterface(LLMInterfaceBase):
             ]
         )
 
-        def process_word(the_word: str) -> dict:
+        async def process_word(the_word: str) -> dict:
             """
             Asynchronously processes a given word using a language model to analyze its vocabulary.
 
@@ -124,14 +149,16 @@ class LLMBedrockInterface(LLMInterfaceBase):
                 None: The result is stored in the vocabulary dictionary with the word as the key.
             """
             print(f"Processing word: {the_word}")
+            # prompt = self._convert_prompt_to_messages(given_word_template)
             prompt = given_word_template.invoke({"the_word": the_word})
-            structured_llm = self.word_analyzer_llm.with_structured_output(VocabularyResults)
-            result = structured_llm.invoke(prompt.to_messages())
+            prompt = convert_messages_to_prompt_mistral(prompt.messages)
+            result = await self._invoke_with_structured_output(prompt, VocabularyResults)
+
             vocabulary[the_word] = result["result"]
 
         # await asyncio.gather(*[process_word(word) for word in words])
         for word in words:
-            process_word(word)
+            await process_word(word)
 
         return vocabulary
 
@@ -166,7 +193,7 @@ class LLMBedrockInterface(LLMInterfaceBase):
             """
             anaylyze the following set of "candidate group" of 4 words.
             
-            For each  "candidate group"  determine if the 4 words are connected by a single theme or concept.
+            For each  "candidate group"  determine if the FOUR words are connected by a single theme or concept.
 
             eliminate "candidate group" where the 4 words are not connected by a single theme or concept.
 
@@ -174,9 +201,11 @@ class LLMBedrockInterface(LLMInterfaceBase):
 
             if there is no  "candidate group" connected by a single theme or concept, return the group with the highest group metric.
 
-            return response in json with the
-            * key "candidate_group" for the "candidate group" that is connected by a single theme or concept that is the most unique about the "candidate group".  This is a list of 4 words.
-            * key "explanation" with a few word summary for the reason for the response.
+            return only a JSON object with following keys:
+            "candidategroup" for the four word group that is connected by a single theme or concept, this must contain FOUR words.
+            "explanation" with a few word summary for the reason.
+
+            do not include any other text.
             """
         )
 
@@ -187,9 +216,13 @@ class LLMBedrockInterface(LLMInterfaceBase):
 
         prompt = HumanMessage(candidates)
         prompt = [SystemMessage(EMBEDVEC_SYSTEM_MESSAGE), prompt]
+        prompt = convert_messages_to_prompt_mistral(prompt)
 
-        structured_llm = self.word_analyzer_llm.with_structured_output(EmbedVecGroup)
-        result = await structured_llm.ainvoke(prompt)
+        # TODO: clean up?
+        # structured_llm = self.word_analyzer_llm.with_structured_output(EmbedVecGroup)
+        # result = await structured_llm.ainvoke(prompt)
+
+        result = await self._invoke_with_structured_output(prompt, EmbedVecGroup)
 
         return result
 
@@ -208,44 +241,23 @@ class LLMBedrockInterface(LLMInterfaceBase):
             """
             You are a helpful assistant in solving the New York Times Connection Puzzle.
 
-            The New York Times Connection Puzzle involves identifying groups of four related items from a grid of 16 words. Each word can belong to only one group, and there are generally 4 groups to identify. Your task is to examine the provided words, identify the possible groups based on thematic connections, and then suggest the groups one by one.
+            The New York Times Connection Puzzle involves identifying groups of four related items from a grid of 16 words. Each word can belong to only one group, and there are generally 4 groups to identify. Your task is to examine the provided words, identify the possible groups based on thematic connections, and then suggest a group of four words that are connected by a common theme or concept.
 
             # Steps
 
             1. **Review the candidate words**: Look at the words provided in the candidate list carefully.
             2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).
             3. **Group Words**: Attempt to form groups of four words that share a common theme.
-            4. **Avoid invalid groups**: Do not include word groups that are known to be invalid.
-            5. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
-            6. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
-            7. **Solution output**: Select only the highest confidence group.  Generate only a json response as shown in the **Output Format** section.
+            4. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
+            5. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
+            6. **Solution output**: Select only the highest confidence group.  Generate only a JSON object response with the keys "words" and "connection".
 
-            # Output Format
+            Return only a JSON object containing these keys:
+            "words" that is the list of the connected words  
+            "connection" describing the connection among the words.
 
-            Provide the solution with the highest confidence group and their themes in a structured format. The JSON output should contain keys "words" that is the list of the connected words and "connection" describing the connection among the words.
-
-            ```json
-            {{"words": ["Word1", "Word2", "Word3", "Word4"], "connection": "..."}},
-            ```
-
-            No other text.
-
-            # Examples
-
-            **Example:**
-
-            - **Input:** ["prime", "dud", "shot", "card", "flop", "turn", "charge", "rainforest", "time", "miss", "plastic", "kindle", "chance", "river", "bust", "credit"]
-            
-            - **Output:**
-            {{"words": [ "bust", "dud", "flop", "mist"], "connection": "clunker"}}
-
-            No other text.
-
-            # Notes
-
-            - Ensure all thematic connections make logical sense.
-            - Consider edge cases where a word could potentially fit into more than one category.
-            - Focus on clear and accurate thematic grouping to aid in solving the puzzle efficiently.
+            RETURN ONLY THE JSON OBJECT WITH THE KEYS "words" and "connection".
+            DO NOT INCLUDE ANY OTHER TEXT.
             """
         )
 
@@ -273,8 +285,9 @@ class LLMBedrockInterface(LLMInterfaceBase):
         ).invoke({"candidate_list": words_remaining})
 
         # Invoke the LLM
-        structured_llm = self.word_analyzer_llm.with_structured_output(LLMRecommendation)
-        response = await structured_llm.ainvoke(prompt.to_messages())
+        # structured_llm = self.word_analyzer_llm.with_structured_output(LLMRecommendation)
+        # response = await structured_llm.ainvoke(prompt.to_messages())
+        response = await self._invoke_with_structured_output(prompt, LLMRecommendation)
 
         logger.info("Exiting ask_llm_for_solution")
         logger.debug(f"exiting ask_llm_for_solution response {response}")
@@ -350,8 +363,11 @@ class LLMBedrockInterface(LLMInterfaceBase):
             ]
         ).invoke({"anchor_words_group": anchor_words_group})
 
-        structured_llm = self.word_analyzer_llm.with_structured_output(AnchorWordsAnalysis)
-        result = await structured_llm.ainvoke(prompt.to_messages())
+        # structured_llm = self.word_analyzer_llm.with_structured_output(AnchorWordsAnalysis)
+        # result = await structured_llm.ainvoke(prompt.to_messages())
+
+        prompt = convert_messages_to_prompt_mistral(prompt.messages)
+        result = await self._invoke_with_structured_output(prompt, AnchorWordsAnalysis)
 
         return result
 
@@ -399,8 +415,11 @@ class LLMBedrockInterface(LLMInterfaceBase):
             }
         )
 
-        structured_llm = self.word_analyzer_llm.with_structured_output(OneAwayRecommendation)
-        result = await structured_llm.ainvoke(prompt.to_messages())
+        # structured_llm = self.word_analyzer_llm.with_structured_output(OneAwayRecommendation)
+        # result = await structured_llm.ainvoke(prompt.to_messages())
+
+        prompt = convert_messages_to_prompt_mistral(prompt.messages)
+        result = await self._invoke_with_structured_output(prompt, OneAwayRecommendation)
 
         return result
 
