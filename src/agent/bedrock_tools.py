@@ -122,6 +122,7 @@ class LLMBedrockInterface(LLMInterfaceBase):
                 "verb: example4"
                 ]
             }}
+            DO NOT INCLUDE ANY OTHER TEXT INCLUDING ANY COMMENTS.
             """
         )
 
@@ -148,7 +149,7 @@ class LLMBedrockInterface(LLMInterfaceBase):
             Returns:
                 None: The result is stored in the vocabulary dictionary with the word as the key.
             """
-            print(f"Processing word: {the_word}")
+            # print(f"Processing word: {the_word}")
             # prompt = self._convert_prompt_to_messages(given_word_template)
             prompt = given_word_template.invoke({"the_word": the_word})
             prompt = convert_messages_to_prompt_mistral(prompt.messages)
@@ -156,9 +157,11 @@ class LLMBedrockInterface(LLMInterfaceBase):
 
             vocabulary[the_word] = result["result"]
 
-        # await asyncio.gather(*[process_word(word) for word in words])
-        for word in words:
-            await process_word(word)
+        await asyncio.gather(*[process_word(word) for word in words])
+
+        # TODO Clean up
+        # for word in words:
+        #     await process_word(word)
 
         return vocabulary
 
@@ -239,9 +242,9 @@ class LLMBedrockInterface(LLMInterfaceBase):
 
         LLM_RECOMMENDER_SYSTEM_MESSAGE = textwrap.dedent(
             """
-            You are a helpful assistant in solving the New York Times Connection Puzzle.
+            You are a helpful assistant knowledgeable of the English language.
 
-            The New York Times Connection Puzzle involves identifying groups of four related items from a grid of 16 words. Each word can belong to only one group, and there are generally 4 groups to identify. Your task is to examine the provided words, identify the possible groups based on thematic connections, and then suggest a group of four words that are connected by a common theme or concept.
+            From a canidate list of words, you must identify a group of four words that are connected by a common word association, theme, concept, or category.
 
             # Steps
 
@@ -252,8 +255,8 @@ class LLMBedrockInterface(LLMInterfaceBase):
             5. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
             6. **Solution output**: Select only the highest confidence group.  Generate only a JSON object response with the keys "words" and "connection".
 
-            Return only a JSON object containing these keys:
-            "words" that is the list of the connected words  
+            Return only a single JSON object containing these keys:
+            "words" that is the list of the connected 4 words  
             "connection" describing the connection among the words.
 
             RETURN ONLY THE JSON OBJECT WITH THE KEYS "words" and "connection".
