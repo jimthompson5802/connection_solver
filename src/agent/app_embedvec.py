@@ -126,8 +126,8 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
                     workflow_graph,
                     initial_state,
                     runtime_config,
-                    puzzle_setup_function=puzzle_setup_function,
-                    puzzle_response_function=puzzle_response_function,
+                    puzzle_setup_function=setup_this_puzzle,
+                    puzzle_response_function=interact_with_user,
                 )
         else:
             result = await run_workflow(
