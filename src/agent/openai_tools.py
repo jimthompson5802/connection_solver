@@ -169,14 +169,14 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             if there is no  "candidate group" connected by a single theme or concept, return the group with the highest group metric.
 
             return response in json with the
-            * key "candidate_group" for the "candidate group" that is connected by a single theme or concept that is the most unique about the "candidate group".  This is a list of 4 words.
+            * key "candidategroup" for the "candidate group" that is connected by a single theme or concept that is the most unique about the "candidate group".  This is a list of 4 words.
             * key "explanation" with a few word summary for the reason for the response.
             """
         )
 
         # Define the structured output for the embedded vector item
         class EmbedVecGroup(TypedDict):
-            candidate_group: List[str]
+            candidategroup: List[str]
             explanation: str
 
         prompt = HumanMessage(candidates)
