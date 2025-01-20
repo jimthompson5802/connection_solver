@@ -18,6 +18,7 @@ from workflow_manager import run_workflow, create_workflow_graph
 from puzzle_solver import PuzzleState
 
 from openai_tools import LLMOpenAIInterface
+from bedrock_mistralai_tools import LLMBedrockMistralAIInterface
 from tools import interact_with_user, manual_puzzle_setup_prompt, llm_interface_registry
 
 from src.agent import __version__
@@ -26,6 +27,7 @@ from src.agent import __version__
 # register the LLM interfaces available
 llm_interface_registry = {
     "openai": LLMOpenAIInterface,
+    "bedrock_mistralai": LLMBedrockMistralAIInterface,
 }
 
 

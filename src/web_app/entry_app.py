@@ -16,6 +16,7 @@ from workflow_manager import create_webui_workflow_graph
 from puzzle_solver import PuzzleState
 from tools import read_file_to_word_list, extract_words_from_image_file, llm_interface_registry
 from openai_tools import LLMOpenAIInterface
+from bedrock_mistralai_tools import LLMBedrockMistralAIInterface
 
 from langchain_core.runnables import RunnableConfig
 
@@ -39,6 +40,7 @@ args = parser.parse_args()
 # register the LLM interfaces available
 llm_interface_registry = {
     "openai": LLMOpenAIInterface,
+    "bedrock_mistralai": LLMBedrockMistralAIInterface,
 }
 
 
