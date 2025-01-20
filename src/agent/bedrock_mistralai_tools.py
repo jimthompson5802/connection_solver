@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 #
-class LLMBedrockInterface(LLMInterfaceBase):
+class LLMBedrockMistralAIInterface(LLMInterfaceBase):
     """class for OpenAI LLM Interface"""
 
     def __init__(
@@ -55,27 +55,26 @@ class LLMBedrockInterface(LLMInterfaceBase):
 
         self.embedding_model = BedrockEmbeddings(model_id=self.embendding_model_name)
 
-    def _convert_prompt_to_messages(self, in_prompt: List) -> List:
-        """Convert to appropriate formate for LLM"""
-
-        if self.word_analyzer_llm_name.startswith("mistral"):
-            out_prompt = convert_messages_to_prompt_mistral(in_prompt)
-        else:
-            out_prompt = in_prompt
-
-        return out_prompt
-
     async def _invoke_with_structured_output(self, in_prompt: List, ReponseStucture: Dict) -> Dict:
         """Invoke LLM with structured output"""
 
-        if self.word_analyzer_llm_name.startswith("mistral"):
-            response = await self.word_analyzer_llm.ainvoke(in_prompt)
-            response = json.loads(response.content)
-        else:
-            structured_call = self.word_analyzer_llm.with_structured_output(ReponseStucture)
-            response = await structured_call.ainvoke(in_prompt)
-
-        return response
+        retries = 4
+        for attempt in range(retries):
+            try:
+                response = await self.word_analyzer_llm.ainvoke(in_prompt)
+                response = json.loads(response.content)
+                return response
+            except json.JSONDecodeError as e:
+                if attempt < retries - 1:
+                    warning_message = f"JSONDecodeError encountered: {e}. Retrying {retries - attempt - 1} more times.\nprompt: {in_prompt}\nResponseStructure: {ReponseStucture}\nrespose: {response}"
+                    logger.warning(warning_message)
+                    print(warning_message)
+                    await asyncio.sleep(1)  # Optional: wait a bit before retrying
+                else:
+                    error_message = f"Failed to decode JSON after {retries} attempts: {e}\nprompt: {in_prompt}\nResponseStructure: {ReponseStucture}\nrespose: {response}"
+                    logger.error(error_message)
+                    print(error_message)
+                    raise
 
     async def llm_check(self):
         """
@@ -253,10 +252,10 @@ class LLMBedrockInterface(LLMInterfaceBase):
             3. **Group Words**: Attempt to form groups of four words that share a common theme.
             4. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.
             5. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.
-            6. **Solution output**: Select only the highest confidence group.  Generate only a JSON object response with the keys "words" and "connection".
+            6. **Solution output**: Select only the highest confidence group.  Generate only a JSON object response with the keys "words" and "connection".  Make sure the word group contains four words.
 
-            Return only a single JSON object containing these keys:
-            "words" that is the list of the connected 4 words  
+            Return only a "SINGLE" JSON object containing these keys:
+            "words" that is the list of the connected 4 words.  MAKE SURE THE LIST CONTAINS 4 WORDS.
             "connection" describing the connection among the words.
 
             RETURN ONLY THE JSON OBJECT WITH THE KEYS "words" and "connection".
