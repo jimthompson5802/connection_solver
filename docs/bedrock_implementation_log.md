@@ -4677,3 +4677,132 @@ Generating vocabulary and embeddings for the words...this may take several secon
 
 Generating embeddings for the definitions
 ```
+
+### Example where JSONDecoderError occurred and retry succeeded
+```text 
+Running Connection Solver Agent Tester 0.16.0-dev-bedrock
+
+>>>>SOLVING PUZZLE 1
+LLMBedrockInterface __init__
+Setting up Puzzle Words: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'rain', 'sleet', 'level', 'racecar', 'bucks', 'tab', 'hail', 'snow']
+(197, 197)
+(197, 197)
+candidate_lists size: 118
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['hail', 'rain', 'sleet', 'snow'] with connection All words in this group are related to different types of precipitation from the sky.
+All words in this group are related to different types of precipitation from the sky. ~ wet weather: ['hail', 'rain', 'sleet', 'snow'] == ['hail', 'rain', 'sleet', 'snow']
+Recommendation ['hail', 'rain', 'sleet', 'snow'] is correct
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 1, mistake_count: 0
+words_remaining: ['nets', 'return', 'heat', 'jazz', 'mom', 'shift', 'kayak', 'option', 'level', 'racecar', 'bucks', 'tab']
+(142, 142)
+(142, 142)
+candidate_lists size: 90
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['heat', 'jazz', 'level', 'shift'] with connection All words in this group are related to the concept of change or transformation, with heat representing a source of energy that can bring about change, jazz suggesting a lively and rhythmic atmosphere, level implying a stage or degree of change, and shift indicating a transfer or movement from one state to another.
+Recommendation ['heat', 'jazz', 'level', 'shift'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 1, mistake_count: 1
+attempt_count: 1
+words_remaining: ['tab', 'bucks', 'racecar', 'level', 'option', 'kayak', 'shift', 'mom', 'jazz', 'heat', 'return', 'nets']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['option', 'return', 'shift', 'tab'] with connection These words are related to the concept of 'controls' or 'manipulation' in various contexts. 'Shift' refers to a lever or button used to change gears in a vehicle or to move data between windows in a computer program. 'Tab' is a key on a keyboard used for navigating between fields or tabs in a document. 'Option' is a choice or possibility, and 'return' can refer to the act of coming back or the key used to submit information in a computer program.
+These words are related to the concept of 'controls' or 'manipulation' in various contexts. 'Shift' refers to a lever or button used to change gears in a vehicle or to move data between windows in a computer program. 'Tab' is a key on a keyboard used for navigating between fields or tabs in a document. 'Option' is a choice or possibility, and 'return' can refer to the act of coming back or the key used to submit information in a computer program. ~ keyboard keys: ['option', 'return', 'shift', 'tab'] == ['option', 'return', 'shift', 'tab']
+Recommendation ['option', 'return', 'shift', 'tab'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 2, mistake_count: 1
+attempt_count: 1
+words_remaining: ['nets', 'heat', 'jazz', 'mom', 'kayak', 'level', 'racecar', 'bucks']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'fish', 'kayak', 'nets'] with connection Fishing is a common theme connecting these words. Nets are used to catch fish, bucks can refer to deer or money gained from fishing or other activities, and a kayak is a popular mode of transportation for fishing.
+Recommendation ['bucks', 'fish', 'kayak', 'nets'] is incorrect
+
+ENTERED LLM_RECOMMENDER
+found count: 2, mistake_count: 2
+attempt_count: 1
+words_remaining: ['nets', 'racecar', 'bucks', 'level', 'mom', 'heat', 'jazz', 'kayak']
+JSONDecodeError encountered: Extra data: line 6 column 1 (char 423). Retrying 3 more times.
+prompt: messages=[SystemMessage(content='\nYou are a helpful assistant knowledgeable of the English language.\n\nFrom a canidate list of words, you must identify a group of four words that are connected by a common word association, theme, concept, or category.\n\n# Steps\n\n1. **Review the candidate words**: Look at the words provided in the candidate list carefully.\n2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).\n3. **Group Words**: Attempt to form groups of four words that share a common theme.\n4. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.\n5. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.\n6. **Solution output**: Select only the highest confidence group.  Generate only a JSON object response with the keys "words" and "connection".  Make sure the word group contains four words.\n\nReturn only a "SINGLE" JSON object containing these keys:\n"words" that is the list of the connected 4 words.  MAKE SURE THE LIST CONTAINS 4 WORDS.\n"connection" describing the connection among the words.\n\nRETURN ONLY THE JSON OBJECT WITH THE KEYS "words" and "connection".\nDO NOT INCLUDE ANY OTHER TEXT.\n', additional_kwargs={}, response_metadata={}), HumanMessage(content='\nFrom the following candidate list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection. \n\ncandidate list: nets, racecar, bucks, level, mom, heat, jazz, kayak     \n', additional_kwargs={}, response_metadata={})]
+ResponseStructure: <class 'bedrock_mistralai_tools.LLMBedrockMistralAIInterface.ask_llm_for_solution.<locals>.LLMRecommendation'>
+respose: content=' {\n"words": ["racecar", "kayak", "bucks", "level"],\n"connection": "The words \'racecar\' and \'kayak\' can be associated with the theme of \'vehicles\' or \'transportation\'. \'Bucks\' can be associated with the concept of \'money\' or \'currency\'. \'Level\' connects the group by its meaning as a \'flat surface\' or \'equality\'. This grouping brings together words related to different aspects of transportation and money or equality."\n}\n\nOr,\n\n{\n"words": ["mom", "level", "heat", "bucks"],\n"connection": "The words \'mom\' and \'bucks\' are connected by the theme of \'money\' or \'finances\'. \'Heat\' can be associated with the concept of \'temperature\' or \'warmth\'. \'Level\' connects the group by its meaning as a \'flat surface\' or \'equality\'. This grouping brings together words related to family and money, and temperature."\n}\n\nBoth of these groups are valid, but the first one might be more intuitive as it directly connects \'vehicles\' with \'transportation\' and \'money\'. However, the second grouping also makes sense as it connects \'mom\' with \'bucks\' and \'heat\' with \'level\'. The choice ultimately depends on the desired focus.' additional_kwargs={'usage': {'prompt_tokens': 399, 'completion_tokens': 310, 'total_tokens': 709}, 'stop_reason': None, 'model_id': 'mistral.mistral-7b-instruct-v0:2'} response_metadata={'usage': {'prompt_tokens': 399, 'completion_tokens': 310, 'total_tokens': 709}, 'stop_reason': None, 'model_id': 'mistral.mistral-7b-instruct-v0:2'} id='run-6e00b411-ff6c-40ed-824b-c6abc828b64e-0' usage_metadata={'input_tokens': 399, 'output_tokens': 310, 'total_tokens': 709}
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'kayak', 'level', 'racecar'] with connection All of these words can be associated with the theme of 'activities' or 'things to do'. A racecar is a vehicle used in racing, bucks can refer to male deer, which are hunted or pursued, and a kayak is a small boat used for water sports. The word 'level' can be associated with ensuring a balanced or fair playing field in various activities.
+Recommendation ['bucks', 'kayak', 'level', 'racecar'] is incorrect, one away from correct
+
+ENTERED ONE-AWAY ANALYZER
+found count: 2, mistake_count: 3
+
+>>>Number of single topic groups: 0
+No single-topic group recommendations found.
+no one_away_group_recommendation, let llm_recommender try again
+
+ENTERED LLM_RECOMMENDER
+found count: 2, mistake_count: 3
+attempt_count: 1
+words_remaining: ['kayak', 'jazz', 'heat', 'mom', 'level', 'bucks', 'racecar', 'nets']
+JSONDecodeError encountered: Extra data: line 6 column 1 (char 100). Retrying 3 more times.
+prompt: messages=[SystemMessage(content='\nYou are a helpful assistant knowledgeable of the English language.\n\nFrom a canidate list of words, you must identify a group of four words that are connected by a common word association, theme, concept, or category.\n\n# Steps\n\n1. **Review the candidate words**: Look at the words provided in the candidate list carefully.\n2. **Identify Themes**: Notice any apparent themes or categories (e.g., types of animals, names of colors, etc.).\n3. **Group Words**: Attempt to form groups of four words that share a common theme.\n4. **Verify Groups**: Ensure that each word belongs to only one group. If a word seems to fit into multiple categories, decide on the best fit based on the remaining options.\n5. **Order the groups**: Order your answers in terms of your confidence level, high confidence first.\n6. **Solution output**: Select only the highest confidence group.  Generate only a JSON object response with the keys "words" and "connection".  Make sure the word group contains four words.\n\nReturn only a "SINGLE" JSON object containing these keys:\n"words" that is the list of the connected 4 words.  MAKE SURE THE LIST CONTAINS 4 WORDS.\n"connection" describing the connection among the words.\n\nRETURN ONLY THE JSON OBJECT WITH THE KEYS "words" and "connection".\nDO NOT INCLUDE ANY OTHER TEXT.\n', additional_kwargs={}, response_metadata={}), HumanMessage(content='\nFrom the following candidate list of words identify a group of four words that are connected by a common word association, theme, concept, or category, and describe the connection. \n\ncandidate list: kayak, jazz, heat, mom, level, bucks, racecar, nets     \n', additional_kwargs={}, response_metadata={})]
+ResponseStructure: <class 'bedrock_mistralai_tools.LLMBedrockMistralAIInterface.ask_llm_for_solution.<locals>.LLMRecommendation'>
+respose: content=' {\n"words": ["kayak", "bucks", "racecar", "nets"],\n"connection": "Outdoor Activities and Sports"\n}\n\nExplanation:\n\n1. Review the candidate words: The words provided are kayak, jazz, heat, mom, level, bucks, racecar, and nets.\n2. Identify Themes: There are no apparent themes or categories among these words. However, we can identify a few words that seem to be related to outdoor activities and sports: kayak, bucks (as in deer, an animal hunted for sport), racecar, and nets (used in various sports and outdoor activities).\n3. Group Words: We can group the words "kayak," "bucks," "racecar," and "nets" based on their connection to outdoor activities and sports.\n4. Verify Groups: Each word in this group belongs to only this group.\n5. Order the groups: This group has the highest confidence level.\n6. Solution output: {\n   "words": ["kayak", "bucks", "racecar", "nets"],\n   "connection": "Outdoor Activities and Sports"\n}' additional_kwargs={'usage': {'prompt_tokens': 399, 'completion_tokens': 269, 'total_tokens': 668}, 'stop_reason': None, 'model_id': 'mistral.mistral-7b-instruct-v0:2'} response_metadata={'usage': {'prompt_tokens': 399, 'completion_tokens': 269, 'total_tokens': 668}, 'stop_reason': None, 'model_id': 'mistral.mistral-7b-instruct-v0:2'} id='run-2d8dc7b8-28d4-402d-861a-0d9259f93b12-0' usage_metadata={'input_tokens': 399, 'output_tokens': 269, 'total_tokens': 668}
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['bucks', 'kayak', 'nets', 'racecar'] with connection Outdoor Activities and Sports
+FAILED TO SOLVE THE CONNECTION PUZZLE TOO MANY MISTAKES!!!
+
+
+FINAL PUZZLE STATE:
+{'current_tool': 'llm_recommender',
+ 'found_count': 2,
+ 'invalid_connections': [['ed14c8fe76fc9710d31dc3a29639415b',
+                          ['heat', 'jazz', 'level', 'shift']],
+                         ['bec14fbb17921d9945f3458f228b884f',
+                          ['bucks', 'fish', 'kayak', 'nets']],
+                         ['d2a4e51970a21b0b38e25cd38f8732c7',
+                          ['bucks', 'kayak', 'level', 'racecar']],
+                         ('3ed85ecd2c987c06f5595acbe1c4aa1d',
+                          ['bucks', 'kayak', 'nets', 'racecar'])],
+ 'llm_retry_count': 0,
+ 'llm_temperature': 0.7,
+ 'mistake_count': 4,
+ 'puzzle_status': 'initialized',
+ 'recommendation_answer_status': 'n',
+ 'recommendation_correct_groups': [['hail', 'rain', 'sleet', 'snow'],
+                                   ['option', 'return', 'shift', 'tab']],
+ 'recommendation_count': 6,
+ 'recommended_connection': '',
+ 'recommended_correct': False,
+ 'recommended_words': [],
+ 'tool_status': 'puzzle_completed',
+ 'tool_to_use': 'END',
+ 'vocabulary_db_fp': '/tmp/tmp2kpdzagf.db',
+ 'words_remaining': ['kayak',
+                     'jazz',
+                     'heat',
+                     'mom',
+                     'level',
+                     'bucks',
+                     'racecar',
+                     'nets']}
+
+FOUND SOLUTIONS
+[['hail', 'rain', 'sleet', 'snow'], ['option', 'return', 'shift', 'tab']]
+ALL GROUPS FOUND
+[[['hail', 'rain', 'sleet', 'snow'], ['option', 'return', 'shift', 'tab']]]
+   solved_puzzle  number_found                                       groups_found
+0          False             2  [[hail, rain, sleet, snow], [option, return, s...
+```

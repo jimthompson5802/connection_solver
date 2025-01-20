@@ -31,8 +31,7 @@ class LLMBedrockMistralAIInterface(LLMInterfaceBase):
         **kwargs,
     ):
         """setups up LLM Model"""
-
-        print("LLMBedrockInterface __init__")
+        print(f"{self.__class__.__name__} __init__")
         self.word_analyzer_llm_name = word_analyzer_llm_name
         self.workflow_llm_name = workflow_llm_name
         self.image_extraction_llm_name = image_extraction_llm_name
