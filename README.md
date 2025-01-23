@@ -646,6 +646,21 @@ options:
 Note: Due to the random nature of the LLM, the results vary from run to run.  For example, running the same puzzle multiple times may result in different recommendations from the LLM.  As a result, the puzzle may get solved in one run and not in another.
 
 
+## Ollama Server
+From command MacOS command line
+
+**Start up the Ollama Server**
+```bash
+$ cd ${workspaceFolder}/.devcontainer
+$ docker-compose up -d
+```
+
+**Stop the Ollama Server**
+```bash
+$ cd ${workspaceFolder}/.devcontainer
+$ docker-compose down
+```
+
 ## `langsmith` tracing
 
 The `langsmith` tracing tool was used to trace the agent's workflow.  Here is an example trace of the agent solving a Connections Puzzle.:

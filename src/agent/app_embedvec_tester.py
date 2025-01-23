@@ -24,6 +24,7 @@ from puzzle_solver import PuzzleState
 from tools import check_one_solution, llm_interface_registry
 
 from openai_tools import LLMOpenAIInterface
+from ollama_tools import LLMOllamaInterface
 
 from src.agent import __version__
 
@@ -31,6 +32,7 @@ from src.agent import __version__
 # register the LLM interfaces available
 llm_interface_registry = {
     "openai": LLMOpenAIInterface,
+    "hybrid": LLMOllamaInterface,
 }
 
 # create logger

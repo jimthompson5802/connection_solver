@@ -3,32 +3,34 @@ import logging
 import pprint as pp
 import textwrap
 from typing import List, TypedDict
+import time
 
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 
 from tools import LLMInterfaceBase
 
 logger = logging.getLogger(__name__)
 
 
-class LLMOpenAIInterface(LLMInterfaceBase):
-    """class for OpenAI LLM Interface"""
+class LLMOllamaInterface(LLMInterfaceBase):
+    """class for Ollama LLM Interface"""
 
     def __init__(
         self,
-        word_analyzer_llm_name: str = "gpt-4o",
-        image_extraction_llm_name: str = "gpt-4o",
+        word_analyzer_llm_name: str = "llama3.2",
+        image_extraction_llm_name: str = None,
         workflow_llm_name: str = "gpt-4o-mini",
-        embedding_model_name: str = "text-embedding-3-small",
+        embedding_model_name: str = "llama3.2",
         temperature: float = 0.7,
         max_tokens=4096,
         **kwargs,
     ):
         """setups up LLM Model"""
-        logger.info("Entering LLMOpenAIInterface.__init__")
-        print("Entering LLMOpenAIInterface.__init__")
+        logger.info("Entering LLMOllamaInterface.__init__")
+        print("Entering LLMOllamaInterface.__init__")
 
         self.word_analyzer_llm_name = word_analyzer_llm_name
         self.workflow_llm_name = workflow_llm_name
@@ -37,17 +39,21 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         self.temperature = temperature
         self.max_tokens = max_tokens
 
-        self.word_analyzer_llm = ChatOpenAI(
+        print(
+            f"word_analyzer_llm_name: {self.word_analyzer_llm_name}, workflow_llm_name: {self.workflow_llm_name}, image_extraction_llm_name: {self.image_extraction_llm_name}, embedding_model_name: {self.embendding_model_name}"
+        )
+
+        self.word_analyzer_llm = ChatOllama(
             model=self.word_analyzer_llm_name,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
         )
 
-        self.image_extraction_llm = ChatOpenAI(
-            model=self.image_extraction_llm_name,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-        )
+        # self.image_extraction_llm = ChatOpenAI(
+        #     model=self.image_extraction_llm_name,
+        #     temperature=self.temperature,
+        #     max_tokens=self.max_tokens,
+        # )
 
         self.workflow_llm = ChatOpenAI(
             model=self.workflow_llm_name,
@@ -55,7 +61,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             max_tokens=self.max_tokens,
         )
 
-        self.embedding_model = OpenAIEmbeddings(model=self.embendding_model_name)
+        self.embedding_model = OllamaEmbeddings(model=self.embendding_model_name)
 
     async def generate_vocabulary(self, words: List[str]) -> dict:
         """
@@ -110,7 +116,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             ]
         )
 
-        async def process_word(the_word: str) -> dict:
+        def process_word(the_word: str) -> dict:
             """
             Asynchronously processes a given word using a language model to analyze its vocabulary.
 
@@ -122,10 +128,13 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             """
             prompt = given_word_template.invoke({"the_word": the_word})
             structured_llm = self.word_analyzer_llm.with_structured_output(VocabularyResults)
-            result = await structured_llm.ainvoke(prompt.to_messages())
+            # sleep for one second to avoid rate limiting
+            time.sleep(1)
+            result = structured_llm.invoke(prompt.to_messages())
             vocabulary[the_word] = result["result"]
 
-        await asyncio.gather(*[process_word(word) for word in words])
+        for word in words:
+            process_word(word)
 
         return vocabulary
 
@@ -183,7 +192,8 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         prompt = [SystemMessage(EMBEDVEC_SYSTEM_MESSAGE), prompt]
 
         structured_llm = self.word_analyzer_llm.with_structured_output(EmbedVecGroup)
-        result = await structured_llm.ainvoke(prompt)
+        time.sleep(1)
+        result = structured_llm.invoke(prompt)
 
         return result
 
@@ -267,8 +277,9 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         ).invoke({"candidate_list": words_remaining})
 
         # Invoke the LLM
+        time.sleep(1)
         structured_llm = self.word_analyzer_llm.with_structured_output(LLMRecommendation)
-        response = await structured_llm.ainvoke(prompt.to_messages())
+        response = structured_llm.invoke(prompt.to_messages())
 
         logger.info("Exiting ask_llm_for_solution")
         logger.debug(f"exiting ask_llm_for_solution response {response}")
@@ -299,12 +310,11 @@ class LLMOpenAIInterface(LLMInterfaceBase):
         )
 
         structured_llm = self.image_extraction_llm.with_structured_output(ExtractedWordsFromImage)
-
         response = await structured_llm.ainvoke([message])
 
         return response
 
-    async def analyze_anchor_words_group(self, anchor_words_group: str) -> dict:
+    def analyze_anchor_words_group(self, anchor_words_group: str) -> dict:
         """
         Analyzes a group of anchor words to determine if they are related to a single topic.
 
@@ -344,8 +354,9 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             ]
         ).invoke({"anchor_words_group": anchor_words_group})
 
+        time.sleep(1)
         structured_llm = self.word_analyzer_llm.with_structured_output(AnchorWordsAnalysis)
-        result = await structured_llm.ainvoke(prompt.to_messages())
+        result = structured_llm.invoke(prompt.to_messages())
 
         return result
 
@@ -393,8 +404,9 @@ class LLMOpenAIInterface(LLMInterfaceBase):
             }
         )
 
+        time.sleep(1)
         structured_llm = self.word_analyzer_llm.with_structured_output(OneAwayRecommendation)
-        result = await structured_llm.ainvoke(prompt.to_messages())
+        result = structured_llm.invoke(prompt.to_messages())
 
         return result
 
