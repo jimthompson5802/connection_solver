@@ -134,7 +134,8 @@ During task with name 'setup_puzzle' and id 'f4ec9627-49f2-1ace-878b-7ca1e573db1
 ``` 
 
 ## Successfully solved test puzzle with Anthropic Claude Sonnet v1 LLM
-Had to insert a bunch of asynio.sleep(8.0) before each call to LLM to avoid the ThrottlingException.
+Inserted a bunch of asynio.sleep(8.0) before each call to LLM and converted concurrent processing to sequential processing to avoid the ThrottlingException.
+
 Need to work out a more robust solution for this.
 
 ```text
