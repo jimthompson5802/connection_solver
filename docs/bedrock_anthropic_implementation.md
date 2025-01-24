@@ -285,7 +285,9 @@ ALL GROUPS FOUND
 
 ## Successfully solved test puzzle with Anthropic Claude Sonnet v1 LLM with puzzle image
 
-Puzzle setup from this png image: [connection_puzzle_2024_12_06.png](../data/connection_puzzle_2024_12_06.png)
+Puzzle setup from this png image: 
+
+![connection_puzzle_2024_12_06.png](../data/connection_puzzle_2024_12_06.png)
 
 ```text
 $ python src/agent/app_embedvec.py --llm_interface bedrock_anthropic
