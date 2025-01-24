@@ -24,6 +24,7 @@ from puzzle_solver import PuzzleState
 from tools import check_one_solution, llm_interface_registry
 
 from bedrock_mistralai_tools import LLMBedrockMistralAIInterface
+from bedrock_anthropic_tools import LLMBedrockAnthropicInterface
 from openai_tools import LLMOpenAIInterface
 
 from src.agent import __version__
@@ -33,6 +34,7 @@ from src.agent import __version__
 llm_interface_registry = {
     "openai": LLMOpenAIInterface,
     "bedrock_mistralai": LLMBedrockMistralAIInterface,
+    "bedrock_anthropic": LLMBedrockAnthropicInterface,
 }
 
 # create logger
