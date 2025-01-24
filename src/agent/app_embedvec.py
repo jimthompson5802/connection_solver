@@ -19,6 +19,7 @@ from puzzle_solver import PuzzleState
 
 from openai_tools import LLMOpenAIInterface
 from bedrock_mistralai_tools import LLMBedrockMistralAIInterface
+from bedrock_anthropic_tools import LLMBedrockAnthropicInterface
 from tools import interact_with_user, manual_puzzle_setup_prompt, llm_interface_registry
 
 from src.agent import __version__
@@ -28,6 +29,7 @@ from src.agent import __version__
 llm_interface_registry = {
     "openai": LLMOpenAIInterface,
     "bedrock_mistralai": LLMBedrockMistralAIInterface,
+    "bedrock_anthropic": LLMBedrockAnthropicInterface,
 }
 
 

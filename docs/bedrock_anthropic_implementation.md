@@ -282,3 +282,127 @@ ALL GROUPS FOUND
    solved_puzzle  number_found                                       groups_found
 0           True             4  [[hail, rain, sleet, snow], [kayak, level, mom...
 ```
+
+## Successfully solved test puzzle with Anthropic Claude Sonnet v1 LLM with puzzle image
+
+Puzzle setup from this png image: [connection_puzzle_2024_12_06.png](../data/connection_puzzle_2024_12_06.png)
+
+```text
+$ python src/agent/app_embedvec.py --llm_interface bedrock_anthropic
+Running Connection Solver Agent with EmbedVec Recommender 0.16.0-dev-bedrock
+LLMBedrockAnthropicInterface __init__
+Enter 'file' to read words from a file or 'image' to read words from an image: image
+Please enter the file/image location: data/connection_puzzle_2024_12_06.png
+Setting up Puzzle Words: ['puzzle', 'mania', 'buzz', 'gate', 'core', 'hex', 'vex', 'rex', 'slinky', 'stump', 'pox', 'perplex', 'jinx', 'hamm', 'spell', 'pilled']
+
+ENTERED SETUP_PUZZLE
+
+Generating vocabulary and embeddings for the words...this may take several seconds 
+Processing word: puzzle
+Processing word: mania
+Processing word: buzz
+Processing word: gate
+Processing word: core
+Processing word: hex
+Processing word: vex
+Processing word: rex
+Processing word: slinky
+Processing word: stump
+Processing word: pox
+Processing word: perplex
+Processing word: jinx
+Processing word: hamm
+Processing word: spell
+Processing word: pilled
+
+Generating embeddings for the definitions
+
+Storing vocabulary and embeddings in external database
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 0, mistake_count: 0
+words_remaining: ['puzzle', 'mania', 'buzz', 'gate', 'core', 'hex', 'vex', 'rex', 'slinky', 'stump', 'pox', 'perplex', 'jinx', 'hamm', 'spell', 'pilled']
+(755, 755)
+(755, 755)
+candidate_lists size: 104
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['hex', 'jinx', 'pox', 'spell'] with connection Supernatural theme, most cohesive group
+Is the recommendation accepted? (y/g/b/p/m/s/o/n): g
+Recommendation ['hex', 'jinx', 'pox', 'spell'] is correct
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 1, mistake_count: 0
+words_remaining: ['puzzle', 'mania', 'buzz', 'gate', 'core', 'vex', 'rex', 'slinky', 'stump', 'perplex', 'hamm', 'pilled']
+(724, 724)
+(724, 724)
+candidate_lists size: 72
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['perplex', 'puzzle', 'stump', 'vex'] with connection Connected by theme of mental confusion
+Is the recommendation accepted? (y/g/b/p/m/s/o/n): y
+Recommendation ['perplex', 'puzzle', 'stump', 'vex'] is correct
+
+ENTERED EMBEDVEC_RECOMMENDER
+found count: 2, mistake_count: 0
+words_remaining: ['mania', 'buzz', 'gate', 'core', 'rex', 'slinky', 'hamm', 'pilled']
+(689, 689)
+(689, 689)
+candidate_lists size: 32
+
+EMBEDVEC_RECOMMENDER: RECOMMENDED WORDS ['buzz', 'hamm', 'mania', 'slinky'] with connection Toy Story characters
+Is the recommendation accepted? (y/g/b/p/m/s/o/n): n
+Recommendation ['buzz', 'hamm', 'mania', 'slinky'] is incorrect
+Changing the recommender from 'embedvec_recommender' to 'llm_recommender'
+
+ENTERED LLM_RECOMMENDER
+found count: 2, mistake_count: 1
+attempt_count: 1
+words_remaining: ['pilled', 'hamm', 'slinky', 'rex', 'core', 'gate', 'buzz', 'mania']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['buzz', 'hamm', 'rex', 'slinky'] with connection Toy Story characters
+Is the recommendation accepted? (y/g/b/p/m/s/o/n): b
+Recommendation ['buzz', 'hamm', 'rex', 'slinky'] is correct
+
+ENTERED LLM_RECOMMENDER
+found count: 3, mistake_count: 1
+attempt_count: 1
+words_remaining: ['gate', 'core', 'mania', 'pilled']
+
+LLM_RECOMMENDER: RECOMMENDED WORDS ['core', 'gate', 'mania', 'pilled'] with connection Suffixes: These words can all be used as suffixes to form compound words or phrases
+Is the recommendation accepted? (y/g/b/p/m/s/o/n): p
+Recommendation ['core', 'gate', 'mania', 'pilled'] is correct
+SOLVED THE CONNECTION PUZZLE!!!
+
+
+FINAL PUZZLE STATE:
+{'current_tool': 'llm_recommender',
+ 'found_blue': True,
+ 'found_count': 4,
+ 'found_purple': True,
+ 'found_yellow': True,
+ 'invalid_connections': [['264a47f4f18aa9f46f44e87ea93edaf4',
+                          ['buzz', 'hamm', 'mania', 'slinky']]],
+ 'llm_retry_count': 0,
+ 'llm_temperature': 0.7,
+ 'mistake_count': 1,
+ 'puzzle_status': 'initialized',
+ 'recommendation_answer_status': 'p',
+ 'recommendation_correct_groups': [['hex', 'jinx', 'pox', 'spell'],
+                                   ['perplex', 'puzzle', 'stump', 'vex'],
+                                   ['buzz', 'hamm', 'rex', 'slinky'],
+                                   ['core', 'gate', 'mania', 'pilled']],
+ 'recommendation_count': 5,
+ 'recommended_connection': 'Suffixes: These words can all be used as suffixes '
+                           'to form compound words or phrases',
+ 'recommended_correct': True,
+ 'recommended_words': ['core', 'gate', 'mania', 'pilled'],
+ 'tool_status': 'puzzle_completed',
+ 'tool_to_use': 'END',
+ 'vocabulary_db_fp': '/tmp/tmp6ri722l2.db',
+ 'words_remaining': []}
+
+FOUND SOLUTIONS
+[   ['hex', 'jinx', 'pox', 'spell'],
+    ['perplex', 'puzzle', 'stump', 'vex'],
+    ['buzz', 'hamm', 'rex', 'slinky'],
+    ['core', 'gate', 'mania', 'pilled']]
+```
