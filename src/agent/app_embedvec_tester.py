@@ -90,8 +90,22 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
         help="File path to setup Connections Puzzle data",
     )
 
+    # parameter to enable or disable concurrency, set default to 'true'
+    parser.add_argument(
+        "--concurrent",
+        type=str,
+        choices=["true", "false"],
+        default="true",
+        help="Enable or disable concurrency for the application (true or false)",
+    )
+
     # Parse arguments
     args = parser.parse_args()
+
+    if args.concurrent == "true":
+        concurrent_flag = True
+    else:
+        concurrent_flag = False
 
     # configure the logger
     configure_logging(args.log_level)
@@ -173,9 +187,14 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
 
         return result
 
-    found_solutions = await asyncio.gather(
-        *[solve_a_puzzle(i, solution, workflow_instructions) for i, solution in enumerate(puzzle_data)]
-    )
+    if concurrent_flag:
+        found_solutions = await asyncio.gather(
+            *[solve_a_puzzle(i, solution, workflow_instructions) for i, solution in enumerate(puzzle_data)]
+        )
+    else:
+        found_solutions = []
+        for i, solution in enumerate(puzzle_data):
+            found_solutions.append(await solve_a_puzzle(i, solution, workflow_instructions))
 
     return found_solutions
 

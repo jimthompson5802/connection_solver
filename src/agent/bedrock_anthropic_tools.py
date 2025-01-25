@@ -3,11 +3,13 @@ import logging
 import pprint as pp
 import textwrap
 from typing import List, TypedDict, Coroutine, Any
+from functools import wraps
 
 from langchain_aws import ChatBedrock, BedrockEmbeddings
 from langchain_aws.chat_models.bedrock import convert_messages_to_prompt_anthropic
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.rate_limiters import InMemoryRateLimiter
 
 from tools import LLMInterfaceBase
 
@@ -23,93 +25,72 @@ from typing import Any, Callable
 logger = logging.getLogger(__name__)
 
 
-def retry_with_exponential_backoff(max_retries: int = 8, base_delay: float = 1.0, max_delay: float = 60.0) -> Callable:
-    """
-    Decorator that implements exponential backoff for Bedrock API calls.
+# define limit on number of concurrent aysnc concurrent calls
+# MAX_CONCURRENT_CALLS = asyncio.Semaphore(2)
 
-    Args:
-        max_retries (int): Maximum number of retry attempts
-        base_delay (float): Initial delay between retries in seconds
-        max_delay (float): Maximum delay between retries in seconds
+
+def retry_when_error(max_retries=4, base_delay=1, jitter=0.1):
+    """
+    A decorator to retry an asynchronous function when an exception occurs.
+
+    Parameters:
+    max_retries (int): The maximum number of retries before giving up. Default is 4.
+    base_delay (int or float): The base delay between retries in seconds. Default is 1 second.
+    jitter (float): The maximum random jitter to add to the delay to avoid thundering herd problem. Default is 0.1 seconds.
+
+    Returns:
+    function: A wrapped function that will be retried upon failure.
+
+    Example:
+    @retry_when_error(max_retries=3, base_delay=2, jitter=0.5)
+    async def my_function():
+        # function implementation
     """
 
-    def decorator(func: Callable) -> Callable:
-        @functools.wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
             retries = 0
-            while True:
+            while retries < max_retries:
                 try:
-                    return func(*args, **kwargs)
-                except botocore.exceptions.ClientError as error:
-                    if error.response["Error"]["Code"] == "ThrottlingException":
-                        if retries >= max_retries:
-                            logger.error(f"Max retries ({max_retries}) exceeded. Last error: {error}")
-                            raise
-
-                        # Calculate delay with exponential backoff and jitter
-                        delay = min(max_delay, base_delay * (2**retries) + random.uniform(0, 1))
-                        logger.warning(
-                            f"ThrottlingException encountered. Retrying in {delay:.2f} seconds. "
-                            f"Attempt {retries + 1}/{max_retries}"
-                        )
-
-                        time.sleep(delay)
-                        retries += 1
-                    else:
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    if retries == max_retries - 1:
+                        print(f"Failed after {retries + 1} retries")
                         raise
+                    retries += 1
+                    delay = (base_delay * 2**retries) + (random.random() * jitter)
+                    print(f"Retrying {retries}/{max_retries} with delay {delay:.3f} after error: {e}")
+                    await asyncio.sleep(delay)
+            return await func(*args, **kwargs)
 
         return wrapper
 
     return decorator
 
 
-# Example usage:
-# @retry_with_exponential_backoff()
-# def invoke_bedrock_model(client, **kwargs):
-#     return client.invoke_model(**kwargs)
+@retry_when_error()
+async def invoke_bedrock_model_async(llm_model, prompt):
+    """
+    Asynchronously invokes a Bedrock model with a given prompt and returns the result.
 
-# def async_retry_with_exponential_backoff(
-#     max_retries: int = 8, base_delay: float = 1.0, max_delay: float = 60.0
-# ) -> Callable:
-#     def decorator(func: Callable[..., Coroutine[Any, Any]]) -> Callable[..., Coroutine[Any, Any]]:
-#         @functools.wraps(func)
-#         async def wrapper(*args: Any, **kwargs: Any):
-#             retries = 0
-#             while True:
-#                 try:
-#                     return await func(*args, **kwargs)
-#                 except botocore.exceptions.ClientError as error:
-#                     if error.response["Error"]["Code"] == "ThrottlingException":
-#                         if retries >= max_retries:
-#                             logger.error(f"Max retries ({max_retries}) exceeded. Last error: {error}")
-#                             raise
+    Parameters:
+    llm_model (ChatBedrock): The Bedrock model to be invoked.
+    prompt (str): The prompt to be sent to the model.
+    output_type (Any): The type of the output to be returned.
 
-#                         delay = min(max_delay, base_delay * (2**retries) + random.uniform(0, 1))
-#                         logger.warning(
-#                             f"ThrottlingException encountered. Retrying in {delay:.2f} seconds. "
-#                             f"Attempt {retries + 1}/{max_retries}"
-#                         )
+    Returns:
+    Any: The result of the model invocation.
+    """
 
-#                         await asyncio.sleep(delay)
-#                         retries += 1
-#                     else:
-#                         raise
-
-#         return wrapper
-
-#     return decorator
+    return await llm_model.ainvoke(prompt)
 
 
-# Usage example:
-# @async_retry_with_exponential_backoff()
-# async def invoke_bedrock_model_async(client, **kwargs):
-#     return await client.invoke_model(**kwargs)
-
-
-# @async_retry_with_exponential_backoff()
-# async def invoke_bedrock_model_async(client, prompt: str, StructuredOutputt):
-#     structured_llm = client.with_structured_output(StructuredOutputt)
-#     return await structured_llm.ainvoke(prompt)
+RATE_LIMITER = InMemoryRateLimiter(
+    requests_per_second=(5 / 60.0),  # requests per minute in seconds
+    check_every_n_seconds=0.1,  # check every 0.1 seconds
+    max_bucket_size=5,  # allow up to 5 requests in a burst
+)
 
 
 class LLMBedrockAnthropicInterface(LLMInterfaceBase):
@@ -144,11 +125,13 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
         self.word_analyzer_llm = ChatBedrock(
             model_id=self.word_analyzer_llm_name,
             model_kwargs=model_kwargs,
+            rate_limiter=RATE_LIMITER,
         )
 
         self.image_extraction_llm = ChatBedrock(
             model=self.image_extraction_llm_name,
             model_kwargs=model_kwargs,
+            rate_limiter=RATE_LIMITER,
         )
 
         self.workflow_llm = ChatBedrock(
@@ -157,6 +140,7 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
                 "temperature": 0,
                 "max_tokens": self.max_tokens,
             },
+            rate_limiter=RATE_LIMITER,
         )
 
         self.embedding_model = BedrockEmbeddings(model_id=self.embendding_model_name)
@@ -228,14 +212,15 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
             prompt = given_word_template.invoke({"the_word": the_word})
             prompt = convert_messages_to_prompt_anthropic(prompt.messages)
             structured_llm = self.word_analyzer_llm.with_structured_output(VocabularyResults)
-            result = await structured_llm.ainvoke(prompt)
-            # result = await invoke_bedrock_model_async(self.word_analyzer_llm, prompt, VocabularyResults)
+            # result = await structured_llm.ainvoke(prompt)
+            result = await invoke_bedrock_model_async(structured_llm, prompt)
+            print(f">>> generated vocabulary for {the_word}")
             vocabulary[the_word] = result["result"]
 
-        # await asyncio.gather(*[process_word(word) for word in words])
-        for word in words:
-            await asyncio.sleep(8.0)
-            await process_word(word)
+        await asyncio.gather(*[process_word(word) for word in words])
+        # for word in words:
+        #     await asyncio.sleep(8.0)
+        #     await process_word(word)
 
         return vocabulary
 
@@ -294,8 +279,9 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
         prompt = convert_messages_to_prompt_anthropic(prompt)
 
         structured_llm = self.word_analyzer_llm.with_structured_output(EmbedVecGroup)
-        await asyncio.sleep(8.0)
-        result = await structured_llm.ainvoke(prompt)
+        # await asyncio.sleep(8.0)
+        # result = await structured_llm.ainvoke(prompt)
+        result = await invoke_bedrock_model_async(structured_llm, prompt)
 
         return result
 
@@ -380,8 +366,9 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
 
         # Invoke the LLM
         structured_llm = self.word_analyzer_llm.with_structured_output(LLMRecommendation)
-        await asyncio.sleep(8.0)
-        response = await structured_llm.ainvoke(prompt.to_messages())
+        # await asyncio.sleep(8.0)
+        # response = await structured_llm.ainvoke(prompt.to_messages())
+        response = await invoke_bedrock_model_async(structured_llm, prompt.to_messages())
 
         logger.info("Exiting ask_llm_for_solution")
         logger.debug(f"exiting ask_llm_for_solution response {response}")
@@ -412,8 +399,9 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
         )
 
         structured_llm = self.image_extraction_llm.with_structured_output(ExtractedWordsFromImage)
-        await asyncio.sleep(8.0)
-        response = await structured_llm.ainvoke([message])
+        # await asyncio.sleep(8.0)
+        # response = await structured_llm.ainvoke([message])
+        response = await invoke_bedrock_model_async(structured_llm, [message])
 
         return response
 
@@ -459,8 +447,9 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
         prompt = convert_messages_to_prompt_anthropic(prompt.messages)
 
         structured_llm = self.word_analyzer_llm.with_structured_output(AnchorWordsAnalysis)
-        await asyncio.sleep(8.0)
-        result = await structured_llm.ainvoke(prompt)
+        # await asyncio.sleep(8.0)
+        # result = await structured_llm.ainvoke(prompt)
+        result = await invoke_bedrock_model_async(structured_llm, prompt)
 
         return result
 
@@ -510,8 +499,9 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
         prompt = convert_messages_to_prompt_anthropic(prompt.messages)
 
         structured_llm = self.word_analyzer_llm.with_structured_output(OneAwayRecommendation)
-        await asyncio.sleep(8.0)
-        result = await structured_llm.ainvoke(prompt)
+        # await asyncio.sleep(8.0)
+        # result = await structured_llm.ainvoke(prompt)
+        result = await invoke_bedrock_model_async(structured_llm, prompt)
 
         return result
 
@@ -567,8 +557,9 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
 
         # Invoke the LLM
         llm_structured = self.workflow_llm.with_structured_output(NextAction)
-        await asyncio.sleep(6.0)
-        response = await llm_structured.ainvoke(prompt)
+        # await asyncio.sleep(6.0)
+        # response = await llm_structured.ainvoke(prompt)
+        response = await invoke_bedrock_model_async(llm_structured, prompt)
 
         logger.debug(f"response: {pp.pformat(response)}")
 

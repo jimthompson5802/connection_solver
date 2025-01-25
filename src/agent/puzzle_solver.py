@@ -257,12 +257,9 @@ async def one_away_analyzer(
         response = await config["configurable"]["llm_interface"].analyze_anchor_words_group(anchor_words)
         return anchor_list, response
 
-    # single_topic_groups = await asyncio.gather(
-    #     *[process_anchor_words(anchor_list) for anchor_list in possible_anchor_words_list]
-    # )
-    for anchor_list in possible_anchor_words_list:
-        await asyncio.sleep(8.0)
-        single_topic_groups.append(await process_anchor_words(anchor_list))
+    single_topic_groups = await asyncio.gather(
+        *[process_anchor_words(anchor_list) for anchor_list in possible_anchor_words_list]
+    )
 
     single_topic_groups = [
         RecommendedGroup(
