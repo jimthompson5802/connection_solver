@@ -25,10 +25,6 @@ from typing import Any, Callable
 logger = logging.getLogger(__name__)
 
 
-# define limit on number of concurrent aysnc concurrent calls
-# MAX_CONCURRENT_CALLS = asyncio.Semaphore(2)
-
-
 def retry_when_error(max_retries=4, base_delay=1, jitter=0.1):
     """
     A decorator to retry an asynchronous function when an exception occurs.
@@ -212,15 +208,11 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
             prompt = given_word_template.invoke({"the_word": the_word})
             prompt = convert_messages_to_prompt_anthropic(prompt.messages)
             structured_llm = self.word_analyzer_llm.with_structured_output(VocabularyResults)
-            # result = await structured_llm.ainvoke(prompt)
             result = await invoke_bedrock_model_async(structured_llm, prompt)
             print(f">>> generated vocabulary for {the_word}")
             vocabulary[the_word] = result["result"]
 
         await asyncio.gather(*[process_word(word) for word in words])
-        # for word in words:
-        #     await asyncio.sleep(8.0)
-        #     await process_word(word)
 
         return vocabulary
 
@@ -366,8 +358,6 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
 
         # Invoke the LLM
         structured_llm = self.word_analyzer_llm.with_structured_output(LLMRecommendation)
-        # await asyncio.sleep(8.0)
-        # response = await structured_llm.ainvoke(prompt.to_messages())
         response = await invoke_bedrock_model_async(structured_llm, prompt.to_messages())
 
         logger.info("Exiting ask_llm_for_solution")
@@ -399,8 +389,6 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
         )
 
         structured_llm = self.image_extraction_llm.with_structured_output(ExtractedWordsFromImage)
-        # await asyncio.sleep(8.0)
-        # response = await structured_llm.ainvoke([message])
         response = await invoke_bedrock_model_async(structured_llm, [message])
 
         return response
@@ -447,8 +435,6 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
         prompt = convert_messages_to_prompt_anthropic(prompt.messages)
 
         structured_llm = self.word_analyzer_llm.with_structured_output(AnchorWordsAnalysis)
-        # await asyncio.sleep(8.0)
-        # result = await structured_llm.ainvoke(prompt)
         result = await invoke_bedrock_model_async(structured_llm, prompt)
 
         return result
@@ -499,8 +485,6 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
         prompt = convert_messages_to_prompt_anthropic(prompt.messages)
 
         structured_llm = self.word_analyzer_llm.with_structured_output(OneAwayRecommendation)
-        # await asyncio.sleep(8.0)
-        # result = await structured_llm.ainvoke(prompt)
         result = await invoke_bedrock_model_async(structured_llm, prompt)
 
         return result
@@ -557,8 +541,6 @@ class LLMBedrockAnthropicInterface(LLMInterfaceBase):
 
         # Invoke the LLM
         llm_structured = self.workflow_llm.with_structured_output(NextAction)
-        # await asyncio.sleep(6.0)
-        # response = await llm_structured.ainvoke(prompt)
         response = await invoke_bedrock_model_async(llm_structured, prompt)
 
         logger.debug(f"response: {pp.pformat(response)}")

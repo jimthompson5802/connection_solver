@@ -148,7 +148,6 @@ class LLMBedrockMistralAIInterface(LLMInterfaceBase):
                 None: The result is stored in the vocabulary dictionary with the word as the key.
             """
             # print(f"Processing word: {the_word}")
-            # prompt = self._convert_prompt_to_messages(given_word_template)
             prompt = given_word_template.invoke({"the_word": the_word})
             prompt = convert_messages_to_prompt_mistral(prompt.messages)
             result = await self._invoke_with_structured_output(prompt, VocabularyResults)
@@ -156,10 +155,6 @@ class LLMBedrockMistralAIInterface(LLMInterfaceBase):
             vocabulary[the_word] = result["result"]
 
         await asyncio.gather(*[process_word(word) for word in words])
-
-        # TODO Clean up
-        # for word in words:
-        #     await process_word(word)
 
         return vocabulary
 
@@ -218,10 +213,6 @@ class LLMBedrockMistralAIInterface(LLMInterfaceBase):
         prompt = HumanMessage(candidates)
         prompt = [SystemMessage(EMBEDVEC_SYSTEM_MESSAGE), prompt]
         prompt = convert_messages_to_prompt_mistral(prompt)
-
-        # TODO: clean up?
-        # structured_llm = self.word_analyzer_llm.with_structured_output(EmbedVecGroup)
-        # result = await structured_llm.ainvoke(prompt)
 
         result = await self._invoke_with_structured_output(prompt, EmbedVecGroup)
 
@@ -286,8 +277,6 @@ class LLMBedrockMistralAIInterface(LLMInterfaceBase):
         ).invoke({"candidate_list": words_remaining})
 
         # Invoke the LLM
-        # structured_llm = self.word_analyzer_llm.with_structured_output(LLMRecommendation)
-        # response = await structured_llm.ainvoke(prompt.to_messages())
         response = await self._invoke_with_structured_output(prompt, LLMRecommendation)
 
         logger.info("Exiting ask_llm_for_solution")
@@ -364,9 +353,6 @@ class LLMBedrockMistralAIInterface(LLMInterfaceBase):
             ]
         ).invoke({"anchor_words_group": anchor_words_group})
 
-        # structured_llm = self.word_analyzer_llm.with_structured_output(AnchorWordsAnalysis)
-        # result = await structured_llm.ainvoke(prompt.to_messages())
-
         prompt = convert_messages_to_prompt_mistral(prompt.messages)
         result = await self._invoke_with_structured_output(prompt, AnchorWordsAnalysis)
 
@@ -415,9 +401,6 @@ class LLMBedrockMistralAIInterface(LLMInterfaceBase):
                 "candidate_words": candidate_words_remaining,
             }
         )
-
-        # structured_llm = self.word_analyzer_llm.with_structured_output(OneAwayRecommendation)
-        # result = await structured_llm.ainvoke(prompt.to_messages())
 
         prompt = convert_messages_to_prompt_mistral(prompt.messages)
         result = await self._invoke_with_structured_output(prompt, OneAwayRecommendation)
