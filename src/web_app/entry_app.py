@@ -37,14 +37,6 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-# TODO: this is temporary until a more formal way of registring LLM interfaces is implemented
-# register the LLM interfaces available
-llm_interface_registry = {
-    "openai": LLMOpenAIInterface,
-    "bedrock_mistralai": LLMBedrockMistralAIInterface,
-    "bedrock_anthropic": LLMBedrockAnthropicInterface,
-}
-
 
 pp = pp.PrettyPrinter(indent=4)
 logger = logging.getLogger(__name__)
@@ -75,7 +67,7 @@ async def webui_puzzle_setup_function(puzzle_setup_fp: str, config: RunnableConf
 
 
 # setup interace to LLM
-llm_interface = llm_interface_registry[args.llm_interface]()
+llm_interface = llm_interface_registry.get(args.llm_interface)()
 
 # setup runtime config
 runtime_config = {

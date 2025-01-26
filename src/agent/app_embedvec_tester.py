@@ -27,15 +27,9 @@ from bedrock_mistralai_tools import LLMBedrockMistralAIInterface
 from bedrock_anthropic_tools import LLMBedrockAnthropicInterface
 from openai_tools import LLMOpenAIInterface
 
+
 from src.agent import __version__
 
-# TODO: this is temporary until a more formal way of registring LLM interfaces is implemented
-# register the LLM interfaces available
-llm_interface_registry = {
-    "openai": LLMOpenAIInterface,
-    "bedrock_mistralai": LLMBedrockMistralAIInterface,
-    "bedrock_anthropic": LLMBedrockAnthropicInterface,
-}
 
 # create logger
 logger = logging.getLogger(__name__)
@@ -135,7 +129,7 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
     async def solve_a_puzzle(i, solution, workflow_instructions):
         print(f"\n>>>>SOLVING PUZZLE {i+1}")
 
-        llm_interface = llm_interface_registry[args.llm_interface]()
+        llm_interface = llm_interface_registry.get(args.llm_interface)()
 
         runtime_config = RunnableConfig(
             configurable={

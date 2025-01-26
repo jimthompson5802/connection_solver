@@ -11,7 +11,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from langchain_core.rate_limiters import InMemoryRateLimiter
 
-from tools import LLMInterfaceBase
+from tools import LLMInterfaceBase, llm_interface_registry
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +89,7 @@ RATE_LIMITER = InMemoryRateLimiter(
 )
 
 
+@llm_interface_registry.register("bedrock_anthropic")
 class LLMBedrockAnthropicInterface(LLMInterfaceBase):
     """class for OpenAI LLM Interface"""
 
