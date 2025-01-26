@@ -100,7 +100,7 @@ This is an automated tester for the Connections Puzzle Solver.  The tester runs 
 
 The `LLMInterfaceBase` class is the base class for interacting with language models. It provides a common interface for interacting with different language models that may be used in different parts of the solution process such as methods for generating vocabulary, embeddings, recommendations and workflow management.
 
-This class provides a structured way to support LLM from different vendors.  At the moment, the `LLMOpenAIInterface` class is the only implementation of the `LLMInterfaceBase` class.  The `LLMOpenAIInterface` class provides specific implementations for interacting with OpenAI's language models.  A future release will demonstrate how to use the `LLMInterfaceBase` class to interact with other vendor's language models.
+This class provides a structured way to support LLM from different vendors.  
 
 ### Methods
 
@@ -140,28 +140,60 @@ This class provides a structured way to support LLM from different vendors.  At 
     - Returns a dictionary with the next action.
 
 
-### LLMOpenAIInterface Class
+### Support for Multiple LLMs
+
+The Connections Puzzler Agent is able to work with the following LLMs
+
+#### LLMOpenAIInterface Class
 The `LLMOpenAIInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with OpenAI's language models. Models used in this implementation are OpenAI's
-* `gpt-4o` the word analysis to generate group recommendations
-* `gpt-4o-mini` for workflow management
-* `text-embedding-3-small` for generating vector embeddings
+* word analyzer: `gpt-4o`
+* word extraction from image: `gpt-4o`
+* workflow manager: `gpt-4o-mini`
+* vector embedding generator: `text-embedding-3-small`
+
+#### LLMBedrockAntropicInterface Class
+The `LLMBedrockAntropicInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with Bedrock Antropic's language model Claude 3.5 Sonnet V1. Models used in this implementation are Bedrock Antropic's
+* word analyzer: `anthropic.claude-3-5-sonnet-20240620-v1:0`
+* word extraction from image: `anthropic.claude-3-5-sonnet-20240620-v1:0`
+* workflow manager: `anthropic.claude-3-5-sonnet-20240620-v1:0`
+* vector embedding generator: `amazon.titan-embed-text-v2:0`
+
+#### LLMBedrockMistralAIInterface Class
+The `LLMBedrockMistralAIInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with Bedrock MistralAI's language model Mistral 7B. **NOTE: This implementation uses a mix of MistralAI and OpenAI LLMs because the MistralAI model appears not to have sufficent power to drive the workflow management.** Models used in this implementation are Bedrock MistralAI's
+* word analyzer: `mistral.mistral-7b-instruct-v0:2`
+* word extraction from image: **Function not supported**
+* workflow manager: `gpt-4o-mini`
+* vector embedding generator: `amazon.titan-embed-text-v2:0`
+
+### LLM Registry
+
+To facilitate access to the different LLMs, a registry is used to access the respective LLM concrete classes.  The registry is a dictionary with the LLM identifier as the key and the LLM class as the value.  This allows the user to specify with LLM to use at start up time with the cli parameter `llm_interface`. 
+
+| LLM Identifier | LLM Class |
+| --- | --- |
+| `openai` | `LLMOpenAIInterface` |
+| `bedrock_anthropic` | `LLMBedrockAntropicInterface` |
+| `bedrock_mistralai` | `LLMBedrockMistralAIInterface` |
+
 
 
 **Example Initialization**
 ```python
+@llm_interface_registry.register("openai")
 class LLMOpenAIInterface(LLMInterfaceBase):
-    def __init__(self, word_analyzer_llm_name: str = "gpt-4o", image_extraction_llm_name: str = "gpt-4o", workflow_llm_name: str = "gpt-4o-mini", embedding_model_name: str = "text-embedding-3-small", temperature: float = 0.7, max_tokens=4096, **kwargs):
-        self.word_analyzer_llm_name = word_analyzer_llm_name
-        self.workflow_llm_name = workflow_llm_name
-        self.image_extraction_llm_name = image_extraction_llm_name
-        self.embendding_model_name = embedding_model_name
-        self.temperature = temperature
-        self.max_tokens = max_tokens
+    """class for OpenAI LLM Interface"""
 
-        self.word_analyzer_llm = ChatOpenAI(model=self.word_analyzer_llm_name, temperature=self.temperature, max_tokens=self.max_tokens)
-        self.image_extraction_llm = ChatOpenAI(model=self.image_extraction_llm_name, temperature=self.temperature, max_tokens=self.max_tokens)
-        self.workflow_llm = ChatOpenAI(model=self.workflow_llm_name, temperature=0, max_tokens=self.max_tokens)
-        self.embedding_model = OpenAIEmbeddings(model=self.embendding_model_name)
+    def __init__(
+        self,
+        word_analyzer_llm_name: str = "gpt-4o",
+        image_extraction_llm_name: str = "gpt-4o",
+        workflow_llm_name: str = "gpt-4o-mini",
+        embedding_model_name: str = "text-embedding-3-small",
+        temperature: float = 0.7,
+        max_tokens=4096,
+        **kwargs,
+    ):
+    ...
 ```
 
 
@@ -437,8 +469,6 @@ Key workflow attributes:
 * `puzzle_status`: indicates if puzzle is initialized
 * `tool_status`: indicates the results of the current step and is used to determine next tool to use.
 * `current_tool`: indicates current active tool.
-* `workflow_instructions`: contains the workflow instructions
-* `vocabulary_db_fp`: contains file path to sqlite3 database containing vocabulary and embedding vectors
 
 
 Overall control is performed by the `run_planner()` function.  The agent's workflow is defined by the `StateGraph` class from `langgraph`.  The agent's workflow is defined by a series of nodes and edges.  The nodes are the agent's processing steps and the edges are the transitions between the processing steps.  This function determines the next step in the agent's workflow based on the attributes described above.
@@ -594,17 +624,24 @@ The project is run in a devcontainer. The `.devcontainer/devcontainer.json` setu
 The above assumes the `.openai` directory contains the `api_key.json` file and `.openai` is a subdirectory of the directory pointed to by the environment variable `$NCPA_ROOT_DIR`.
 
 
-### Credentials for OpenAI and `langsmith`
-The code assumes the existence of this json file in this location: `/openai/api_key.json`.  The file should contain the following:
-```json
-{
-    "org": "<OPENAI-ORG>",
-    "key": "<OPENAI-API-KEY>",
-    "langsmith_key": "<LANGSMITH-API-KEY>"
-}
+### Credentials for LLMs and `langsmith`
+The code depends on the following environment variables needed for accessing the respective services. 
+
+```bash
+# OpenAI API Key
+OPENAI_API_KEY="OpenAI API Key"
+
+# langsmith API Key
+LANGSMITH_API_KEY="langsmith API Key"
+
+# AWS Bedrock API Key
+AWS_ACCESS_KEY_ID="AWS Access Key ID"
+AWS_SECRET_ACCESS_KEY="AWS Secret Access Key"
+AWS_DEFAULT_REGION="AWS Default Region"
 ```
 
-**Note**: The `langsmith_key` is only used if the `--trace` CLI option is specified.  
+
+**Note**: The `LANGSMITH_API_KEY` is only used if the `--trace` CLI option is specified.  
 
 ## Some Lessons Learned
 While prompt engineering is a critical component to the agent's success, an equally critical function is setting up the right data structures to be used by the LLM.  Specifically, randomizing the order of the words in `words_remaining` seemed to allow the LLM to get unstuck from invalid groupings. 
@@ -628,7 +665,7 @@ $ python src/agent/app_embedvec.py --log-level DEBUG
 ```
 Command line options:
 ```text
-Running Connection Solver Agent with EmbedVec Recommender 0.15.0
+Running Connection Solver Agent with EmbedVec Recommender 0.16.0
 usage: app_embedvec.py [-h] [--llm_interface LLM_INTERFACE] [--log-level LOG_LEVEL] [--trace] [--snapshot_fp SNAPSHOT_FP]
 
 Set logging level for the application.
@@ -641,6 +678,7 @@ options:
                         Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
   --trace               Enable langsmith tracing for the application.
   --snapshot_fp SNAPSHOT_FP
+                        File path to save snapshot data
   ```
 
 Note: Due to the random nature of the LLM, the results vary from run to run.  For example, running the same puzzle multiple times may result in different recommendations from the LLM.  As a result, the puzzle may get solved in one run and not in another.
