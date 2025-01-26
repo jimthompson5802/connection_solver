@@ -11,15 +11,6 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 
 
-# temporary llm interface registry
-# manually update this as other LLM interfaces are added
-llm_interface_registry = {}
-
-# with open("/openai/api_key.json") as f:
-#     config = json.load(f)
-
-# api_key = config["key"]
-
 logger = logging.getLogger(__name__)
 
 pp = pp.PrettyPrinter(indent=4)
