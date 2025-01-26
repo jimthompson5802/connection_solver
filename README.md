@@ -66,6 +66,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.13.0 | add prior invalid group detection in embedvec recommender |
 | v0.14.0 | update webui with active recommender identifier |
 | v0.15.0 | Introduced LLMInterface class design components and use of prompt templates |
+| v0.16.0 | Suppport for two AWS Bedrock Models |
 
 
 ## Sample Runs
