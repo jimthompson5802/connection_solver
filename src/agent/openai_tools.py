@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 @llm_interface_registry.register("openai")
 class LLMOpenAIInterface(LLMInterfaceBase):
-    """class for OpenAI LLM Interface"""
 
     def __init__(
         self,
@@ -29,7 +28,7 @@ class LLMOpenAIInterface(LLMInterfaceBase):
     ):
         """setups up LLM Model"""
 
-        print("LLMOpeAIInterface __init__")
+        print(f"{self.__class__.__name__} __init__")
 
         self.word_analyzer_llm_name = word_analyzer_llm_name
         self.workflow_llm_name = workflow_llm_name

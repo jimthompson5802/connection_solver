@@ -66,7 +66,7 @@ Connections is a word game that challenges players to find themes between words.
 | v0.13.0 | add prior invalid group detection in embedvec recommender |
 | v0.14.0 | update webui with active recommender identifier |
 | v0.15.0 | Introduced LLMInterface class design components and use of prompt templates |
-| v0.16.0 | Suppport for two AWS Bedrock Models |
+| v0.16.0 | Suppport for AWS Bedrock Models |
 
 
 ## Sample Runs
@@ -152,11 +152,18 @@ The `LLMOpenAIInterface` class inherits from `LLMInterfaceBase` and provides spe
 * workflow manager: `gpt-4o-mini`
 * vector embedding generator: `text-embedding-3-small`
 
-#### LLMBedrockAntropicInterface Class
+#### LLMBedrockSonnetInterface Class
 The `LLMBedrockAntropicInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with Bedrock Antropic's language model Claude 3.5 Sonnet V1. Models used in this implementation are Bedrock Antropic's
 * word analyzer: `anthropic.claude-3-5-sonnet-20240620-v1:0`
 * word extraction from image: `anthropic.claude-3-5-sonnet-20240620-v1:0`
 * workflow manager: `anthropic.claude-3-5-sonnet-20240620-v1:0`
+* vector embedding generator: `amazon.titan-embed-text-v2:0`
+
+#### LLMBedrockHaikuInterface Class
+The `LLMBedrockAntropicInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with Bedrock Antropic's language model Claude 3 Haiku. Models used in this implementation are Bedrock Antropic's
+* word analyzer: `anthropic.claude-3-haiku-20240307-v1:0`
+* word extraction from image: `anthropic.claude-3-haiku-20240307-v1:0`
+* workflow manager: `anthropic.claude-3-haiku-20240307-v1:0`
 * vector embedding generator: `amazon.titan-embed-text-v2:0`
 
 #### LLMBedrockMistralAIInterface Class
@@ -173,7 +180,8 @@ To facilitate access to the different LLMs, a registry is used to access the res
 | LLM Identifier | LLM Class |
 | --- | --- |
 | `openai` | `LLMOpenAIInterface` |
-| `bedrock_anthropic` | `LLMBedrockAntropicInterface` |
+| `bedrock_sonnet` | `LLMBedrockSonnetInterface` |
+| `bedrock_haiku` | `LLMBedrockHaikuInterface` |
 | `bedrock_mistralai` | `LLMBedrockMistralAIInterface` |
 
 
