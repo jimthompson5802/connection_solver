@@ -5,6 +5,8 @@ import textwrap
 from typing import List, TypedDict, Coroutine, Any
 from functools import wraps
 
+from botocore.exceptions import ClientError
+
 from langchain_aws import ChatBedrock, BedrockEmbeddings
 from langchain_aws.chat_models.bedrock import convert_messages_to_prompt_anthropic
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -50,14 +52,21 @@ def retry_when_error(max_retries=4, base_delay=1, jitter=0.1):
             while retries < max_retries:
                 try:
                     return await func(*args, **kwargs)
-                except Exception as e:
-                    if retries == max_retries - 1:
-                        print(f"Failed after {retries + 1} retries")
+                except ClientError as e:
+                    # Retry on ThrottlingException
+                    if e.response["Error"]["Code"] == "ThrottlingException":
+                        if retries == max_retries - 1:
+                            print(f"Failed after {retries + 1} retries")
+                            raise
+                        retries += 1
+                        delay = (base_delay * 2**retries) + (random.random() * jitter)
+                        print(f"Retrying {retries}/{max_retries} with delay {delay:.3f} after error: {e}")
+                        await asyncio.sleep(delay)
+
+                    # Raise other exceptions
+                    else:
                         raise
-                    retries += 1
-                    delay = (base_delay * 2**retries) + (random.random() * jitter)
-                    print(f"Retrying {retries}/{max_retries} with delay {delay:.3f} after error: {e}")
-                    await asyncio.sleep(delay)
+
             return await func(*args, **kwargs)
 
         return wrapper
