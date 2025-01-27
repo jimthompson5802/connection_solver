@@ -153,18 +153,27 @@ The `LLMOpenAIInterface` class inherits from `LLMInterfaceBase` and provides spe
 * vector embedding generator: `text-embedding-3-small`
 
 #### LLMBedrockSonnetInterface Class
-The `LLMBedrockAntropicInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with Bedrock Antropic's language model Claude 3.5 Sonnet V1. Models used in this implementation are Bedrock Antropic's
+The `LLMBedrockSonnetInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with Bedrock Antropic's language model Claude 3.5 Sonnet V1. Models used in this implementation are Bedrock Antropic's
 * word analyzer: `anthropic.claude-3-5-sonnet-20240620-v1:0`
 * word extraction from image: `anthropic.claude-3-5-sonnet-20240620-v1:0`
 * workflow manager: `anthropic.claude-3-5-sonnet-20240620-v1:0`
 * vector embedding generator: `amazon.titan-embed-text-v2:0`
 
 #### LLMBedrockHaikuInterface Class
-The `LLMBedrockAntropicInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with Bedrock Antropic's language model Claude 3 Haiku. Models used in this implementation are Bedrock Antropic's
+The `LLMBedrockInterfaceInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with Bedrock Antropic's language model Claude 3 Haiku. Models used in this implementation are Bedrock Antropic's
 * word analyzer: `anthropic.claude-3-haiku-20240307-v1:0`
 * word extraction from image: `anthropic.claude-3-haiku-20240307-v1:0`
 * workflow manager: `anthropic.claude-3-haiku-20240307-v1:0`
 * vector embedding generator: `amazon.titan-embed-text-v2:0`
+
+#### LLMBedrockHybridInterface Class
+The `LLMBedrockHybridInterface` class inherits from `LLMInterfaceBase`.  This model is similar to the Haiku interface with the exception that there are two word analyzer LLMs.  The standard one is the Haiku LLM.  The second, termed "deep word analyzer" is the Sonnet LLM. Reason for this two word analyzer approach is that the Haiku model is fast and does not have a strict rate limit like the Sonnet model.  This model is used for generating word definitions, work extraction from images and workflow managment.  The Sonnet model is used for the more sophisticated analysis required for deriving the 4-word group recommendations.  Models used in this implementation are
+* word analyzer: `anthropic.claude-3-haiku-20240307-v1:0`
+* deep word analyzer: `anthropic.claude-3-5-sonnet-20240620-v1:0`
+* word extraction from image: `anthropic.claude-3-haiku-20240307-v1:0`
+* workflow manager: `anthropic.claude-3-haiku-20240307-v1:0`
+* vector embedding generator: `amazon.titan-embed-text-v2:0`
+
 
 #### LLMBedrockMistralAIInterface Class
 The `LLMBedrockMistralAIInterface` class inherits from `LLMInterfaceBase` and provides specific implementations for interacting with Bedrock MistralAI's language model Mistral 7B. **NOTE: This implementation uses a mix of MistralAI and OpenAI LLMs because the MistralAI model appears not to have sufficent power to drive the workflow management.** Models used in this implementation are Bedrock MistralAI's
@@ -183,6 +192,7 @@ To facilitate access to the different LLMs, a registry is used to access the res
 | `bedrock_sonnet` | `LLMBedrockSonnetInterface` |
 | `bedrock_haiku` | `LLMBedrockHaikuInterface` |
 | `bedrock_mistralai` | `LLMBedrockMistralAIInterface` |
+| `bedrock_hybrid` | `LLMBedrockHybridInterface` |
 
 
 
