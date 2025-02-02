@@ -9,6 +9,7 @@ matplotlib
 seaborn
 langchain
 langchain-openai
+langchain-aws
 langchain_community
 langgraph
 pygraphviz

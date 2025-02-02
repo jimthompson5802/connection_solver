@@ -11,15 +11,6 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 
 
-# temporary llm interface registry
-# manually update this as other LLM interfaces are added
-llm_interface_registry = {}
-
-# with open("/openai/api_key.json") as f:
-#     config = json.load(f)
-
-# api_key = config["key"]
-
 logger = logging.getLogger(__name__)
 
 pp = pp.PrettyPrinter(indent=4)
@@ -74,7 +65,78 @@ class LLMInterfaceBase(ABC):
         raise NotImplementedError()
 
 
+class LLMRegistry:
+    """
+    A singleton class that maintains a registry of classes.
+
+    Attributes:
+        _instance (Registry): The singleton instance of the Registry class.
+        _registry (dict): A dictionary that stores registered classes with their names as keys.
+
+    Methods:
+        register(name):
+            A class method that registers a class with a given name.
+            Args:
+                name (str): The name to register the class under.
+            Returns:
+                function: A decorator function that registers the class.
+
+        get(name):
+            A class method that retrieves a registered class by its name.
+            Args:
+                name (str): The name of the registered class to retrieve.
+            Returns:
+                class: The registered class, or None if not found.
+
+        list_registered():
+            A class method that lists all registered class names.
+            Returns:
+                list: A list of all registered class names.
+    """
+
+    _instance = None
+    _registry = {}
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(LLMRegistry, cls).__new__(cls)
+        return cls._instance
+
+    @classmethod
+    def register(cls, name):
+        def decorator(class_):
+            cls._registry[name] = class_
+            return class_
+
+        return decorator
+
+    @classmethod
+    def get(cls, name):
+        return cls._registry.get(name)
+
+    @classmethod
+    def list_registered(cls):
+        return list(cls._registry.keys())
+
+
+# singleton instance of the registry for LLMs
+llm_interface_registry = LLMRegistry()
+
+
 def compute_group_id(word_group: list) -> str:
+    """
+    Computes a unique group ID for a list of words.
+
+    This function takes a list of words, sorts them, concatenates them into a single string,
+    and then generates an MD5 hash of that string. The resulting hash is returned as a
+    hexadecimal string.
+
+    Args:
+        word_group (list): A list of words (strings) to compute the group ID for.
+
+    Returns:
+        str: A hexadecimal string representing the MD5 hash of the concatenated and sorted words.
+    """
     return hashlib.md5("".join(sorted(word_group)).encode()).hexdigest()
 
 
@@ -136,6 +198,18 @@ async def extract_words_from_image_file(image_fp: str, config: RunnableConfig) -
 
 
 async def manual_puzzle_setup_prompt(config: RunnableConfig) -> List[str]:
+    """
+    Asynchronously prompts the user to set up a puzzle by specifying the source of the puzzle words.
+
+    Args:
+        config (RunnableConfig): Configuration object required for extracting words from an image.
+
+    Returns:
+        List[str]: A list of words extracted from the specified source.
+
+    Raises:
+        ValueError: If the input source type is neither 'file' nor 'image'.
+    """
 
     # pompt user for puzzle source
     puzzle_source_type = input("Enter 'file' to read words from a file or 'image' to read words from an image: ")
@@ -153,6 +227,20 @@ async def manual_puzzle_setup_prompt(config: RunnableConfig) -> List[str]:
 
 
 def interact_with_user(gen_words, gen_reason, recommender) -> str:
+    """
+    Interacts with the user by providing a recommendation message and capturing the user's response.
+
+    Args:
+        gen_words (str): The generated words to be recommended.
+        gen_reason (str): The reason for the recommendation.
+        recommender (str): The name of the recommender.
+
+    Returns:
+        str: The user's response to the recommendation.
+
+    Logs:
+        Logs the recommendation message, the user instruction prompt, and the user's response.
+    """
     recommendation_message = f"\n{recommender.upper()}: RECOMMENDED WORDS {gen_words} with connection {gen_reason}"
     logger.info(recommendation_message)
     print(recommendation_message)
@@ -167,6 +255,21 @@ def interact_with_user(gen_words, gen_reason, recommender) -> str:
 
 
 def check_one_solution(solution, *, gen_words: List[str], gen_reason: str, recommender: str) -> str:
+    """
+    Checks if the generated solution matches any of the provided solutions.
+    This is used by the automated tester.
+
+    Args:
+        solution (dict): A dictionary containing groups of words and their reasons.
+        gen_words (List[str]): A list of generated words to be checked.
+        gen_reason (str): The reason associated with the generated words.
+        recommender (str): The name of the recommender.
+
+    Returns:
+        str: "correct" if the generated words match exactly with any group of words in the solution,
+             "o" if there are three words in common between the generated words and any group of words in the solution,
+             "n" otherwise.
+    """
     recommendation_message = f"\n{recommender.upper()}: RECOMMENDED WORDS {gen_words} with connection {gen_reason}"
     logger.info(recommendation_message)
     print(recommendation_message)

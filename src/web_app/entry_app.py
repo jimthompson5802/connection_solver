@@ -15,7 +15,6 @@ import pandas as pd
 from workflow_manager import create_webui_workflow_graph
 from puzzle_solver import PuzzleState
 from tools import read_file_to_word_list, extract_words_from_image_file, llm_interface_registry
-from openai_tools import LLMOpenAIInterface
 
 from langchain_core.runnables import RunnableConfig
 
@@ -34,12 +33,6 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-
-# TODO: this is temporary until a more formal way of registring LLM interfaces is implemented
-# register the LLM interfaces available
-llm_interface_registry = {
-    "openai": LLMOpenAIInterface,
-}
 
 
 pp = pp.PrettyPrinter(indent=4)
@@ -71,7 +64,7 @@ async def webui_puzzle_setup_function(puzzle_setup_fp: str, config: RunnableConf
 
 
 # setup interace to LLM
-llm_interface = llm_interface_registry[args.llm_interface]()
+llm_interface = llm_interface_registry.get(args.llm_interface)()
 
 # setup runtime config
 runtime_config = {

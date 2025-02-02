@@ -387,7 +387,7 @@ async def get_embedvec_recommendation(state: PuzzleState, config: RunnableConfig
     recommended_group = await config["configurable"]["llm_interface"].choose_embedvec_item(list_to_validate)
     logger.info(f"Recommended group: {recommended_group}")
 
-    state["recommended_words"] = recommended_group["candidate_group"]
+    state["recommended_words"] = recommended_group["candidategroup"]
     state["recommended_connection"] = recommended_group["explanation"]
     state["tool_status"] = "have_recommendation"
 

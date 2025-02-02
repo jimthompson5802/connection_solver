@@ -17,16 +17,9 @@ from langchain_core.runnables import RunnableConfig
 from workflow_manager import run_workflow, create_workflow_graph
 from puzzle_solver import PuzzleState
 
-from openai_tools import LLMOpenAIInterface
 from tools import interact_with_user, manual_puzzle_setup_prompt, llm_interface_registry
 
 from src.agent import __version__
-
-# TODO: this is temporary until a more formal way of registring LLM interfaces is implemented
-# register the LLM interfaces available
-llm_interface_registry = {
-    "openai": LLMOpenAIInterface,
-}
 
 
 # create logger
@@ -96,7 +89,7 @@ async def main(puzzle_setup_function: callable = None, puzzle_response_function:
 
     workflow_graph.get_graph().draw_png("images/connection_solver_embedvec_graph.png")
 
-    llm_interface = llm_interface_registry[args.llm_interface]()
+    llm_interface = llm_interface_registry.get(args.llm_interface)()
 
     runtime_config = RunnableConfig(
         configurable={
