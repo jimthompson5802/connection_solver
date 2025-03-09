@@ -2,7 +2,7 @@
 
 ## Features of the Connection Solver Virtual Assistant Agent
 * Extract puzzle words from text file to setup the puzzle
-* LLM based tools to:  
+* LLM based tools to:
   * Extract words from an image to seutp the puzzle 
 
     ![](../images/example_puzzle_image.png)
