@@ -10,6 +10,7 @@ seaborn
 langchain
 langchain-openai
 langchain-aws
+langchain-ollama
 langchain_community
 langgraph
 pygraphviz
